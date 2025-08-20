@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // 리뷰 기록 항목을 위한 데이터 모델
 class ReviewHistoryEntry {
   final String foodName;
+  final String? restaurantName;
   final String? imagePath; // 이미지 파일 경로
   final double deliveryRating;
   final double tasteRating;
@@ -18,6 +19,7 @@ class ReviewHistoryEntry {
 
   ReviewHistoryEntry({
     required this.foodName,
+    this.restaurantName,
     this.imagePath,
     required this.deliveryRating,
     required this.tasteRating,
@@ -32,6 +34,7 @@ class ReviewHistoryEntry {
   // JSON 직렬화 (안전하게)
   Map<String, dynamic> toJson() => {
     'foodName': foodName,
+    'restaurantName': restaurantName,
     'imagePath': imagePath,
     'deliveryRating': deliveryRating.toString(), // double을 string으로 안전하게 저장
     'tasteRating': tasteRating.toString(),
@@ -48,6 +51,7 @@ class ReviewHistoryEntry {
     try {
       return ReviewHistoryEntry(
         foodName: json['foodName']?.toString() ?? '',
+        restaurantName: json['restaurantName']?.toString(),
         imagePath: json['imagePath']?.toString(),
         deliveryRating: _safeParseDouble(json['deliveryRating']),
         tasteRating: _safeParseDouble(json['tasteRating']),
@@ -138,6 +142,9 @@ final imageProvider = StateProvider<File?>((ref) => null);
 
 // 2. 음식 이름 텍스트를 관리하는 Provider
 final foodNameProvider = StateProvider<String>((ref) => '');
+
+// 음식점 이름 텍스트를 관리하는 Provider
+final restaurantNameProvider = StateProvider<String>((ref) => '');
 
 // 3. 강조하고 싶은 내용을 관리하는 Provider
 final emphasisProvider = StateProvider<String>((ref) => '');
