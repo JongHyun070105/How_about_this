@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,7 +65,7 @@ class ReviewHistoryEntry {
         createdAt: _safeParseDateTime(json['createdAt']),
       );
     } catch (e) {
-      print('Error parsing ReviewHistoryEntry: $e');
+      debugPrint('Error parsing ReviewHistoryEntry: $e');
       // 기본값으로 반환하여 앱이 크래시되지 않도록 함
       return ReviewHistoryEntry(
         foodName: '오류 발생',
@@ -86,7 +88,7 @@ class ReviewHistoryEntry {
       try {
         return double.parse(value);
       } catch (e) {
-        print('Error parsing double: $value, error: $e');
+        debugPrint('Error parsing double: $value, error: $e');
         return 0.0;
       }
     }
@@ -106,7 +108,7 @@ class ReviewHistoryEntry {
           return decoded.map((item) => item.toString()).toList();
         }
       } catch (e) {
-        print('Error parsing list: $value, error: $e');
+        debugPrint('Error parsing list: $value, error: $e');
       }
     }
     return [];
@@ -121,7 +123,7 @@ class ReviewHistoryEntry {
         final milliseconds = int.parse(value);
         return DateTime.fromMillisecondsSinceEpoch(milliseconds);
       } catch (e) {
-        print('Error parsing DateTime: $value, error: $e');
+        debugPrint('Error parsing DateTime: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -129,7 +131,7 @@ class ReviewHistoryEntry {
       try {
         return DateTime.fromMillisecondsSinceEpoch(value);
       } catch (e) {
-        print('Error parsing DateTime from int: $value, error: $e');
+        debugPrint('Error parsing DateTime from int: $value, error: $e');
         return DateTime.now();
       }
     }
@@ -185,12 +187,12 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
       final historyJson = prefs.getString('review_history_v2');
 
       if (historyJson == null || historyJson.isEmpty) {
-        print('No history found in SharedPreferences');
+        debugPrint('No history found in SharedPreferences');
         state = [];
         return;
       }
 
-      print(
+      debugPrint(
         'Loading history: ${historyJson.substring(0, historyJson.length > 100 ? 100 : historyJson.length)}...',
       );
 
@@ -202,21 +204,21 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
           final entry = ReviewHistoryEntry.fromJson(historyList[i]);
           entries.add(entry);
         } catch (e) {
-          print('Error parsing entry at index $i: $e');
+          debugPrint('Error parsing entry at index $i: $e');
           continue;
         }
       }
 
       state = entries;
     } catch (e) {
-      print('Error loading review history: $e');
+      debugPrint('Error loading review history: $e');
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('reviewHistory'); // 기존 키
         await prefs.remove('review_history_v2'); // 새로운 키
-        print('Cleared corrupted review history');
+        debugPrint('Cleared corrupted review history');
       } catch (clearError) {
-        print('Error clearing history: $clearError');
+        debugPrint('Error clearing history: $clearError');
       }
       state = [];
     }
@@ -254,12 +256,12 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
         await prefs.setString('review_history_v2', historyJson);
 
         state = currentHistory;
-        print('Successfully saved review history');
+        debugPrint('Successfully saved review history');
       } else {
-        print('Duplicate review entry detected, not adding to history.');
+        debugPrint('Duplicate review entry detected, not adding to history.');
       }
     } catch (e) {
-      print('Error adding review to history: $e');
+      debugPrint('Error adding review to history: $e');
     }
   }
 
@@ -269,9 +271,9 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
       await prefs.remove('reviewHistory'); // 기존 키
       await prefs.remove('review_history_v2'); // 새로운 키
       state = [];
-      print('Successfully cleared all review history');
+      debugPrint('Successfully cleared all review history');
     } catch (e) {
-      print('Error clearing review history: $e');
+      debugPrint('Error clearing review history: $e');
     }
   }
 }

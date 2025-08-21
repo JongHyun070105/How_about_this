@@ -1,53 +1,50 @@
 import 'package:reviewai_flutter/config/app_constants.dart';
-import 'dart:math';
-
-import 'package:confetti/confetti.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:reviewai_flutter/providers/food_providers.dart';
 import 'package:reviewai_flutter/screens/review_screen.dart';
-import 'package:reviewai_flutter/services/notification_service.dart';
+import 'package:reviewai_flutter/services/user_preference_service.dart';
+import 'package:reviewai_flutter/services/recommendation_service.dart';
+import 'package:reviewai_flutter/widgets/category_card.dart';
+import 'package:reviewai_flutter/widgets/dialogs/food_recommendation_dialog.dart';
+import 'package:reviewai_flutter/widgets/dialogs/user_stats_dialog.dart';
 
 // 로딩 상태를 관리하는 Provider
 final isCategoryLoadingProvider = StateProvider<bool>((ref) => false);
 
-class TodayRecommendationScreen extends ConsumerWidget {
+class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodayRecommendationScreen> createState() =>
+      _TodayRecommendationScreenState();
+}
+
+class _TodayRecommendationScreenState
+    extends ConsumerState<TodayRecommendationScreen> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final foodCategories = ref.watch(foodCategoriesProvider);
     final isCategoryLoading = ref.watch(isCategoryLoadingProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final textTheme = Theme.of(context).textTheme;
 
-    FoodRecommendation pickRandomFood(
+    Future<FoodRecommendation> pickSmartFood(
       List<FoodRecommendation> foods,
       List<String> recentFoods,
-    ) {
-      if (foods.isEmpty) {
-        throw Exception("추천 가능한 음식이 없습니다.");
-      }
-
-      List<FoodRecommendation> available = foods
-          .where((f) => !recentFoods.contains(f.name))
-          .toList();
-
-      if (available.isEmpty) {
-        recentFoods.clear();
-        available = List.from(foods);
-      }
-
-      final chosen = available[Random().nextInt(available.length)];
-
-      recentFoods.add(chosen.name);
-      if (recentFoods.length > AppConstants.recentFoodsLimit) {
-        recentFoods.removeAt(0);
-      }
-      return chosen;
+    ) async {
+      final preferences = await UserPreferenceService.analyzeUserPreferences();
+      return RecommendationService.pickSmartFood(
+        foods,
+        recentFoods,
+        preferences,
+      );
     }
 
     void showRecommendationDialog(
@@ -58,10 +55,11 @@ class TodayRecommendationScreen extends ConsumerWidget {
     }) {
       final recentFoods = <String>[];
 
-      void openDialog() {
-        final recommended = pickRandomFood(foods, recentFoods);
+      void openDialog() async {
+        final recommended = await pickSmartFood(foods, recentFoods);
         ref.read(selectedFoodProvider.notifier).state = recommended;
 
+        if (!context.mounted) return;
         showDialog(
           context: context,
           builder: (_) => SlideTransition(
@@ -80,13 +78,14 @@ class TodayRecommendationScreen extends ConsumerWidget {
               recommended: recommended,
               foods: foods,
               color: color,
-              onRecommendAgain: () {
-                Navigator.pop(context);
-                openDialog();
-              },
             ),
           ),
-        );
+        ).then((result) {
+          if (!context.mounted) return;
+          if (result == true) {
+            openDialog(); // Re-call openDialog if "싫어요" was pressed
+          }
+        });
       }
 
       openDialog();
@@ -96,6 +95,8 @@ class TodayRecommendationScreen extends ConsumerWidget {
       children: [
         Scaffold(
           appBar: AppBar(
+            titleSpacing: screenWidth * 0.06,
+            centerTitle: false,
             title: Text(
               '오늘 뭐 먹지?',
               style: textTheme.headlineMedium?.copyWith(
@@ -104,10 +105,15 @@ class TodayRecommendationScreen extends ConsumerWidget {
                 fontFamily: 'Do Hyeon',
               ),
             ),
-            centerTitle: true,
             actions: [
+              // 통계 보기 버튼 추가
               IconButton(
-                icon: const Icon(Icons.rate_review),
+                icon: Icon(Icons.analytics, size: screenWidth * 0.06),
+                onPressed: () => _showUserStatsDialog(context),
+                tooltip: '내 식습관 통계',
+              ),
+              IconButton(
+                icon: Icon(Icons.rate_review, size: screenWidth * 0.06),
                 onPressed: () =>
                     _navigateToReviewScreen(context, _createDefaultFood()),
                 tooltip: '리뷰 작성',
@@ -115,7 +121,7 @@ class TodayRecommendationScreen extends ConsumerWidget {
             ],
           ),
           body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+            padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.06),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -139,75 +145,18 @@ class TodayRecommendationScreen extends ConsumerWidget {
                       crossAxisCount: 2,
                       crossAxisSpacing: screenWidth * 0.04,
                       mainAxisSpacing: screenHeight * 0.02,
-                      childAspectRatio: 0.9,
+                      childAspectRatio: 0.92,
                     ),
                     itemCount: foodCategories.length,
                     itemBuilder: (context, index) {
                       final category = foodCategories[index];
-
-                      return Hero(
-                        tag: 'category_${category.name}_$index',
-                        child: GestureDetector(
-                          onTap: () => _handleCategoryTap(
-                            context,
-                            ref,
-                            category,
-                            showRecommendationDialog,
-                          ),
-                          child: AnimatedScale(
-                            scale: 1.0,
-                            duration: const Duration(milliseconds: 100),
-                            child: Card(
-                              color: category.color,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                                side: BorderSide(
-                                  color: Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Column(
-                                children: [
-                                  SizedBox(
-                                    height: screenHeight * 0.17,
-                                    child: SvgPicture.asset(
-                                      category.imageUrl,
-                                      fit: BoxFit.contain,
-                                      width: screenWidth * 0.22,
-                                      height: screenWidth * 0.22,
-                                      placeholderBuilder: (context) =>
-                                          Container(
-                                            color: Colors.grey.shade200,
-                                            child: Center(
-                                              child: Icon(
-                                                Icons.image,
-                                                size: screenWidth * 0.17,
-                                              ),
-                                            ),
-                                          ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: screenHeight * 0.0005,
-                                      horizontal: screenWidth * 0.02,
-                                    ),
-                                    child: Text(
-                                      category.name,
-                                      style: textTheme.titleMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Do Hyeon',
-                                        fontSize: screenWidth * 0.045,
-                                        color: Colors.black87,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                      return CategoryCard(
+                        category: category,
+                        onTap: () => _handleCategoryTap(
+                          context,
+                          ref,
+                          category,
+                          showRecommendationDialog,
                         ),
                       );
                     },
@@ -289,6 +238,7 @@ class TodayRecommendationScreen extends ConsumerWidget {
       );
 
       if (foods.isNotEmpty) {
+        if (!context.mounted) return;
         showDialogFn(
           context,
           category: category.name,
@@ -296,9 +246,11 @@ class TodayRecommendationScreen extends ConsumerWidget {
           color: category.color,
         );
       } else {
-        _showErrorSnackBar(context, '추천을 불러오지 못했습니다.');
+        if (!context.mounted) return;
+      _showErrorSnackBar(context, '추천을 불러오지 못했습니다.');
       }
     } catch (e) {
+      if (!context.mounted) return;
       _showErrorSnackBar(context, '오류가 발생했습니다: $e');
     } finally {
       ref.read(isCategoryLoadingProvider.notifier).state = false;
@@ -314,337 +266,115 @@ class TodayRecommendationScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
-class FoodRecommendationDialog extends StatefulWidget {
-  final String category;
-  final FoodRecommendation recommended;
-  final List<FoodRecommendation> foods;
-  final Color color;
-  final VoidCallback onRecommendAgain;
+  // 사용자 통계 다이얼로그 (PageView로 리팩토링)
+  void _showUserStatsDialog(BuildContext context) async {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
-  const FoodRecommendationDialog({
-    super.key,
-    required this.category,
-    required this.recommended,
-    required this.foods,
-    required this.color,
-    required this.onRecommendAgain,
-  });
+    try {
+      final stats = await RecommendationService.getUserStats();
+      
 
-  @override
-  State<FoodRecommendationDialog> createState() =>
-      _FoodRecommendationDialogState();
-}
+      // Get the food categories from provider to get category colors
+      final foodCategories = ref.read(foodCategoriesProvider);
+      // Map category name to color
+      final Map<String, Color> categoryColorMap = {
+        for (final cat in foodCategories) cat.name: cat.color,
+      };
 
-class _FoodRecommendationDialogState extends State<FoodRecommendationDialog>
-    with TickerProviderStateMixin {
-  late AnimationController _rouletteController;
-  late AnimationController _scaleController;
-  late ConfettiController _confettiController;
-  late Animation<double> _rouletteAnimation;
-  late Animation<double> _scaleAnimation;
-
-  String _displayText = '?';
-  bool _isSpinning = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _confettiController = ConfettiController(
-      duration: const Duration(seconds: 1),
-    );
-    _initializeAnimations();
-    _startRouletteAnimation();
-  }
-
-  void _initializeAnimations() {
-    _rouletteController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _rouletteAnimation = CurvedAnimation(
-      parent: _rouletteController,
-      curve: Curves.easeOutQuart,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
-    );
-  }
-
-  void _startRouletteAnimation() {
-    final allFoods = widget.foods.map((f) => f.name).toList();
-    allFoods.shuffle();
-    final spinnerFoods = allFoods.take(5).toList();
-
-    int spinnerIndex = 0;
-    _rouletteController.addListener(() {
-      if (_isSpinning) {
-        if (!mounted) return;
-        setState(() {
-          _displayText = spinnerFoods[spinnerIndex % spinnerFoods.length];
-          spinnerIndex++;
-        });
+      // Convert stats['categoryStats'] (Map<String, int>) to List<Map<String, dynamic>>
+      List<Map<String, dynamic>> categoryList = [];
+      int totalSelections = stats['totalSelections'] ?? 0;
+      if (stats['categoryStats'] != null &&
+          stats['categoryStats'] is Map<String, dynamic>) {
+        final Map<String, dynamic> catStats = Map<String, dynamic>.from(
+          stats['categoryStats'],
+        );
+        // Filter out "상관없음", include all with count > 0
+        final filteredCats = catStats.entries
+            .where((e) => e.key != '상관없음' && (e.value ?? 0) > 0)
+            .toList();
+        int denominator = totalSelections > 0
+            ? totalSelections
+            : filteredCats.fold<int>(
+                0,
+                (sum, e) => sum + ((e.value ?? 0) as num).toInt(),
+              );
+        categoryList = filteredCats.map<Map<String, dynamic>>((e) {
+          int count = (e.value ?? 0) as int;
+          double percent = denominator > 0 ? (count / denominator * 100) : 0.0;
+          return {'name': e.key, 'count': count, 'percent': percent};
+        }).toList();
       }
-    });
 
-    _rouletteController.forward().then((_) {
-      if (!mounted) return;
-      setState(() {
-        _isSpinning = false;
-        _displayText = widget.recommended.name;
-      });
-      _scaleController.forward();
-      _confettiController.play();
-    });
+      // Calculate total count of top 5 foods
+      final List<dynamic> topFoodsList = (stats['topFoods'] as List)
+          .take(5)
+          .toList();
+      int totalTop5Count = 0;
+      for (final food in topFoodsList) {
+        if (food['count'] != null) {
+          totalTop5Count += (food['count'] as num).toInt();
+        }
+      }
+
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) {
+          PageController pageController = PageController();
+          return AnimatedStatsDialog(
+            screenWidth: screenWidth,
+            screenHeight: screenHeight,
+            stats: stats,
+            topFoodsList: topFoodsList,
+            totalTop5Count: totalTop5Count,
+            categoryList: categoryList,
+            categoryColorMap: categoryColorMap,
+            pageController: pageController,
+            buildStatItem: _buildStatItem,
+          );
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      _showErrorSnackBar(context, '통계를 불러오는데 실패했습니다.');
+    }
   }
 
-  @override
-  void dispose() {
-    _rouletteController.dispose();
-    _scaleController.dispose();
-    _confettiController.dispose();
-    super.dispose();
-  }
-
-  void _showPostRecommendationInfo(BuildContext context) {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: const Text('팁!', style: TextStyle(fontFamily: 'Do Hyeon')),
-        content: const Text(
-          '좋아요! 맛있게 드시고, 나중에 상단의 리뷰 작성 아이콘을 눌러 AI에게 리뷰를 맡겨보세요!',
-          style: TextStyle(fontFamily: 'Do Hyeon'),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+  // 통계 아이템 빌더 헬퍼 메서드
+  Widget _buildStatItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontFamily: 'Do Hyeon'),
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'Do Hyeon',
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    final textColor = HSLColor.fromColor(
-      widget.color,
-    ).withLightness(0.25).toColor();
-
-    return Stack(
-      alignment: Alignment.topCenter,
-      children: [
-        AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          titlePadding: const EdgeInsets.only(
-            left: 20,
-            right: 8,
-            top: 18,
-            bottom: 8,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 10,
-          ),
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 40,
-          ),
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '🍽️ 오늘의 ${widget.category} 추천!',
-                  style: const TextStyle(
-                    fontFamily: 'Do Hyeon',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, color: Colors.grey, size: 20),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [widget.color, widget.color.withOpacity(0.5)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                            color: widget.color.withOpacity(0.3),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: AnimatedBuilder(
-                          animation: _scaleAnimation,
-                          builder: (context, child) {
-                            return Transform.scale(
-                              scale: _isSpinning ? 1.0 : _scaleAnimation.value,
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 1500),
-                                child: Transform.scale(
-                                  scale: _isSpinning
-                                      ? 1.0
-                                      : _scaleAnimation.value,
-                                  child: Text(
-                                    _displayText,
-                                    style: TextStyle(
-                                      fontFamily: 'Do Hyeon',
-                                      fontSize: _isSpinning ? 24 : 32,
-                                      fontWeight: FontWeight.bold,
-                                      color: _isSpinning
-                                          ? Colors.grey.shade600
-                                          : textColor,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: TextButton.icon(
-                        onPressed: _isSpinning ? null : widget.onRecommendAgain,
-                        icon: const Icon(Icons.refresh, size: 18),
-                        label: const Text(
-                          '재추천',
-                          style: TextStyle(fontFamily: 'Do Hyeon'),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          minimumSize: const Size(0, 36),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                if (!_isSpinning) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Center(
-                          child: Text(
-                            '어떠세요? 🤤',
-                            style: TextStyle(
-                              fontFamily: 'Do Hyeon',
-                              fontSize: 16,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                              _showPostRecommendationInfo(context);
-
-                              final scheduledTime = DateTime.now().add(
-                                const Duration(minutes: 90),
-                              );
-                              NotificationService.scheduleNotification(
-                                id: 0,
-                                title: '리뷰 작성 알림',
-                                body:
-                                    '오늘 드신 ${widget.recommended.name} 어떠셨나요? AI에게 리뷰를 맡겨보세요!',
-                                scheduledDate: scheduledTime,
-                                payload: 'review_notification',
-                              );
-                            },
-                            icon: const Icon(Icons.thumb_up, size: 18),
-                            label: const Text(
-                              '좋아요!',
-                              style: TextStyle(fontFamily: 'Do Hyeon'),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: null,
-        ),
-        Align(
-          alignment: const Alignment(0.0, -0.6),
-          child: ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            numberOfParticles: 30,
-            emissionFrequency: 0.03,
-            gravity: 0.3,
-            colors: const [
-              Colors.green,
-              Colors.blue,
-              Colors.pink,
-              Colors.orange,
-              Colors.purple,
-            ],
-            createParticlePath: (size) {
-              final path = Path();
-              path.addOval(Rect.fromCircle(center: Offset.zero, radius: 7));
-              return path;
-            },
-          ),
-        ),
-      ],
-    );
-  }
 }
+
+

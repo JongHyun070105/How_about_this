@@ -1,7 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:reviewai_flutter/providers/food_providers.dart';
+import 'user_preference_service.dart'; // 위에서 만든 서비스 import
+import 'dart:math';
+import 'package:reviewai_flutter/config/app_constants.dart';
 
 class RecommendationService {
   static final _apiKey = dotenv.env['GEMINI_API_KEY'];
@@ -14,19 +18,16 @@ class RecommendationService {
       throw Exception('API 키가 없습니다. .env 파일을 확인하세요.');
     }
 
-    // 사용 중인 패키지 버전에 따라 responseMimeType 설정이 가능하면 아래 주석 해제
-    // final model = GenerativeModel(
-    //   model: 'gemini-1.5-flash',
-    //   apiKey: _apiKey!,
-    //   generationConfig: GenerationConfig(
-    //     responseMimeType: 'application/json',
-    //     temperature: 0.6,
-    //   ),
-    // );
+    final model = GenerativeModel(
+      model: 'gemini-2.5-flash-lite',
+      apiKey: _apiKey!,
+    );
 
-    final model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _apiKey!);
-
-    final prompt = _buildPrompt(category, history);
+    // 개인화된 프롬프트 생성
+    final prompt = await UserPreferenceService.buildPersonalizedPrompt(
+      category: category,
+      recentFoods: history,
+    );
 
     try {
       final response = await model.generateContent([Content.text(prompt)]);
@@ -44,52 +45,120 @@ class RecommendationService {
 
       final List<dynamic> decodedList = jsonDecode(cleanedJson);
 
-      return decodedList
+      final recommendations = decodedList
           .map((item) => FoodRecommendation.fromJson(item))
           .toList();
+
+      // 싫어하는 음식 필터링 (추가 안전장치)
+      final dislikedFoods = await UserPreferenceService.getDislikedFoods();
+      final filteredRecommendations = recommendations
+          .where((food) => !dislikedFoods.contains(food.name))
+          .toList();
+
+      return filteredRecommendations;
     } catch (e) {
-      print('Gemini API 호출 또는 파싱 오류: $e');
+      debugPrint('Gemini API 호출 또는 파싱 오류: $e');
       return Future.error('음식 추천을 받아오는 데 실패했습니다. 다시 시도해주세요.');
     }
   }
 
-  static String _buildPrompt(String category, List<String> history) {
-    final historyText = history.isEmpty
-        ? '최근에 먹은 음식이 없습니다.'
-        : '최근에 먹은 음식들은 다음과 같습니다: ${history.join(', ')}';
+  // 개인화된 추천을 위한 스마트 음식 선택
+  static FoodRecommendation pickSmartFood(
+    List<FoodRecommendation> foods,
+    List<String> recentFoods,
+    UserPreferenceAnalysis preferences,
+  ) {
+    if (foods.isEmpty) {
+      throw Exception("추천 가능한 음식이 없습니다.");
+    }
 
-    // 카테고리 제약 문구를 더 강하게
-    final isAny = category == '상관없음';
-    final categoryRule = isAny
-        ? '카테고리 제약 없이 다양하게 추천하세요.'
-        : '반드시 모든 항목이 정확히 "$category" 카테고리여야 합니다. 다른 카테고리(한식/일식/양식/분식/아시안/패스트푸드 등)는 절대 포함하지 마세요.';
+    final random = Random(); // Create a single Random instance
 
-    // 참고 예시로 모델을 바이어스 (출력에 포함 X)
-    final examples = '''
-예시(출력에 포함하지 마세요):
-- 한식: 김치찌개, 된장찌개, 비빔밥, 불고기, 갈비탕, 냉면
-- 중식: 짜장면, 짬뽕, 탕수육, 마라탕, 마라샹궈, 꿔바로우, 마파두부, 깐풍기, 볶음밥, 딤섬, 훠궈, 우육면
-- 일식: 스시, 사시미, 라멘, 우동, 돈카츠, 규동, 오코노미야키
-- 양식: 파스타, 피자, 스테이크, 리조또, 라자냐
-- 분식: 떡볶이, 순대, 오뎅, 김밥, 라볶이
-- 아시안: 쌀국수, 팟타이, 똠얌꿍, 반미, 카오팟
-- 패스트푸드: 햄버거, 프라이드치킨, 감자튀김, 핫도그, 나초
-''';
+    // 1단계: 싫어하는 음식과 최근 먹은 음식 제외
+    List<FoodRecommendation> available = foods
+        .where((f) => !recentFoods.contains(f.name))
+        .where((f) => !preferences.dislikedFoods.contains(f.name))
+        .toList();
 
-    return '''
-당신은 음식을 무엇을 먹을지 고민하는 사용자를 위한 음식 추천 시스템입니다.
-$historyText
+    if (available.isEmpty) {
+      // 최근 음식 기록 초기화하고 다시 시도 (싫어하는 음식은 유지)
+      recentFoods.clear();
+      available = foods
+          .where((f) => !preferences.dislikedFoods.contains(f.name))
+          .toList();
 
-요구사항:
-- $categoryRule
-- 한국에서 흔히 접할 수 있는 메뉴명만 사용하세요.
-- 유사/중복 메뉴는 피하고 다양성을 유지하세요.
-- 개수: 5~8개.
-- 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
-- JSON 형식: [{"name":"메뉴명"}, {"name":"메뉴명"}, ...]
+      if (available.isEmpty) {
+        // 모든 음식을 싫어하는 경우 - 전체에서 랜덤 선택
+        available = List.from(foods);
+      }
+    }
 
-$examples
-이제 결과를 JSON 배열로만 출력하세요.
-''';
+    // 2단계: 선호도 기반 가중치 적용
+    if (preferences.preferredFoods.isNotEmpty) {
+      final preferredAvailable = available
+          .where((f) => preferences.preferredFoods.contains(f.name))
+          .toList();
+
+      // 선호하는 음식이 있으면 70% 확률로 선호 음식에서 선택
+      if (preferredAvailable.isNotEmpty && random.nextDouble() < 0.7) {
+        available = preferredAvailable;
+      }
+    }
+
+    // 3단계: 최종 선택
+    final chosen = available[random.nextInt(available.length)];
+
+    // 4단계: 기록 업데이트
+    recentFoods.add(chosen.name);
+    if (recentFoods.length > AppConstants.recentFoodsLimit) {
+      recentFoods.removeAt(0);
+    }
+
+    return chosen;
+  }
+
+  // 사용자 통계 조회
+  static Future<Map<String, dynamic>> getUserStats() async {
+    final history = await UserPreferenceService.getFoodSelectionHistory();
+    final analysis = await UserPreferenceService.analyzeUserPreferences();
+
+    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+    final recentSelections = history
+        .where((s) => s.selectedAt.isAfter(thirtyDaysAgo))
+        .toList();
+
+    // 카테고리별 통계
+    final categoryStats = <String, int>{};
+    for (final selection in recentSelections) {
+      categoryStats[selection.category] =
+          (categoryStats[selection.category] ?? 0) + 1;
+    }
+
+    // 가장 자주 선택한 음식 TOP 5
+    final foodFrequency = <String, int>{};
+    for (final selection in recentSelections) {
+      foodFrequency[selection.foodName] =
+          (foodFrequency[selection.foodName] ?? 0) + 1;
+    }
+
+    final topFoods = foodFrequency.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return {
+      'totalSelections': history.length,
+      'recentSelections': recentSelections.length,
+      'likedPercentage': recentSelections.isEmpty
+          ? 0.0
+          : (recentSelections.where((s) => s.liked).length /
+                recentSelections.length *
+                100),
+      'categoryStats': categoryStats,
+      'topFoods': topFoods
+          .take(5)
+          .map((e) => {'name': e.key, 'count': e.value})
+          .toList(),
+      'preferredCategories': analysis.preferredCategories,
+      'dislikedFoodsCount': analysis.dislikedFoods.length,
+    };
   }
 }

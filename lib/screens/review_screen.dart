@@ -1,10 +1,7 @@
 import 'package:reviewai_flutter/config/app_constants.dart';
 import 'package:reviewai_flutter/config/security_config.dart';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:reviewai_flutter/providers/review_provider.dart';
 import 'package:reviewai_flutter/providers/food_providers.dart';
@@ -12,8 +9,10 @@ import 'package:reviewai_flutter/screens/review_selection_screen.dart';
 import 'package:reviewai_flutter/screens/history_screen.dart';
 import 'package:reviewai_flutter/services/gemini_service.dart';
 import 'package:reviewai_flutter/screens/today_recommendation_screen.dart';
-
-final isPickingImageProvider = StateProvider<bool>((ref) => false);
+import 'package:reviewai_flutter/widgets/review/image_upload_section.dart';
+import 'package:reviewai_flutter/widgets/review/rating_row.dart';
+import 'package:reviewai_flutter/widgets/review/review_style_section.dart';
+import 'package:reviewai_flutter/widgets/dialogs/review_dialogs.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final FoodRecommendation food;
@@ -28,6 +27,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   RewardedAd? _rewardedAd;
   final TextEditingController _foodNameController = TextEditingController();
   bool _isProcessing = false;
+  late Size screenSize;
 
   @override
   void initState() {
@@ -102,7 +102,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    screenSize = MediaQuery.of(context).size;
     final textTheme = Theme.of(context).textTheme;
     final isLoading = ref.watch(reviewLoadingProvider);
 
@@ -114,7 +114,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     return PopScope(
       canPop: !isLoading,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
           resetAllProviders(ref);
         }
@@ -164,15 +164,34 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(height: screenSize.height * 0.02),
-            _buildImageUploadSection(screenSize),
+            const ImageUploadSection(),
             SizedBox(height: screenSize.height * 0.03),
-            _buildFoodNameInput(screenSize),
+            _buildFoodNameInput(),
             SizedBox(height: screenSize.height * 0.02),
-            ..._buildRatingRows(),
+            RatingRow(
+              label: '배달',
+              rating: ref.watch(deliveryRatingProvider),
+              onRate: (r) => ref.read(deliveryRatingProvider.notifier).state = r,
+            ),
+            RatingRow(
+              label: '맛',
+              rating: ref.watch(tasteRatingProvider),
+              onRate: (r) => ref.read(tasteRatingProvider.notifier).state = r,
+            ),
+            RatingRow(
+              label: '양',
+              rating: ref.read(portionRatingProvider),
+              onRate: (r) => ref.read(portionRatingProvider.notifier).state = r,
+            ),
+            RatingRow(
+              label: '가격',
+              rating: ref.watch(priceRatingProvider),
+              onRate: (r) => ref.read(priceRatingProvider.notifier).state = r,
+            ),
             SizedBox(height: screenSize.height * 0.03),
-            _buildReviewStyleSection(textTheme, screenSize.width),
+            const ReviewStyleSection(),
             SizedBox(height: screenSize.height * 0.03),
-            _buildGenerateButton(screenSize, isLoading),
+            _buildGenerateButton(isLoading),
             SizedBox(height: screenSize.height * 0.02),
           ],
         ),
@@ -180,69 +199,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  Widget _buildImageUploadSection(Size screenSize) {
-    final image = ref.watch(imageProvider);
-    final isPicking = ref.watch(isPickingImageProvider);
-
-    return GestureDetector(
-      onTap: isPicking ? null : _pickImage,
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFBDBDBD), width: 2),
-            borderRadius: BorderRadius.circular(15),
-            color: const Color(0xFFF1F1F1),
-          ),
-          child: _buildImageContent(image, screenSize.width, isPicking),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageContent(
-    File? imageFile,
-    double screenWidth,
-    bool isPicking,
-  ) {
-    if (isPicking) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (imageFile == null || !imageFile.existsSync()) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.cloud_upload_outlined,
-              size: screenWidth * 0.1,
-              color: Colors.grey.shade600,
-            ),
-            SizedBox(height: screenWidth * 0.02),
-            Text(
-              '이미지 업로드',
-              style: TextStyle(
-                fontSize: screenWidth * 0.04,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Do Hyeon',
-                color: Colors.black54,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
-        image: DecorationImage(image: FileImage(imageFile), fit: BoxFit.cover),
-      ),
-    );
-  }
-
-  Widget _buildFoodNameInput(Size screenSize) {
+  Widget _buildFoodNameInput() {
     return TextField(
       controller: _foodNameController,
       maxLength: AppConstants.maxFoodNameLength,
@@ -261,124 +218,14 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  List<Widget> _buildRatingRows() {
-    return [
-      _buildRatingRow(
-        '배달',
-        ref.watch(deliveryRatingProvider),
-        (r) => ref.read(deliveryRatingProvider.notifier).state = r,
-      ),
-      _buildRatingRow(
-        '맛',
-        ref.watch(tasteRatingProvider),
-        (r) => ref.read(tasteRatingProvider.notifier).state = r,
-      ),
-      _buildRatingRow(
-        '양',
-        ref.watch(portionRatingProvider),
-        (r) => ref.read(portionRatingProvider.notifier).state = r,
-      ),
-      _buildRatingRow(
-        '가격',
-        ref.watch(priceRatingProvider),
-        (r) => ref.read(priceRatingProvider.notifier).state = r,
-      ),
-    ];
-  }
-
-  Widget _buildRatingRow(String label, double rating, Function(double) onRate) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          SizedBox(
-            width: screenWidth * 0.12,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Do Hyeon',
-                fontSize: screenWidth * 0.04,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: List.generate(5, (index) {
-                return GestureDetector(
-                  onTap: () => onRate((index + 1).toDouble()),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.01,
-                    ),
-                    child: Icon(
-                      Icons.star,
-                      color: index < rating
-                          ? Colors.amber
-                          : Colors.grey.shade300,
-                      size: screenWidth * 0.07,
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReviewStyleSection(TextTheme textTheme, double screenWidth) {
-    final reviewStyles = ref.watch(reviewStylesProvider);
-    final selectedStyle = ref.watch(selectedReviewStyleProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '리뷰 스타일',
-          style: textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Do Hyeon',
-            fontSize: screenWidth * 0.045,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: reviewStyles.map((style) {
-            return ChoiceChip(
-              label: Text(
-                style,
-                style: TextStyle(
-                  fontFamily: 'Do Hyeon',
-                  fontSize: screenWidth * 0.035,
-                ),
-              ),
-              selected: selectedStyle == style,
-              onSelected: (isSelected) {
-                if (isSelected) {
-                  ref.read(selectedReviewStyleProvider.notifier).state = style;
-                }
-              },
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGenerateButton(Size screenSize, bool isLoading) {
+  Widget _buildGenerateButton(bool isLoading) {
     return SizedBox(
       width: double.infinity,
-      height: screenSize.height * 0.065 < 50 ? 50 : screenSize.height * 0.065,
+      height: screenSize.height * 0.065 < screenSize.height * 0.0625 ? screenSize.height * 0.0625 : screenSize.height * 0.065,
       child: ElevatedButton(
         onPressed: (isLoading || _isProcessing) ? null : _handleGenerateReview,
         style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.015),
         ),
         child: Text(
           '리뷰 생성하기',
@@ -400,26 +247,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ),
       ),
     );
-  }
-
-  void _pickImage() async {
-    if (ref.read(isPickingImageProvider)) return;
-
-    ref.read(isPickingImageProvider.notifier).state = true;
-    try {
-      final picker = ImagePicker();
-      final picked = await picker.pickImage(source: ImageSource.gallery);
-
-      if (picked != null) {
-        ref.read(imageProvider.notifier).state = File(picked.path);
-      }
-    } catch (e) {
-      _showErrorSnackBar('이미지 선택에 실패했습니다.');
-    } finally {
-      if (mounted) {
-        ref.read(isPickingImageProvider.notifier).state = false;
-      }
-    }
   }
 
   void _handleGenerateReview() async {
@@ -476,39 +303,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         taste == 0 ||
         portion == 0 ||
         price == 0) {
-      _showValidationDialog();
+      showValidationDialog(context, screenSize);
       return false;
     }
     return true;
-  }
-
-  void _showValidationDialog() {
-    showCupertinoDialog(
-      context: context,
-      builder: (_) => CupertinoAlertDialog(
-        title: const Text(
-          '입력 오류',
-          style: TextStyle(
-            fontFamily: 'Do Hyeon',
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: const Padding(
-          padding: EdgeInsets.only(top: 8.0),
-          child: Text(
-            '모든 입력을 완료해주세요.',
-            style: TextStyle(fontFamily: 'Do Hyeon', fontSize: 16),
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
-          ),
-        ],
-      ),
-    );
   }
 
   void _generateReviews() async {
@@ -554,7 +352,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     if (errorString.contains('부적절한 이미지') ||
         errorString.contains('이미지가 음식 리뷰에 적합하지 않습니다')) {
-      _showImageErrorDialog(errorMessage);
+      showImageErrorDialog(context, errorMessage, screenSize);
     } else {
       _showErrorSnackBar(errorMessage);
     }
@@ -568,35 +366,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     } else {
       return '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
     }
-  }
-
-  void _showImageErrorDialog(String message) {
-    showCupertinoDialog(
-      context: context,
-      builder: (_) => CupertinoAlertDialog(
-        title: const Text(
-          '이미지 오류',
-          style: TextStyle(
-            fontFamily: 'Do Hyeon',
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Text(
-            message,
-            style: const TextStyle(fontFamily: 'Do Hyeon', fontSize: 16),
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
-          ),
-        ],
-      ),
-    );
   }
 
   // 네비게이션 메서드들

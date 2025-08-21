@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:reviewai_flutter/providers/review_provider.dart';
 import 'package:reviewai_flutter/providers/food_providers.dart'; // Added import
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:reviewai_flutter/widgets/review_selection/edit_review_dialog.dart';
+import 'package:reviewai_flutter/widgets/review_selection/review_card.dart';
 
 class ReviewSelectionScreen extends ConsumerStatefulWidget {
   const ReviewSelectionScreen({super.key});
@@ -94,7 +96,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                     final review = reviews[index];
                     final isSelected = selectedReviewIndex == index;
 
-                    return GestureDetector(
+                    return ReviewCard(
+                      review: review,
+                      isSelected: isSelected,
                       onTap: () {
                         setState(() {
                           if (isSelected) {
@@ -104,67 +108,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                           }
                         });
                       },
-                      child: Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          side: BorderSide(
-                            color: isSelected
-                                ? Colors.blue
-                                : Colors.grey.shade300,
-                            width: isSelected ? 2 : 1,
-                          ),
-                          borderRadius: BorderRadius.circular(
-                            screenWidth * 0.025,
-                          ),
-                        ),
-                        margin: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.02,
-                          vertical: screenHeight * 0.02,
-                        ),
-                        color: isSelected
-                            ? Colors.blue.shade50
-                            : const Color(0xFFF1F1F1),
-                        child: Stack(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.all(screenWidth * 0.06),
-                              child: Center(
-                                child: SingleChildScrollView(
-                                  child: Text(
-                                    review,
-                                    style: textTheme.bodyLarge?.copyWith(
-                                      height: 1.5,
-                                      fontFamily: 'Do Hyeon',
-                                      fontSize: screenWidth * 0.045,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            if (isSelected)
-                              Positioned(
-                                top: screenWidth * 0.03,
-                                right: screenWidth * 0.03,
-                                child: Container(
-                                  width: screenWidth * 0.06,
-                                  height: screenWidth * 0.06,
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue,
-                                    borderRadius: BorderRadius.circular(
-                                      screenWidth * 0.03,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
+                      onEdit: () {
+                        _showEditReviewDialog(context, index, review);
+                      },
                     );
                   },
                 ),
@@ -223,6 +169,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                             ClipboardData(text: selectedReviewText),
                           );
 
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -234,6 +181,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                           );
 
                           resetAllProviders(ref);
+                          if (!context.mounted) return;
                           Navigator.pop(context);
                         },
                   style: ElevatedButton.styleFrom(
@@ -258,6 +206,15 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showEditReviewDialog(BuildContext context, int index, String currentReview) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return EditReviewDialog(index: index, currentReview: currentReview);
+      },
     );
   }
 }

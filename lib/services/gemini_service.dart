@@ -139,10 +139,11 @@ ${foodImage != null ? '''
 
         String mimeType = 'image/jpeg';
         final extension = imageFile.path.split('.').last.toLowerCase();
-        if (extension == 'png')
+        if (extension == 'png') {
           mimeType = 'image/png';
-        else if (extension == 'webp')
+        } else if (extension == 'webp') {
           mimeType = 'image/webp';
+        }
 
         parts.add({
           'inline_data': {'mime_type': mimeType, 'data': base64Image},

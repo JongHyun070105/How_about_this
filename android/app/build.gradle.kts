@@ -1,6 +1,3 @@
-import java.util.Properties
-import java.io.FileInputStream
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -13,22 +10,31 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
-    val keyPropertiesFile = rootProject.file("key.properties")
-    val keyProperties = Properties()
-    if (keyPropertiesFile.exists()) {
-        keyProperties.load(FileInputStream(keyPropertiesFile))
+    // Properties 파일을 Gradle 방식으로 로드
+    val keystorePropertiesFile = rootProject.file("key.properties")
+    val keystoreProperties = mutableMapOf<String, String>()
+    
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.readLines().forEach { line ->
+            if (line.contains("=") && !line.startsWith("#")) {
+                val (key, value) = line.split("=", limit = 2)
+                keystoreProperties[key.trim()] = value.trim()
+            }
+        }
     }
 
     signingConfigs {
         create("release") {
-            keyAlias = keyProperties.getProperty("keyAlias")
-            keyPassword = keyProperties.getProperty("keyPassword")
-            storeFile = if (keyProperties.getProperty("storeFile") != null) rootProject.file(keyProperties.getProperty("storeFile")) else null
-            storePassword = keyProperties.getProperty("storePassword")
+            keyAlias = keystoreProperties["keyAlias"]
+            keyPassword = keystoreProperties["keyPassword"]
+            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"]
         }
     }
 
     compileOptions {
+        // Core library desugaring 활성화
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -42,10 +48,13 @@ android {
         applicationId = "com.example.reviewai_flutter"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // MultiDex 지원 (필요시)
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -57,4 +66,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Core library desugaring dependency 추가
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
