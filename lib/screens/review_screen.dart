@@ -29,6 +29,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   final TextEditingController _foodNameController = TextEditingController();
   bool _isProcessing = false;
   late Size screenSize;
+  int _adLoadAttempts = 0; // 광고 로드 시도 횟수
+  static const int _maxAdLoadAttempts = 3; // 최대 재시도 횟수
+  static const Duration _adRetryDelay = Duration(seconds: 3); // 재시도 간 지연 시간
 
   @override
   void initState() {
@@ -50,7 +53,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   void _loadAd() {
-    if (_rewardedAd != null) return;
+    if (_rewardedAd != null) {
+      _adLoadAttempts = 0; // 광고 로드 성공 시 시도 횟수 초기화
+      return;
+    }
 
     RewardedAd.load(
       adUnitId: _getAdUnitId(),
@@ -59,10 +65,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         onAdLoaded: (ad) {
           _rewardedAd = ad;
           _configureAdCallbacks(ad);
+          _adLoadAttempts = 0; // 광고 로드 성공 시 시도 횟수 초기화
         },
         onAdFailedToLoad: (error) {
           debugPrint('Rewarded ad failed to load: $error');
           _rewardedAd = null;
+          _adLoadAttempts++; // 광고 로드 실패 시 시도 횟수 증가
           _showErrorSnackBar(
             '광고 로드 실패: ${error.message}',
           ); // Display error to user
@@ -305,8 +313,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         );
         _rewardedAd = null;
       } else {
-        _showErrorSnackBar('광고가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); // Inform user
-        _loadAd(); // Try to load a new ad
+        // 광고 로드 실패 시 재시도 로직
+        if (_adLoadAttempts < _maxAdLoadAttempts) {
+          _showErrorSnackBar(
+              '광고가 준비되지 않았습니다. 잠시 후 다시 시도합니다. (${_adLoadAttempts + 1}/$_maxAdLoadAttempts)');
+          await Future.delayed(_adRetryDelay); // 일정 시간 대기
+          _loadAd(); // 광고 재로드 시도
+        } else {
+          // 최대 재시도 횟수 초과 시 리뷰 생성 진행
+          _showErrorSnackBar('광고 로드에 실패하여 리뷰 생성을 진행합니다.');
+          _adLoadAttempts = 0; // 시도 횟수 초기화
+          _generateReviews();
+        }
         if (mounted) {
           setState(() {
             _isProcessing = false; // Reset processing state
