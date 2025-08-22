@@ -65,17 +65,19 @@ Future<void> _configureSystemUI() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 }
 
+import 'package:eat_this_app/screens/loading_screen.dart'; // Add this import
+
 class ReviewAIApp extends StatelessWidget {
   const ReviewAIApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Review AI',
+      title: '이거 먹어봐',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       locale: const Locale('ko', 'KR'),
-      home: const TodayRecommendationScreen(),
+      home: const LoadingScreen(),
       navigatorKey: navigatorKey,
       builder: (context, child) {
         ErrorWidget.builder = (errorDetails) {
