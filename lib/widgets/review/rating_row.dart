@@ -42,7 +42,8 @@ class RatingRow extends StatelessWidget {
                   onTap: onRate != null ? () => onRate!((index + 1).toDouble()) : null,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.01,
+                      horizontal: screenWidth * 0.02,
+                      vertical: screenWidth * 0.01,
                     ),
                     child: Icon(
                       Icons.star,

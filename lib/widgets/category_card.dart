@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:reviewai_flutter/providers/food_providers.dart';
@@ -26,9 +25,7 @@ class CategoryCard extends StatelessWidget {
             color: category.color,
             elevation: 2,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                screenWidth * 0.0375,
-              ),
+              borderRadius: BorderRadius.circular(screenWidth * 0.0375),
               side: BorderSide(
                 color: Colors.grey.shade300,
                 width: screenWidth * 0.0025,
@@ -44,16 +41,12 @@ class CategoryCard extends StatelessWidget {
                     fit: BoxFit.contain,
                     width: screenWidth * 0.22,
                     height: screenWidth * 0.22,
-                    placeholderBuilder: (context) =>
-                        Container(
-                          color: Colors.grey.shade200,
-                          child: Center(
-                            child: Icon(
-                              Icons.image,
-                              size: screenWidth * 0.17,
-                            ),
-                          ),
-                        ),
+                    placeholderBuilder: (context) => Container(
+                      color: Colors.grey.shade200,
+                      child: Center(
+                        child: Icon(Icons.image, size: screenWidth * 0.17),
+                      ),
+                    ),
                   ),
                 ),
                 Padding(
@@ -61,6 +54,7 @@ class CategoryCard extends StatelessWidget {
                     top: screenHeight * 0.002,
                     left: screenWidth * 0.02,
                     right: screenWidth * 0.02,
+                    bottom: screenHeight * 0.02,
                   ),
                   child: Text(
                     category.name,

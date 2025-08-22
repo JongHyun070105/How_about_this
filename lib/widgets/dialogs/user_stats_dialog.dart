@@ -1,8 +1,5 @@
-
-
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-
 
 // CustomPainter for leader lines in the pie chart
 class LeaderLinePainter extends CustomPainter {
@@ -104,221 +101,235 @@ class _AnimatedStatsDialogState extends State<AnimatedStatsDialog> {
             ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
           ),
         ],
       ),
-      content: SizedBox(
-        width: screenWidth * 0.85,
-        height: screenHeight * 0.36,
-        child: Stack(
-          children: [
-            PageView(
-              controller: pageController,
-              physics: const BouncingScrollPhysics(),
-              onPageChanged: (int idx) {
-                setState(() {
-                  _currentPage = idx;
-                });
-              },
-              children: [
-                // Page 1: 자주 먹는 음식 TOP 5
-                Stack(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(bottom: screenHeight * 0.07),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            buildStatItem(
-                              '총 선택 횟수',
-                              '${stats['totalSelections']}회',
-                            ),
-                            buildStatItem(
-                              '최근 30일 선택',
-                              '${stats['recentSelections']}회',
-                            ),
-                            buildStatItem(
-                              '만족도',
-                              '${stats['likedPercentage'].toStringAsFixed(1)}%',
-                            ),
-                            const SizedBox(height: 14),
-                            const Text(
-                              '🏆 자주 먹는 음식 TOP 5',
-                              style: TextStyle(
-                                fontFamily: 'Do Hyeon',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 19,
+      content: SingleChildScrollView(
+        // Added SingleChildScrollView here
+        child: SizedBox(
+          width: screenWidth * 0.85,
+          height: screenHeight * 0.36,
+          child: Stack(
+            children: [
+              PageView(
+                controller: pageController,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (int idx) {
+                  setState(() {
+                    _currentPage = idx;
+                  });
+                },
+                children: [
+                  // Page 1: 자주 먹는 음식 TOP 5
+                  Stack(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(bottom: screenHeight * 0.07),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              buildStatItem(
+                                '총 선택 횟수',
+                                '${stats['totalSelections']}회',
                               ),
-                            ),
-                            const SizedBox(height: 7),
-                            ...topFoodsList.map((food) {
-                              int count = (food['count'] as num).toInt();
-                              int percent = (totalTop5Count > 0)
-                                  ? ((count / totalTop5Count) * 100).round()
-                                  : 0;
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2,
+                              buildStatItem(
+                                '최근 30일 선택',
+                                '${stats['recentSelections']}회',
+                              ),
+                              buildStatItem(
+                                '만족도',
+                                '${stats['likedPercentage'].toStringAsFixed(1)}%',
+                              ),
+                              const SizedBox(height: 14),
+                              const Text(
+                                '🏆 자주 먹는 음식 TOP 5',
+                                style: TextStyle(
+                                  fontFamily: 'Do Hyeon',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 19,
                                 ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        '• ${food['name']} ($count회)  $percent%',
-                                        style: const TextStyle(
-                                          fontFamily: 'Do Hyeon',
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
+                              ),
+                              const SizedBox(height: 7),
+                              ...topFoodsList.map((food) {
+                                int count = (food['count'] as num).toInt();
+                                int percent = (totalTop5Count > 0)
+                                    ? ((count / totalTop5Count) * 100).round()
+                                    : 0;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '• ${food['name']} ($count회)  $percent%',
+                                          style: const TextStyle(
+                                            fontFamily: 'Do Hyeon',
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                            const SizedBox(height: 8),
-                          ],
+                                    ],
+                                  ),
+                                );
+                              }),
+                              const SizedBox(height: 8),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    // Arrow indicator at the right, vertically centered to page content
-                    Positioned(
-                      top: 0,
-                      bottom: 0,
-                      right: 2,
-                      child: _currentPage < 1 // Only show if not on the last page
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: screenWidth * 0.045,
-                                color: Colors.grey.shade400,
-                              ),
-                              onPressed: () {
-                                pageController.nextPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOut,
-                                );
-                              },
-                            )
-                          : const SizedBox.shrink(), // Hide if on the last page
-                    ),
-                  ],
-                ),
-                // Page 2: PieChart + Legend (with animation)
-                Stack(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: 10),
-                      child: SingleChildScrollView(
-                        physics: const NeverScrollableScrollPhysics(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 2),
-                            const Text(
-                              '카테고리별 선호도',
-                              style: TextStyle(
-                                fontFamily: 'Do Hyeon',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            const SizedBox(height: 14),
-                            SizedBox(
-                              height: 148,
-                              child:
-                                  (_currentPage == 1 && categoryList.isNotEmpty)
-                                  ? AnimatedPieChart(
-                                      categoryList: categoryList,
-                                      categoryColorMap: categoryColorMap,
-                                    )
-                                  : const SizedBox(),
-                            ),
-                            const SizedBox(height: 22),
-                            if (categoryList.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 8,
+                      // Arrow indicator at the right, vertically centered to page content
+                      Positioned(
+                        top: 0,
+                        bottom: 0,
+                        right: 2,
+                        child:
+                            _currentPage <
+                                1 // Only show if not on the last page
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: screenWidth * 0.045,
+                                  color: Colors.grey.shade400,
                                 ),
-                                child: Wrap(
-                                  alignment: WrapAlignment.center,
-                                  spacing: 14,
-                                  runSpacing: 6,
-                                  children: List.generate(categoryList.length, (
-                                    int i,
-                                  ) {
-                                    final cat = categoryList[i];
-                                    final Color legendColor =
-                                        categoryColorMap[cat['name']] ??
-                                        Colors.grey.shade400;
-                                    return Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 13,
-                                          height: 13,
-                                          decoration: BoxDecoration(
-                                            color: legendColor,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 5),
-                                        SizedBox(
-                                          width: 70,
-                                          child: Text(
-                                            cat['name'],
-                                            style: const TextStyle(
-                                              fontFamily: 'Do Hyeon',
-                                              fontSize: 13,
-                                              color: Colors.black,
+                                onPressed: () {
+                                  pageController.nextPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOut,
+                                  );
+                                },
+                                splashColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                              )
+                            : const SizedBox.shrink(), // Hide if on the last page
+                      ),
+                    ],
+                  ),
+                  // Page 2: PieChart + Legend (with animation)
+                  Stack(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: SingleChildScrollView(
+                          // Removed physics: const NeverScrollableScrollPhysics(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 2),
+                              const Text(
+                                '카테고리별 선호도',
+                                style: TextStyle(
+                                  fontFamily: 'Do Hyeon',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              const SizedBox(height: 14),
+                              SizedBox(
+                                height: 148,
+                                child:
+                                    (_currentPage == 1 &&
+                                        categoryList.isNotEmpty)
+                                    ? AnimatedPieChart(
+                                        categoryList: categoryList,
+                                        categoryColorMap: categoryColorMap,
+                                      )
+                                    : const SizedBox(),
+                              ),
+                              const SizedBox(height: 22),
+                              if (categoryList.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 8,
+                                  ),
+                                  child: Wrap(
+                                    alignment: WrapAlignment.center,
+                                    spacing: 14,
+                                    runSpacing: 6,
+                                    children: List.generate(
+                                      categoryList.length,
+                                      (int i) {
+                                        final cat = categoryList[i];
+                                        final Color legendColor =
+                                            categoryColorMap[cat['name']] ??
+                                            Colors.grey.shade400;
+                                        return Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 13,
+                                              height: 13,
+                                              decoration: BoxDecoration(
+                                                color: legendColor,
+                                                shape: BoxShape.circle,
+                                              ),
                                             ),
-                                            overflow: TextOverflow.ellipsis,
-                                            softWrap: false,
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  }),
+                                            const SizedBox(width: 5),
+                                            SizedBox(
+                                              width: 70,
+                                              child: Text(
+                                                cat['name'],
+                                                style: const TextStyle(
+                                                  fontFamily: 'Do Hyeon',
+                                                  fontSize: 13,
+                                                  color: Colors.black,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                                softWrap: false,
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            const SizedBox(height: 8),
-                          ],
+                              const SizedBox(height: 8),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    // Arrow indicator at the LEFT, vertically centered to page content (swipe back)
-                    Positioned(
-                      top: 0,
-                      bottom: 0,
-                      left: 2,
-                      child: _currentPage > 0 // Only show if not on the first page
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: screenWidth * 0.045,
-                                color: Colors.grey.shade400,
-                              ),
-                              onPressed: () {
-                                pageController.previousPage(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOut,
-                                );
-                              },
-                            )
-                          : const SizedBox.shrink(), // Hide if on the first page
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                      // Arrow indicator at the LEFT, vertically centered to page content (swipe back)
+                      Positioned(
+                        top: 0,
+                        bottom: 0,
+                        left: 2,
+                        child:
+                            _currentPage >
+                                0 // Only show if not on the first page
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  size: screenWidth * 0.045,
+                                  color: Colors.grey.shade400,
+                                ),
+                                onPressed: () {
+                                  pageController.previousPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOut,
+                                  );
+                                },
+                                splashColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                              )
+                            : const SizedBox.shrink(), // Hide if on the first page
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-      actions: null,
     );
   }
 }

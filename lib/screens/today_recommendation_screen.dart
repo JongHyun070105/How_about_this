@@ -111,12 +111,16 @@ class _TodayRecommendationScreenState
                 icon: Icon(Icons.analytics, size: screenWidth * 0.06),
                 onPressed: () => _showUserStatsDialog(context),
                 tooltip: '내 식습관 통계',
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
               ),
               IconButton(
                 icon: Icon(Icons.rate_review, size: screenWidth * 0.06),
                 onPressed: () =>
                     _navigateToReviewScreen(context, _createDefaultFood()),
                 tooltip: '리뷰 작성',
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
               ),
             ],
           ),

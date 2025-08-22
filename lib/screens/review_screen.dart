@@ -13,6 +13,7 @@ import 'package:reviewai_flutter/widgets/review/image_upload_section.dart';
 import 'package:reviewai_flutter/widgets/review/rating_row.dart';
 import 'package:reviewai_flutter/widgets/review/review_style_section.dart';
 import 'package:reviewai_flutter/widgets/dialogs/review_dialogs.dart';
+import 'package:reviewai_flutter/main.dart'; // Add this import
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final FoodRecommendation food;
@@ -62,6 +63,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         onAdFailedToLoad: (error) {
           debugPrint('Rewarded ad failed to load: $error');
           _rewardedAd = null;
+          _showErrorSnackBar(
+            '광고 로드 실패: ${error.message}',
+          ); // Display error to user
         },
       ),
     );
@@ -88,7 +92,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ad.dispose();
         _rewardedAd = null;
         _loadAd();
-        _generateReviews();
+        _showErrorSnackBar('광고 로드에 실패했습니다. 잠시 후 다시 시도해주세요.'); // Inform user
       },
     );
   }
@@ -145,12 +149,16 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () => _navigateToRecommendationScreen(),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
       ),
       actions: [
         IconButton(
           icon: const Icon(Icons.history),
           onPressed: () => _navigateToHistoryScreen(),
           tooltip: '히스토리',
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
         ),
       ],
     );
@@ -171,22 +179,34 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             RatingRow(
               label: '배달',
               rating: ref.watch(deliveryRatingProvider),
-              onRate: (r) => ref.read(deliveryRatingProvider.notifier).state = r,
+              onRate: (r) {
+                debugPrint('배달 rating updated to: $r');
+                ref.read(deliveryRatingProvider.notifier).state = r;
+              },
             ),
             RatingRow(
               label: '맛',
               rating: ref.watch(tasteRatingProvider),
-              onRate: (r) => ref.read(tasteRatingProvider.notifier).state = r,
+              onRate: (r) {
+                debugPrint('맛 rating updated to: $r');
+                ref.read(tasteRatingProvider.notifier).state = r;
+              },
             ),
             RatingRow(
               label: '양',
-              rating: ref.read(portionRatingProvider),
-              onRate: (r) => ref.read(portionRatingProvider.notifier).state = r,
+              rating: ref.watch(portionRatingProvider),
+              onRate: (r) {
+                debugPrint('양 rating updated to: $r');
+                ref.read(portionRatingProvider.notifier).state = r;
+              },
             ),
             RatingRow(
               label: '가격',
               rating: ref.watch(priceRatingProvider),
-              onRate: (r) => ref.read(priceRatingProvider.notifier).state = r,
+              onRate: (r) {
+                debugPrint('가격 rating updated to: $r');
+                ref.read(priceRatingProvider.notifier).state = r;
+              },
             ),
             SizedBox(height: screenSize.height * 0.03),
             const ReviewStyleSection(),
@@ -219,9 +239,14 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   Widget _buildGenerateButton(bool isLoading) {
+    final double buttonHeight =
+        screenSize.height * 0.065 < screenSize.height * 0.0625
+        ? screenSize.height * 0.0625
+        : screenSize.height * 0.065;
+
     return SizedBox(
       width: double.infinity,
-      height: screenSize.height * 0.065 < screenSize.height * 0.0625 ? screenSize.height * 0.0625 : screenSize.height * 0.065,
+      height: buttonHeight,
       child: ElevatedButton(
         onPressed: (isLoading || _isProcessing) ? null : _handleGenerateReview,
         style: ElevatedButton.styleFrom(
@@ -262,7 +287,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       // 1. Image Validation (if image exists)
       final imageFile = ref.read(imageProvider);
       if (imageFile != null) {
-        await GeminiService.validateImage(imageFile);
+        await ref.read(geminiServiceProvider).validateImage(imageFile);
       }
 
       // 2. Show Ad (if all validations passed)
@@ -277,7 +302,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         );
         _rewardedAd = null;
       } else {
-        _generateReviews();
+        _showErrorSnackBar('광고가 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'); // Inform user
+        _loadAd(); // Try to load a new ad
+        if (mounted) {
+          setState(() {
+            _isProcessing = false; // Reset processing state
+          });
+        }
       }
     } catch (e) {
       // 3. Handle all errors (from validation or image check)
@@ -313,15 +344,17 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     ref.read(reviewLoadingProvider.notifier).state = true;
 
     try {
-      final reviews = await GeminiService.generateReviews(
-        foodName: ref.read(foodNameProvider),
-        deliveryRating: ref.read(deliveryRatingProvider),
-        tasteRating: ref.read(tasteRatingProvider),
-        portionRating: ref.read(portionRatingProvider),
-        priceRating: ref.read(priceRatingProvider),
-        reviewStyle: ref.read(selectedReviewStyleProvider),
-        foodImage: ref.read(imageProvider),
-      );
+      final reviews = await ref
+          .read(geminiServiceProvider)
+          .generateReviews(
+            foodName: ref.read(foodNameProvider),
+            deliveryRating: ref.read(deliveryRatingProvider),
+            tasteRating: ref.read(tasteRatingProvider),
+            portionRating: ref.read(portionRatingProvider),
+            priceRating: ref.read(priceRatingProvider),
+            reviewStyle: ref.read(selectedReviewStyleProvider),
+            foodImage: ref.read(imageProvider),
+          );
 
       ref.read(generatedReviewsProvider.notifier).state = reviews;
 

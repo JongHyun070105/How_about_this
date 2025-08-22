@@ -1,10 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart'; // For Uint8List
+import 'package:reviewai_flutter/services/gemini_api_client.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Keep for now, might be needed for initialization elsewhere
 
 class GeminiService {
-  static Future<List<String>> generateReviews({
+  final GeminiApiClient _apiClient;
+
+  GeminiService(this._apiClient);
+
+  Future<List<String>> generateReviews({
     required String foodName,
     required double deliveryRating,
     required double tasteRating,
@@ -13,14 +18,10 @@ class GeminiService {
     required String reviewStyle,
     File? foodImage,
   }) async {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    if (apiKey == null) {
-      throw Exception('API Key not found in .env file');
+    String foodNameDescription = foodName;
+    if (foodName.contains('아시아 음식')) {
+      foodNameDescription = '$foodName (예: 똠양꿍, 팟타이, 베트남 쌀국수 등 동남아시아 요리 느낌으로)';
     }
-
-    final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=$apiKey',
-    );
 
     final prompt =
         '''
@@ -29,9 +30,9 @@ class GeminiService {
 아래 정보와 이미지를 바탕으로 음식 리뷰 3개를 작성하세요:
 
 **음식 정보:**
-- 사용자 입력 음식명: $foodName
+- 사용자 입력 음식명: $foodNameDescription
 - 배달: ${_getRatingText(deliveryRating)}
-- 맛: ${_getRatingText(tasteRating)} 
+- 맛: ${_getRatingText(tasteRating)}
 - 양: ${_getRatingText(portionRating)}
 - 가격: ${_getRatingText(priceRating)}
 - 리뷰 스타일: $reviewStyle
@@ -48,11 +49,15 @@ ${foodImage != null ? '''
 
 **출력 형식:**
 - [리뷰1]
-- [리뷰2] 
+- [리뷰2]
 - [리뷰3]''';
 
     try {
-      final parts = await _buildParts(prompt, foodImage);
+      Uint8List? imageBytes;
+      if (foodImage != null) {
+        imageBytes = await foodImage.readAsBytes();
+      }
+      final parts = await _buildParts(prompt, imageBytes);
 
       final requestBody = {
         'contents': [
@@ -66,51 +71,44 @@ ${foodImage != null ? '''
         },
       };
 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
+      final data = await _apiClient.postContent(
+        'gemini-2.5-flash-lite',
+        requestBody,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-
-        if (data['candidates'] == null || data['candidates'].isEmpty) {
-          throw Exception('API 응답에 후보가 없습니다');
-        }
-
-        final content = 
-            data['candidates'][0]['content']['parts'][0]['text'] as String;
-        final cleanContent = content.trim();
-
-        final reviews = cleanContent
-            .split('\n')
-            .where((line) => line.trim().startsWith('- '))
-            .map((line) {
-              final reviewText = line.substring(line.indexOf('- ') + 2).trim();
-              return reviewText.isEmpty ? null : reviewText;
-            })
-            .where((review) => review != null)
-            .cast<String>()
-            .toList();
-
-        if (reviews.isEmpty) {
-          throw Exception('유효한 리뷰가 생성되지 않았습니다');
-        }
-
-        return reviews.length >= 3 ? reviews.take(3).toList() : reviews;
-      } else {
-        throw Exception('API 호출 실패 (${response.statusCode})');
+      if (data['candidates'] == null || data['candidates'].isEmpty) {
+        throw Exception('API 응답에 후보가 없습니다');
       }
-    } on FormatException {
-      throw Exception('응답 파싱 실패');
+
+      final content =
+          data['candidates'][0]['content']['parts'][0]['text'] as String;
+      final cleanContent = content.trim();
+
+      final reviews = cleanContent
+          .split('\n')
+          .where((line) => line.trim().startsWith('- '))
+          .map((line) {
+            final reviewText = line.substring(line.indexOf('- ') + 2).trim();
+            return reviewText.isEmpty ? null : reviewText;
+          })
+          .where((review) => review != null)
+          .cast<String>()
+          .toList();
+
+      if (reviews.isEmpty) {
+        throw Exception('유효한 리뷰가 생성되지 않았습니다');
+      }
+
+      return reviews.length >= 3 ? reviews.take(3).toList() : reviews;
+    } on FormatException catch (e) {
+      throw Exception('응답 파싱 실패: $e');
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('알 수 없는 오류: $e');
     }
   }
 
-  static String _getRatingText(double rating) {
+  String _getRatingText(double rating) {
     if (rating >= 4.5) return '매우좋음';
     if (rating >= 4.0) return '좋음';
     if (rating >= 3.5) return '보통';
@@ -119,30 +117,49 @@ ${foodImage != null ? '''
     return '나쁨';
   }
 
-  static Future<List<Map<String, dynamic>>> _buildParts(
+  Future<List<Map<String, dynamic>>> _buildParts(
     String prompt,
-    File? imageFile,
+    Uint8List? imageBytes,
   ) async {
     List<Map<String, dynamic>> parts = [
       {'text': prompt},
     ];
 
-    if (imageFile != null) {
+    if (imageBytes != null) {
       try {
-        final imageBytes = await imageFile.readAsBytes();
-
         if (imageBytes.length > 4 * 1024 * 1024) {
           throw Exception('이미지 크기가 너무 큽니다 (최대 4MB)');
         }
 
         final base64Image = base64Encode(imageBytes);
 
-        String mimeType = 'image/jpeg';
-        final extension = imageFile.path.split('.').last.toLowerCase();
-        if (extension == 'png') {
-          mimeType = 'image/png';
-        } else if (extension == 'webp') {
-          mimeType = 'image/webp';
+        // Determine mime type based on the first few bytes (magic numbers)
+        // This is a more robust way than relying on file extension.
+        String mimeType = 'application/octet-stream'; // Default to generic
+        if (imageBytes.length >= 4) {
+          final header = imageBytes.sublist(0, 4);
+          if (header[0] == 0x89 &&
+              header[1] == 0x50 &&
+              header[2] == 0x4E &&
+              header[3] == 0x47) {
+            mimeType = 'image/png';
+          } else if (header[0] == 0xFF &&
+              header[1] == 0xD8 &&
+              header[2] == 0xFF) {
+            mimeType = 'image/jpeg';
+          } else if (header[0] == 0x52 &&
+              header[1] == 0x49 &&
+              header[2] == 0x46 &&
+              header[3] == 0x46) {
+            // RIFF header, check for WEBP
+            if (imageBytes.length >= 12 &&
+                imageBytes[8] == 0x57 &&
+                imageBytes[9] == 0x45 &&
+                imageBytes[10] == 0x42 &&
+                imageBytes[11] == 0x50) {
+              mimeType = 'image/webp';
+            }
+          }
         }
 
         parts.add({
@@ -156,57 +173,41 @@ ${foodImage != null ? '''
     return parts;
   }
 
-  static Future<bool> validateImage(File foodImage) async {
-    final apiKey = dotenv.env['GEMINI_API_KEY'];
-    if (apiKey == null) {
-      throw Exception('API Key not found in .env file');
-    }
-
-    final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=$apiKey',
-    );
-
+  Future<bool> validateImage(File foodImage) async {
     const prompt =
         'Analyze the attached image. Is this a picture of prepared food suitable for a food review? Answer with only "YES" or "NO". Do not consider raw ingredients like a single raw onion or a piece of raw meat as prepared food.';
 
     try {
-      final parts = await _buildParts(prompt, foodImage);
+      Uint8List? imageBytes = await foodImage.readAsBytes();
+      final parts = await _buildParts(prompt, imageBytes);
 
       final requestBody = {
         'contents': [
           {'parts': parts},
         ],
-        'generationConfig': {
-          'temperature': 0.0,
-          'maxOutputTokens': 5,
-        },
+        'generationConfig': {'temperature': 0.0, 'maxOutputTokens': 5},
       };
 
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
+      final data = await _apiClient.postContent(
+        'gemini-2.5-flash-lite',
+        requestBody,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-
-        if (data['candidates'] == null || data['candidates'].isEmpty) {
-          throw Exception('부적절한 이미지: 모델이 이미지를 분석할 수 없습니다.');
-        }
-
-        final content = 
-            data['candidates'][0]['content']['parts'][0]['text'] as String;
-        final cleanContent = content.trim().toUpperCase();
-
-        if (cleanContent.contains('YES')) {
-          return true;
-        } else {
-          throw Exception('부적절한 이미지: 이 사진은 음식 사진이 아니거나 리뷰에 적합하지 않습니다.');
-        }
-      } else {
-        throw Exception('이미지 검증 API 호출 실패 (${response.statusCode})');
+      if (data['candidates'] == null || data['candidates'].isEmpty) {
+        throw Exception('부적절한 이미지: 모델이 이미지를 분석할 수 없습니다.');
       }
+
+      final content =
+          data['candidates'][0]['content']['parts'][0]['text'] as String;
+      final cleanContent = content.trim().toUpperCase();
+
+      if (cleanContent.contains('YES')) {
+        return true;
+      } else {
+        throw Exception('부적절한 이미지: 이 사진은 음식 사진이 아니거나 리뷰에 적합하지 않습니다.');
+      }
+    } on FormatException catch (e) {
+      throw Exception('응답 파싱 실패: $e');
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('이미지 검증 중 알 수 없는 오류: $e');

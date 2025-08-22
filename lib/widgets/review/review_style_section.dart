@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:reviewai_flutter/providers/review_provider.dart';
@@ -29,20 +28,28 @@ class ReviewStyleSection extends ConsumerWidget {
           spacing: screenSize.width * 0.02,
           runSpacing: screenSize.height * 0.005,
           children: reviewStyles.map((style) {
-            return ChoiceChip(
-              label: Text(
-                style,
-                style: TextStyle(
-                  fontFamily: 'Do Hyeon',
-                  fontSize: screenSize.width * 0.035,
+            return Theme(
+              data: Theme.of(
+                context,
+              ).copyWith(splashFactory: NoSplash.splashFactory),
+              child: ChoiceChip(
+                label: Text(
+                  style,
+                  style: TextStyle(
+                    fontFamily: 'Do Hyeon',
+                    fontSize: screenSize.width * 0.035,
+                    color: selectedStyle == style ? Colors.white : Colors.black,
+                  ),
                 ),
+                selected: selectedStyle == style,
+                onSelected: (isSelected) {
+                  if (isSelected) {
+                    ref.read(selectedReviewStyleProvider.notifier).state =
+                        style;
+                  }
+                },
+                selectedColor: Colors.black,
               ),
-              selected: selectedStyle == style,
-              onSelected: (isSelected) {
-                if (isSelected) {
-                  ref.read(selectedReviewStyleProvider.notifier).state = style;
-                }
-              },
             );
           }).toList(),
         ),
