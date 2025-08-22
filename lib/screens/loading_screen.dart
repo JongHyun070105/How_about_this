@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart'; // Added this line
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:eat_this_app/providers/food_providers.dart';
 import 'package:eat_this_app/screens/today_recommendation_screen.dart';
-import 'package:eat_this_app/widgets/dialogs/review_dialogs.dart'; // Assuming this has showAlertDialog
+import 'package:eat_this_app/widgets/dialogs/review_dialogs.dart';
 
 class LoadingScreen extends ConsumerStatefulWidget {
   const LoadingScreen({super.key});

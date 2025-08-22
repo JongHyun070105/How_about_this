@@ -59,3 +59,24 @@ void showImageErrorDialog(BuildContext context, String message, Size screenSize)
     ),
   );
 }
+
+void showAlertDialog(BuildContext context, String title, String message, {VoidCallback? onConfirm}) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(title, style: const TextStyle(fontFamily: 'Do Hyeon')),
+        content: Text(message, style: const TextStyle(fontFamily: 'Do Hyeon')),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
+            onPressed: () {
+              Navigator.of(context).pop();
+              onConfirm?.call();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
