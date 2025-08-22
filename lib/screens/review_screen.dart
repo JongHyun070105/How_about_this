@@ -72,9 +72,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           debugPrint('Rewarded ad failed to load: $error');
           _rewardedAd = null;
           _adLoadAttempts++; // 광고 로드 실패 시 시도 횟수 증가
-          _showErrorSnackBar(
-            '광고 로드 실패: ${error.message}',
-          ); // Display error to user
+          _showAdErrorDialog(
+            '광고 로드에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          ); // Display generic error to user
         },
       ),
     );
@@ -101,7 +101,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ad.dispose();
         _rewardedAd = null;
         _loadAd();
-        _showErrorSnackBar('광고 로드에 실패했습니다. 잠시 후 다시 시도해주세요.'); // Inform user
+        _showAdErrorDialog('광고 로드에 실패했습니다. 잠시 후 다시 시도해주세요.'); // Inform user
       },
     );
   }
@@ -316,14 +316,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       } else {
         // 광고 로드 실패 시 재시도 로직
         if (_adLoadAttempts < _maxAdLoadAttempts) {
-          _showErrorSnackBar(
-            '광고가 준비되지 않았습니다. 잠시 후 다시 시도합니다. (${_adLoadAttempts + 1}/$_maxAdLoadAttempts)',
-          );
+          _showAdErrorDialog(
+              '광고가 준비되지 않았습니다. 잠시 후 다시 시도합니다. (${_adLoadAttempts + 1}/$_maxAdLoadAttempts)');
           await Future.delayed(_adRetryDelay); // 일정 시간 대기
           _loadAd(); // 광고 재로드 시도
         } else {
           // 최대 재시도 횟수 초과 시 리뷰 생성 진행
-          _showErrorSnackBar('광고 로드에 실패하여 리뷰 생성을 진행합니다.');
+          _showAdErrorDialog('광고 로드에 실패하여 리뷰 생성을 진행합니다.');
           _adLoadAttempts = 0; // 시도 횟수 초기화
           _generateReviews();
         }
@@ -384,7 +383,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       if (_isSuccessfulGeneration(reviews)) {
         _navigateToReviewSelection();
       } else {
-        _showErrorSnackBar('리뷰 생성에 실패했습니다. 다시 시도해주세요.');
+        _showAdErrorDialog('리뷰 생성에 실패했습니다. 다시 시도해주세요.');
       }
     } catch (e) {
       _handleGenerationError(e);
@@ -410,7 +409,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         errorString.contains('이미지가 음식 리뷰에 적합하지 않습니다')) {
       showImageErrorDialog(context, errorMessage, screenSize);
     } else {
-      _showErrorSnackBar(errorMessage);
+      _showAdErrorDialog(errorMessage);
     }
   }
 
@@ -447,14 +446,25 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  void _showErrorSnackBar(String message) {
+  void _showAdErrorDialog(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontFamily: 'Do Hyeon')),
-        duration: const Duration(seconds: 4),
-      ),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('알림', style: TextStyle(fontFamily: 'Do Hyeon')),
+          content: Text(message, style: const TextStyle(fontFamily: 'Do Hyeon')),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
