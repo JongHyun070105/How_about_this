@@ -72,9 +72,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           debugPrint('Rewarded ad failed to load: $error');
           _rewardedAd = null;
           _adLoadAttempts++; // 광고 로드 실패 시 시도 횟수 증가
-          _showAdErrorDialog(
-            '광고 로드에 실패했습니다. 잠시 후 다시 시도해주세요.',
-          ); // Display generic error to user
         },
       ),
     );
