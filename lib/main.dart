@@ -2,16 +2,17 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:reviewai_flutter/config/theme.dart';
-import 'package:reviewai_flutter/screens/today_recommendation_screen.dart';
-import 'package:reviewai_flutter/config/security_config.dart';
+import 'package:eat_this_app/config/theme.dart'; // Updated import
+import 'package:eat_this_app/screens/today_recommendation_screen.dart'; // Updated import
+import 'package:eat_this_app/config/security_config.dart'; // Updated import
 import 'package:clarity_flutter/clarity_flutter.dart';
 import 'dart:async'; // unawaited를 위해 추가
-import 'package:reviewai_flutter/widgets/common/error_widget.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Add dotenv import
-import 'package:http/http.dart' as http; // Add http import
-import 'package:reviewai_flutter/services/gemini_api_client.dart'; // Add gemini_api_client import
-import 'package:reviewai_flutter/services/gemini_service.dart'; // Add gemini_service import
+import 'package:eat_this_app/widgets/common/error_widget.dart'; // Updated import
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:eat_this_app/services/gemini_api_client.dart'; // Updated import
+import 'package:eat_this_app/services/gemini_service.dart'; // Updated import
+import 'package:eat_this_app/screens/loading_screen.dart'; // Moved and updated import
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -64,8 +65,6 @@ Future<void> _configureSystemUI() async {
   );
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 }
-
-import 'package:eat_this_app/screens/loading_screen.dart'; // Add this import
 
 class ReviewAIApp extends StatelessWidget {
   const ReviewAIApp({super.key});
