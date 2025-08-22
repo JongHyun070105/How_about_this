@@ -1,6 +1,7 @@
 import 'package:reviewai_flutter/config/app_constants.dart';
 import 'package:reviewai_flutter/config/security_config.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:reviewai_flutter/providers/review_provider.dart';
@@ -316,7 +317,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         // 광고 로드 실패 시 재시도 로직
         if (_adLoadAttempts < _maxAdLoadAttempts) {
           _showErrorSnackBar(
-              '광고가 준비되지 않았습니다. 잠시 후 다시 시도합니다. (${_adLoadAttempts + 1}/$_maxAdLoadAttempts)');
+            '광고가 준비되지 않았습니다. 잠시 후 다시 시도합니다. (${_adLoadAttempts + 1}/$_maxAdLoadAttempts)',
+          );
           await Future.delayed(_adRetryDelay); // 일정 시간 대기
           _loadAd(); // 광고 재로드 시도
         } else {
