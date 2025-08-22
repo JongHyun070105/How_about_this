@@ -30,7 +30,8 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen> {
         context,
         '네트워크 연결 오류',
         '인터넷 연결을 확인해주세요. 앱을 종료합니다.',
-        onConfirm: () => Navigator.of(context).pop(), // Simple pop, app might exit naturally
+        onConfirm: () =>
+            Navigator.of(context).pop(), // Simple pop, app might exit naturally
       );
       return; // Stop further loading
     }
@@ -40,9 +41,11 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen> {
     for (final category in foodCategories) {
       try {
         final loader = SvgAssetLoader(category.imageUrl);
-        await precachePicture(loader, context);
+        await PaintingBinding.instance.precacheImage(loader, context);
       } catch (e) {
-        debugPrint('Failed to precache SVG image: ${category.imageUrl}, Error: $e');
+        debugPrint(
+          'Failed to precache SVG image: ${category.imageUrl}, Error: $e',
+        );
         // Optionally show an error to the user or log it more robustly
       }
     }
@@ -50,7 +53,9 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen> {
     // 3. Navigate to TodayRecommendationScreen
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const TodayRecommendationScreen()),
+        MaterialPageRoute(
+          builder: (context) => const TodayRecommendationScreen(),
+        ),
       );
     }
   }
