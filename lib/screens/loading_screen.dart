@@ -42,7 +42,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen> {
     for (final category in foodCategories) {
       try {
         final loader = SvgAssetLoader(category.imageUrl);
-        await PaintingBinding.instance.precacheImage(loader, context);
+        await precachePicture(loader, context);
       } catch (e) {
         debugPrint(
           'Failed to precache SVG image: ${category.imageUrl}, Error: $e',
