@@ -283,11 +283,11 @@ class _TodayRecommendationScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(
-                  strokeWidth: isTablet ? 4.0 : 3.0,
-                  color: Theme.of(context).primaryColor,
-                ),
-                SizedBox(height: verticalSpacing),
+                // CircularProgressIndicator( // Removed
+                //   strokeWidth: isTablet ? 4.0 : 3.0,
+                //   color: Theme.of(context).primaryColor,
+                // ),
+                // SizedBox(height: verticalSpacing), // Removed
                 Text(
                   '추천을 불러오는 중...',
                   style: TextStyle(

@@ -110,7 +110,6 @@ class _AnimatedStatsDialogState extends State<AnimatedStatsDialog> {
         // Added SingleChildScrollView here
         child: SizedBox(
           width: screenWidth * 0.85,
-          height: screenHeight * 0.36,
           child: Stack(
             children: [
               PageView(

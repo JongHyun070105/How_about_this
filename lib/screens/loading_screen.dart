@@ -209,67 +209,8 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // 앱 아이콘 영역
-                    Container(
-                      width: iconSize,
-                      height: iconSize,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(borderRadius),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: isTablet ? 30 : 20,
-                            offset: Offset(0, isTablet ? 15 : 10),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(borderRadius),
-                        child: Image.asset(
-                          'icon/app_icon.png',
-                          width: iconSize,
-                          height: iconSize,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            // 앱 아이콘을 찾을 수 없는 경우 기본 아이콘 표시
-                            return Container(
-                              width: iconSize,
-                              height: iconSize,
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).primaryColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(
-                                  borderRadius,
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.restaurant_menu,
-                                size: iconSize * 0.5,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: spacingLarge),
-
-                    // 로딩 인디케이터 (제거됨)
-                    // SizedBox(
-                    //   width: loadingSize,
-                    //   height: loadingSize,
-                    //   child: CircularProgressIndicator(
-                    //     strokeWidth: isTablet ? 4 : 3,
-                    //     valueColor: AlwaysStoppedAnimation<Color>(
-                    //       Theme.of(context).primaryColor,
-                    //     ),
-                    //   ),
-                    // ),
-                    // SizedBox(height: spacingMedium),
-
                     // 로딩 텍스트
-                                        Text(
+                    Text(
                       '앱을 준비하는 중...', // Changed text
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -303,10 +244,10 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
   // 반응형 아이콘 크기 계산
   double _getResponsiveIconSize(Size screenSize, bool isTablet) {
     if (isTablet) {
-      return 280.0; // 태블릿용 큰 크기
+      return 350.0; // 태블릿용 더 큰 크기
     } else {
-      final baseSize = screenSize.width * 0.45; // 화면 너비의 45%
-      return baseSize.clamp(150.0, 250.0); // 최소 150, 최대 250
+      final baseSize = screenSize.width * 0.6; // 화면 너비의 60% (더 크게)
+      return baseSize.clamp(200.0, 300.0); // 최소 200, 최대 300
     }
   }
 

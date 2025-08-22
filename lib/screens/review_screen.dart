@@ -217,71 +217,72 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-        child: Column(
+        child: SingleChildScrollView( // Re-added SingleChildScrollView
+          physics: const BouncingScrollPhysics(), // Added physics
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: verticalSpacing),
 
-              // Image upload with responsive sizing
-              Container(
-                constraints: BoxConstraints(
-                  maxHeight: screenHeight * (isTablet ? 0.3 : 0.25),
+            // Image upload with responsive sizing
+            Container(
+              constraints: BoxConstraints(
+                maxHeight: screenHeight * (isTablet ? 0.3 : 0.25),
+              ),
+              child: const ImageUploadSection(),
+            ),
+
+            SizedBox(height: verticalSpacing * 1.5),
+            _buildFoodNameInput(),
+            SizedBox(height: verticalSpacing),
+
+            // Rating rows with responsive spacing
+            Column(
+              children: [
+                RatingRow(
+                  label: '배달',
+                  rating: ref.watch(deliveryRatingProvider),
+                  onRate: (r) {
+                    debugPrint('배달 rating updated to: $r');
+                    ref.read(deliveryRatingProvider.notifier).state = r;
+                  },
                 ),
-                child: const ImageUploadSection(),
-              ),
+                                  SizedBox(height: verticalSpacing * 0.1), // Reduced padding further
+                RatingRow(
+                  label: '맛',
+                  rating: ref.watch(tasteRatingProvider),
+                  onRate: (r) {
+                    debugPrint('맛 rating updated to: $r');
+                    ref.read(tasteRatingProvider.notifier).state = r;
+                  },
+                ),
+                                  SizedBox(height: verticalSpacing * 0.1), // Reduced padding further
+                RatingRow(
+                  label: '양',
+                  rating: ref.watch(portionRatingProvider),
+                  onRate: (r) {
+                    debugPrint('양 rating updated to: $r');
+                    ref.read(portionRatingProvider.notifier).state = r;
+                  },
+                ),
+                                  SizedBox(height: verticalSpacing * 0.1), // Reduced padding further
+                RatingRow(
+                  label: '가격',
+                  rating: ref.watch(priceRatingProvider),
+                  onRate: (r) {
+                    debugPrint('가격 rating updated to: $r');
+                    ref.read(priceRatingProvider.notifier).state = r;
+                  },
+                ),
+              ],
+            ),
 
-              SizedBox(height: verticalSpacing * 1.5),
-              _buildFoodNameInput(),
-              SizedBox(height: verticalSpacing),
-
-              // Rating rows with responsive spacing
-              Column(
-                children: [
-                  RatingRow(
-                    label: '배달',
-                    rating: ref.watch(deliveryRatingProvider),
-                    onRate: (r) {
-                      debugPrint('배달 rating updated to: $r');
-                      ref.read(deliveryRatingProvider.notifier).state = r;
-                    },
-                  ),
-                  SizedBox(height: verticalSpacing * 0.25),
-                  RatingRow(
-                    label: '맛',
-                    rating: ref.watch(tasteRatingProvider),
-                    onRate: (r) {
-                      debugPrint('맛 rating updated to: $r');
-                      ref.read(tasteRatingProvider.notifier).state = r;
-                    },
-                  ),
-                  SizedBox(height: verticalSpacing * 0.25),
-                  RatingRow(
-                    label: '양',
-                    rating: ref.watch(portionRatingProvider),
-                    onRate: (r) {
-                      debugPrint('양 rating updated to: $r');
-                      ref.read(portionRatingProvider.notifier).state = r;
-                    },
-                  ),
-                  SizedBox(height: verticalSpacing * 0.25),
-                  RatingRow(
-                    label: '가격',
-                    rating: ref.watch(priceRatingProvider),
-                    onRate: (r) {
-                      debugPrint('가격 rating updated to: $r');
-                      ref.read(priceRatingProvider.notifier).state = r;
-                    },
-                  ),
-                ],
-              ),
-
-              SizedBox(height: verticalSpacing * 1.5),
-              const ReviewStyleSection(),
-              SizedBox(height: verticalSpacing * 1.5),
-              _buildGenerateButton(isLoading),
-              SizedBox(height: verticalSpacing),
-            ],
-          ),
+            SizedBox(height: verticalSpacing * 1.5),
+            const ReviewStyleSection(),
+            SizedBox(height: verticalSpacing * 1.5),
+            _buildGenerateButton(isLoading),
+            SizedBox(height: verticalSpacing),
+          ],
         ),
       ),
     );
@@ -290,7 +291,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Widget _buildFoodNameInput() {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(isTablet ? 12.0 : 8.0),
+        borderRadius: BorderRadius.circular(screenWidth * 0.0375), // Matched ImageUploadSection radius
         border: Border.all(
           color: const Color(0xFFBDBDBD), // Matched image upload border color
           width: isTablet ? 1.5 : 1.0,
@@ -313,7 +314,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           focusedBorder: InputBorder.none, // Ensure no border when focused
           enabledBorder: InputBorder.none, // Ensure no border when enabled
           contentPadding: EdgeInsets.all(
-            (screenWidth * (isTablet ? 0.04 : 0.035)).clamp(12.0, 20.0),
+            (screenWidth * (isTablet ? 0.025 : 0.03)).clamp(8.0, 16.0), // Reduced padding for smaller size
           ),
         ),
       ),
