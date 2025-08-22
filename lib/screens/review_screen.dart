@@ -14,7 +14,7 @@ import 'package:eat_this_app/widgets/review/image_upload_section.dart';
 import 'package:eat_this_app/widgets/review/rating_row.dart';
 import 'package:eat_this_app/widgets/review/review_style_section.dart';
 import 'package:eat_this_app/widgets/dialogs/review_dialogs.dart';
-import 'package:eat_this_app/main.dart'; // Add this import
+import 'package:eat_this_app/main.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final FoodRecommendation food;
@@ -29,10 +29,21 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   RewardedAd? _rewardedAd;
   final TextEditingController _foodNameController = TextEditingController();
   bool _isProcessing = false;
-  late Size screenSize;
-  int _adLoadAttempts = 0; // 광고 로드 시도 횟수
-  static const int _maxAdLoadAttempts = 3; // 최대 재시도 횟수
-  static const Duration _adRetryDelay = Duration(seconds: 3); // 재시도 간 지연 시간
+  int _adLoadAttempts = 0;
+  static const int _maxAdLoadAttempts = 3;
+  static const Duration _adRetryDelay = Duration(seconds: 3);
+
+  // Responsive variables
+  late double screenWidth;
+  late double screenHeight;
+  late bool isTablet;
+  late bool isSmallScreen;
+  late double appBarFontSize;
+  late double inputFontSize;
+  late double buttonFontSize;
+  late double horizontalPadding;
+  late double verticalSpacing;
+  late double buttonHeight;
 
   @override
   void initState() {
@@ -45,7 +56,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final selectedFood = widget.food;
       final isDefaultFood = selectedFood.name == AppConstants.defaultFoodName;
-
       final foodNameToSet = isDefaultFood ? '' : selectedFood.name;
 
       _foodNameController.text = foodNameToSet;
@@ -53,9 +63,37 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     });
   }
 
+  void _calculateResponsiveSizes() {
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
+    isTablet = screenWidth >= 768;
+    isSmallScreen = screenWidth < 600;
+
+    // Dynamic font sizes
+    appBarFontSize = (screenWidth * (isTablet ? 0.032 : 0.05)).clamp(
+      16.0,
+      28.0,
+    );
+    inputFontSize = (screenWidth * (isTablet ? 0.028 : 0.04)).clamp(14.0, 20.0);
+    buttonFontSize = (screenWidth * (isTablet ? 0.03 : 0.04)).clamp(14.0, 22.0);
+
+    // Dynamic spacing and padding
+    horizontalPadding = (screenWidth * (isTablet ? 0.06 : 0.04)).clamp(
+      16.0,
+      48.0,
+    );
+    verticalSpacing = (screenHeight * (isTablet ? 0.025 : 0.02)).clamp(
+      12.0,
+      24.0,
+    );
+
+    // Button height with constraints
+    buttonHeight = (screenHeight * (isTablet ? 0.07 : 0.065)).clamp(48.0, 72.0);
+  }
+
   void _loadAd() {
     if (_rewardedAd != null) {
-      _adLoadAttempts = 0; // 광고 로드 성공 시 시도 횟수 초기화
+      _adLoadAttempts = 0;
       return;
     }
 
@@ -66,12 +104,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         onAdLoaded: (ad) {
           _rewardedAd = ad;
           _configureAdCallbacks(ad);
-          _adLoadAttempts = 0; // 광고 로드 성공 시 시도 횟수 초기화
+          _adLoadAttempts = 0;
         },
         onAdFailedToLoad: (error) {
           debugPrint('Rewarded ad failed to load: $error');
           _rewardedAd = null;
-          _adLoadAttempts++; // 광고 로드 실패 시 시도 횟수 증가
+          _adLoadAttempts++;
         },
       ),
     );
@@ -98,7 +136,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ad.dispose();
         _rewardedAd = null;
         _loadAd();
-        _showAdErrorDialog('광고 로드에 실패했습니다. 잠시 후 다시 시도해주세요.'); // Inform user
+        _showAdErrorDialog('광고 로드에 실패했습니다. 잠시 후 다시 시도해주세요.');
       },
     );
   }
@@ -112,7 +150,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    screenSize = MediaQuery.of(context).size;
+    _calculateResponsiveSizes();
     final textTheme = Theme.of(context).textTheme;
     final isLoading = ref.watch(reviewLoadingProvider);
 
@@ -132,8 +170,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       child: Stack(
         children: [
           Scaffold(
-            appBar: _buildAppBar(textTheme, screenSize.width),
-            body: _buildBody(screenSize, textTheme, isLoading),
+            backgroundColor: Colors.white,
+            appBar: _buildAppBar(textTheme),
+            body: _buildBody(textTheme, isLoading),
           ),
           if (isLoading) _buildLoadingOverlay(),
         ],
@@ -141,26 +180,30 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(TextTheme textTheme, double screenWidth) {
+  PreferredSizeWidget _buildAppBar(TextTheme textTheme) {
+    final iconSize = (screenWidth * (isTablet ? 0.04 : 0.06)).clamp(20.0, 32.0);
+
     return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
       title: Text(
         '리뷰 AI',
         style: textTheme.headlineMedium?.copyWith(
-          fontSize: screenWidth * 0.05,
+          fontSize: appBarFontSize,
           fontWeight: FontWeight.bold,
           fontFamily: 'Do Hyeon',
         ),
       ),
-      centerTitle: true,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: Icon(Icons.arrow_back, size: iconSize),
         onPressed: () => _navigateToRecommendationScreen(),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.history),
+          icon: Icon(Icons.history, size: iconSize),
           onPressed: () => _navigateToHistoryScreen(),
           tooltip: '히스토리',
           splashColor: Colors.transparent,
@@ -170,99 +213,149 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  Widget _buildBody(Size screenSize, TextTheme textTheme, bool isLoading) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.04),
-      child: SingleChildScrollView(
+  Widget _buildBody(TextTheme textTheme, bool isLoading) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(height: screenSize.height * 0.02),
-            const ImageUploadSection(),
-            SizedBox(height: screenSize.height * 0.03),
-            _buildFoodNameInput(),
-            SizedBox(height: screenSize.height * 0.02),
-            RatingRow(
-              label: '배달',
-              rating: ref.watch(deliveryRatingProvider),
-              onRate: (r) {
-                debugPrint('배달 rating updated to: $r');
-                ref.read(deliveryRatingProvider.notifier).state = r;
-              },
-            ),
-            RatingRow(
-              label: '맛',
-              rating: ref.watch(tasteRatingProvider),
-              onRate: (r) {
-                debugPrint('맛 rating updated to: $r');
-                ref.read(tasteRatingProvider.notifier).state = r;
-              },
-            ),
-            RatingRow(
-              label: '양',
-              rating: ref.watch(portionRatingProvider),
-              onRate: (r) {
-                debugPrint('양 rating updated to: $r');
-                ref.read(portionRatingProvider.notifier).state = r;
-              },
-            ),
-            RatingRow(
-              label: '가격',
-              rating: ref.watch(priceRatingProvider),
-              onRate: (r) {
-                debugPrint('가격 rating updated to: $r');
-                ref.read(priceRatingProvider.notifier).state = r;
-              },
-            ),
-            SizedBox(height: screenSize.height * 0.03),
-            const ReviewStyleSection(),
-            SizedBox(height: screenSize.height * 0.03),
-            _buildGenerateButton(isLoading),
-            SizedBox(height: screenSize.height * 0.02),
-          ],
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: verticalSpacing),
+
+              // Image upload with responsive sizing
+              Container(
+                constraints: BoxConstraints(
+                  maxHeight: screenHeight * (isTablet ? 0.3 : 0.25),
+                ),
+                child: const ImageUploadSection(),
+              ),
+
+              SizedBox(height: verticalSpacing * 1.5),
+              _buildFoodNameInput(),
+              SizedBox(height: verticalSpacing),
+
+              // Rating rows with responsive spacing
+              Column(
+                children: [
+                  RatingRow(
+                    label: '배달',
+                    rating: ref.watch(deliveryRatingProvider),
+                    onRate: (r) {
+                      debugPrint('배달 rating updated to: $r');
+                      ref.read(deliveryRatingProvider.notifier).state = r;
+                    },
+                  ),
+                  SizedBox(height: verticalSpacing * 0.25),
+                  RatingRow(
+                    label: '맛',
+                    rating: ref.watch(tasteRatingProvider),
+                    onRate: (r) {
+                      debugPrint('맛 rating updated to: $r');
+                      ref.read(tasteRatingProvider.notifier).state = r;
+                    },
+                  ),
+                  SizedBox(height: verticalSpacing * 0.25),
+                  RatingRow(
+                    label: '양',
+                    rating: ref.watch(portionRatingProvider),
+                    onRate: (r) {
+                      debugPrint('양 rating updated to: $r');
+                      ref.read(portionRatingProvider.notifier).state = r;
+                    },
+                  ),
+                  SizedBox(height: verticalSpacing * 0.25),
+                  RatingRow(
+                    label: '가격',
+                    rating: ref.watch(priceRatingProvider),
+                    onRate: (r) {
+                      debugPrint('가격 rating updated to: $r');
+                      ref.read(priceRatingProvider.notifier).state = r;
+                    },
+                  ),
+                ],
+              ),
+
+              SizedBox(height: verticalSpacing * 1.5),
+              const ReviewStyleSection(),
+              SizedBox(height: verticalSpacing * 1.5),
+              _buildGenerateButton(isLoading),
+              SizedBox(height: verticalSpacing),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildFoodNameInput() {
-    return TextField(
-      controller: _foodNameController,
-      maxLength: AppConstants.maxFoodNameLength,
-      onChanged: (text) => ref.read(foodNameProvider.notifier).state = text,
-      decoration: InputDecoration(
-        labelText: '음식명을 입력해주세요',
-        counterText: "",
-        labelStyle: Theme.of(
-          context,
-        ).inputDecorationTheme.labelStyle?.copyWith(fontFamily: 'Do Hyeon'),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(isTablet ? 12.0 : 8.0),
+        border: Border.all(
+          color: const Color(0xFFBDBDBD), // Matched image upload border color
+          width: isTablet ? 1.5 : 1.0,
+        ),
       ),
-      style: TextStyle(
-        fontFamily: 'Do Hyeon',
-        fontSize: screenSize.width * 0.04,
+      child: TextField(
+        controller: _foodNameController,
+        maxLength: AppConstants.maxFoodNameLength,
+        onChanged: (text) => ref.read(foodNameProvider.notifier).state = text,
+        style: TextStyle(fontFamily: 'Do Hyeon', fontSize: inputFontSize),
+        decoration: InputDecoration(
+          labelText: '음식명을 입력해주세요',
+          counterText: "",
+          labelStyle: TextStyle(
+            fontFamily: 'Do Hyeon',
+            fontSize: inputFontSize * 0.9,
+            color: Colors.grey.shade600,
+          ),
+          border: InputBorder.none, // Keep no border for the TextField itself
+          focusedBorder: InputBorder.none, // Ensure no border when focused
+          enabledBorder: InputBorder.none, // Ensure no border when enabled
+          contentPadding: EdgeInsets.all(
+            (screenWidth * (isTablet ? 0.04 : 0.035)).clamp(12.0, 20.0),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildGenerateButton(bool isLoading) {
-    final double buttonHeight =
-        screenSize.height * 0.065 < screenSize.height * 0.0625
-        ? screenSize.height * 0.0625
-        : screenSize.height * 0.065;
-
-    return SizedBox(
+    return Container(
       width: double.infinity,
       height: buttonHeight,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(isTablet ? 12.0 : 8.0),
+        boxShadow: [
+          if (!isLoading && !_isProcessing)
+            BoxShadow(
+              color: Theme.of(context).primaryColor.withOpacity(0.3),
+              blurRadius: isTablet ? 8.0 : 6.0,
+              offset: const Offset(0, 4),
+            ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: (isLoading || _isProcessing) ? null : _handleGenerateReview,
         style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.015),
+          backgroundColor: (isLoading || _isProcessing)
+              ? Colors.grey.shade400
+              : Theme.of(context).primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(isTablet ? 12.0 : 8.0),
+          ),
+          padding: EdgeInsets.symmetric(
+            vertical: (screenHeight * 0.015).clamp(8.0, 16.0),
+          ),
         ),
         child: Text(
           '리뷰 생성하기',
           style: TextStyle(
             fontFamily: 'Do Hyeon',
-            fontSize: screenSize.width * 0.04,
+            fontSize: buttonFontSize,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
@@ -273,8 +366,25 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     return Positioned.fill(
       child: Container(
         color: Colors.black54,
-        child: const Center(
-          child: CircularProgressIndicator(color: Colors.white),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: isTablet ? 4.0 : 3.0,
+              ),
+              SizedBox(height: verticalSpacing),
+              Text(
+                '리뷰를 생성하고 있습니다...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Do Hyeon',
+                  fontSize: inputFontSize,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -290,18 +400,14 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     ref.read(reviewLoadingProvider.notifier).state = true;
 
     try {
-      // 1. Image Validation (if image exists)
       final imageFile = ref.read(imageProvider);
       if (imageFile != null) {
         await ref.read(geminiServiceProvider).validateImage(imageFile);
       }
 
-      // 2. Show Ad (if all validations passed)
-      ref.read(reviewLoadingProvider.notifier).state =
-          false; // Hide loading before showing ad
+      ref.read(reviewLoadingProvider.notifier).state = false;
 
       if (kDebugMode) {
-        // Debug mode: Bypass ad and directly generate reviews
         _generateReviews();
       } else if (_rewardedAd != null) {
         _rewardedAd!.show(
@@ -311,26 +417,24 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         );
         _rewardedAd = null;
       } else {
-        // 광고 로드 실패 시 재시도 로직
         if (_adLoadAttempts < _maxAdLoadAttempts) {
           _showAdErrorDialog(
-              '광고가 준비되지 않았습니다. 잠시 후 다시 시도합니다. (${_adLoadAttempts + 1}/$_maxAdLoadAttempts)');
-          await Future.delayed(_adRetryDelay); // 일정 시간 대기
-          _loadAd(); // 광고 재로드 시도
+            '광고가 준비되지 않았습니다. 잠시 후 다시 시도합니다. (${_adLoadAttempts + 1}/$_maxAdLoadAttempts)',
+          );
+          await Future.delayed(_adRetryDelay);
+          _loadAd();
         } else {
-          // 최대 재시도 횟수 초과 시 리뷰 생성 진행
           _showAdErrorDialog('광고 로드에 실패하여 리뷰 생성을 진행합니다.');
-          _adLoadAttempts = 0; // 시도 횟수 초기화
+          _adLoadAttempts = 0;
           _generateReviews();
         }
         if (mounted) {
           setState(() {
-            _isProcessing = false; // Reset processing state
+            _isProcessing = false;
           });
         }
       }
     } catch (e) {
-      // 3. Handle all errors (from validation or image check)
       ref.read(reviewLoadingProvider.notifier).state = false;
       if (mounted) {
         setState(() {
@@ -353,7 +457,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         taste == 0 ||
         portion == 0 ||
         price == 0) {
-      showValidationDialog(context, screenSize);
+      showValidationDialog(context, Size(screenWidth, screenHeight));
       return false;
     }
     return true;
@@ -404,7 +508,11 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     if (errorString.contains('부적절한 이미지') ||
         errorString.contains('이미지가 음식 리뷰에 적합하지 않습니다')) {
-      showImageErrorDialog(context, errorMessage, screenSize);
+      showImageErrorDialog(
+        context,
+        errorMessage,
+        Size(screenWidth, screenHeight),
+      );
     } else {
       _showAdErrorDialog(errorMessage);
     }
@@ -420,7 +528,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     }
   }
 
-  // 네비게이션 메서드들
   void _navigateToRecommendationScreen() {
     Navigator.pushAndRemoveUntil(
       context,
@@ -450,11 +557,32 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('알림', style: TextStyle(fontFamily: 'Do Hyeon')),
-          content: Text(message, style: const TextStyle(fontFamily: 'Do Hyeon')),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(isTablet ? 16.0 : 12.0),
+          ),
+          title: Text(
+            '알림',
+            style: TextStyle(
+              fontFamily: 'Do Hyeon',
+              fontSize: (screenWidth * (isTablet ? 0.035 : 0.045)).clamp(
+                16.0,
+                24.0,
+              ),
+            ),
+          ),
+          content: Text(
+            message,
+            style: TextStyle(fontFamily: 'Do Hyeon', fontSize: inputFontSize),
+          ),
           actions: <Widget>[
             TextButton(
-              child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
+              child: Text(
+                '확인',
+                style: TextStyle(
+                  fontFamily: 'Do Hyeon',
+                  fontSize: inputFontSize,
+                ),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
