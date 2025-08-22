@@ -25,9 +25,9 @@ class SecurityConfig {
   static String get rewardedAdUnitId {
     // 테스트용 AdMob 리워드 광고 ID (플랫폼별)
     if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/5224354917'; // Android 테스트 리워드 ID
+      return 'ca-app-pub-6555743055922387/7073803440'; // Android 리워드 ID
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/1712485313'; // iOS 테스트 리워드 ID
+      return 'ca-app-pub-6555743055922387/1329741925'; // iOS 리워드 ID
     }
     return ''; // 기본값 (도달하지 않음)
   }
