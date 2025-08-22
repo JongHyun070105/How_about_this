@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:reviewai_flutter/services/recommendation_service.dart';
+import 'package:eat_this_app/services/recommendation_service.dart';
 import 'package:flutter/material.dart';
 
 // =============================================================================

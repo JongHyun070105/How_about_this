@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:reviewai_flutter/providers/review_provider.dart';
+import 'package:eat_this_app/providers/review_provider.dart';
 
 final isPickingImageProvider = StateProvider<bool>((ref) => false);
 

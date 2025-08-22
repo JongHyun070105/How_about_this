@@ -6,8 +6,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:reviewai_flutter/providers/food_providers.dart';
-import 'package:reviewai_flutter/services/user_preference_service.dart';
+import 'package:eat_this_app/providers/food_providers.dart';
+import 'package:eat_this_app/services/user_preference_service.dart';
 
 class FoodRecommendationDialog extends ConsumerStatefulWidget {
   final String category;

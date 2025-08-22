@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:reviewai_flutter/widgets/history/empty_history.dart';
-import 'package:reviewai_flutter/widgets/history/history_card.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:reviewai_flutter/providers/review_provider.dart';
+import 'package:eat_this_app/widgets/history/empty_history.dart';
+import 'package:eat_this_app/widgets/history/history_card.dart';
+import 'package:eat_this_app/providers/review_provider.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});

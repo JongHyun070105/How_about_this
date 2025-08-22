@@ -1,20 +1,20 @@
-import 'package:reviewai_flutter/config/app_constants.dart';
-import 'package:reviewai_flutter/config/security_config.dart';
+import 'package:eat_this_app/config/app_constants.dart';
+import 'package:eat_this_app/config/security_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:reviewai_flutter/providers/review_provider.dart';
-import 'package:reviewai_flutter/providers/food_providers.dart';
-import 'package:reviewai_flutter/screens/review_selection_screen.dart';
-import 'package:reviewai_flutter/screens/history_screen.dart';
-import 'package:reviewai_flutter/services/gemini_service.dart';
-import 'package:reviewai_flutter/screens/today_recommendation_screen.dart';
-import 'package:reviewai_flutter/widgets/review/image_upload_section.dart';
-import 'package:reviewai_flutter/widgets/review/rating_row.dart';
-import 'package:reviewai_flutter/widgets/review/review_style_section.dart';
-import 'package:reviewai_flutter/widgets/dialogs/review_dialogs.dart';
-import 'package:reviewai_flutter/main.dart'; // Add this import
+import 'package:eat_this_app/providers/review_provider.dart';
+import 'package:eat_this_app/providers/food_providers.dart';
+import 'package:eat_this_app/screens/review_selection_screen.dart';
+import 'package:eat_this_app/screens/history_screen.dart';
+import 'package:eat_this_app/services/gemini_service.dart';
+import 'package:eat_this_app/screens/today_recommendation_screen.dart';
+import 'package:eat_this_app/widgets/review/image_upload_section.dart';
+import 'package:eat_this_app/widgets/review/rating_row.dart';
+import 'package:eat_this_app/widgets/review/review_style_section.dart';
+import 'package:eat_this_app/widgets/dialogs/review_dialogs.dart';
+import 'package:eat_this_app/main.dart'; // Add this import
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final FoodRecommendation food;

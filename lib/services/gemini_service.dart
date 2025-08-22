@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart'; // For Uint8List
-import 'package:reviewai_flutter/services/gemini_api_client.dart';
+import 'package:eat_this_app/services/gemini_api_client.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Keep for now, might be needed for initialization elsewhere
 
 class GeminiService {

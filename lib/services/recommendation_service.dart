@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:reviewai_flutter/providers/food_providers.dart';
+import 'package:eat_this_app/providers/food_providers.dart';
 import 'user_preference_service.dart'; // 위에서 만든 서비스 import
 import 'dart:math';
-import 'package:reviewai_flutter/config/app_constants.dart';
+import 'package:eat_this_app/config/app_constants.dart';
 
 class RecommendationService {
   static final _apiKey = dotenv.env['GEMINI_API_KEY'];

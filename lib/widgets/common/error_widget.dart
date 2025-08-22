@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:reviewai_flutter/config/security_config.dart';
+import 'package:eat_this_app/config/security_config.dart';
 
 Widget buildErrorWidget(
   BuildContext context,

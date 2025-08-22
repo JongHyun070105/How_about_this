@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:reviewai_flutter/providers/review_provider.dart';
-import 'package:reviewai_flutter/providers/food_providers.dart'; // Added import
+import 'package:eat_this_app/providers/review_provider.dart';
+import 'package:eat_this_app/providers/food_providers.dart'; // Added import
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:reviewai_flutter/widgets/review_selection/edit_review_dialog.dart';
-import 'package:reviewai_flutter/widgets/review_selection/review_card.dart';
+import 'package:eat_this_app/widgets/review_selection/edit_review_dialog.dart';
+import 'package:eat_this_app/widgets/review_selection/review_card.dart';
 
 class ReviewSelectionScreen extends ConsumerStatefulWidget {
   const ReviewSelectionScreen({super.key});

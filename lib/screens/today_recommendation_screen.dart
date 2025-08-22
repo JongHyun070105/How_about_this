@@ -1,13 +1,13 @@
-import 'package:reviewai_flutter/config/app_constants.dart';
+import 'package:eat_this_app/config/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:reviewai_flutter/providers/food_providers.dart';
-import 'package:reviewai_flutter/screens/review_screen.dart';
-import 'package:reviewai_flutter/services/user_preference_service.dart';
-import 'package:reviewai_flutter/services/recommendation_service.dart';
-import 'package:reviewai_flutter/widgets/category_card.dart';
-import 'package:reviewai_flutter/widgets/dialogs/food_recommendation_dialog.dart';
-import 'package:reviewai_flutter/widgets/dialogs/user_stats_dialog.dart';
+import 'package:eat_this_app/providers/food_providers.dart';
+import 'package:eat_this_app/screens/review_screen.dart';
+import 'package:eat_this_app/services/user_preference_service.dart';
+import 'package:eat_this_app/services/recommendation_service.dart';
+import 'package:eat_this_app/widgets/category_card.dart';
+import 'package:eat_this_app/widgets/dialogs/food_recommendation_dialog.dart';
+import 'package:eat_this_app/widgets/dialogs/user_stats_dialog.dart';
 
 // 로딩 상태를 관리하는 Provider
 final isCategoryLoadingProvider = StateProvider<bool>((ref) => false);
