@@ -294,7 +294,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       ref.read(reviewLoadingProvider.notifier).state =
           false; // Hide loading before showing ad
 
-      if (_rewardedAd != null) {
+      if (kDebugMode) {
+        // Debug mode: Bypass ad and directly generate reviews
+        _generateReviews();
+      } else if (_rewardedAd != null) {
         _rewardedAd!.show(
           onUserEarnedReward: (ad, reward) {
             _generateReviews();
