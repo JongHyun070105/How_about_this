@@ -1,4 +1,4 @@
-name: reviewai_flutter
+name: eat_this_app
 description: "A new Flutter project."
 publish_to: "none"
 version: 1.0.0+1
@@ -58,5 +58,6 @@ flutter:
 
 flutter_native_splash:
   color: "#FFFFFF"
+  image: icon/app_icon.png # Use the app icon as the splash image
   android: true
   ios: true
