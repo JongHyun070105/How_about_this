@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/config/app_constants.dart';
@@ -256,7 +254,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   Widget _buildLoadingOverlay() {
     return Container(
-      color: Colors.black.withOpacity(0.5),
+      color: Colors.black.withAlpha(128),
       child: const Center(
         child: CircularProgressIndicator(),
       ),

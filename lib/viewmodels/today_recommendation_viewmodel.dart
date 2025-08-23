@@ -28,7 +28,9 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
     try {
       final usageTrackingService = _ref.read(usageTrackingServiceProvider);
       if (await usageTrackingService.hasReachedTotalRecommendationLimit()) {
-        _showErrorSnackBar(context, '음식 추천은 하루 20회까지만 이용 가능합니다.');
+        if (context.mounted) {
+          _showErrorSnackBar(context, '음식 추천은 하루 20회까지만 이용 가능합니다.');
+        }
         return;
       }
 

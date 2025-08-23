@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:review_ai/models/food_recommendation.dart';
 import 'package:review_ai/providers/review_provider.dart';
 import 'package:review_ai/utils/responsive.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';

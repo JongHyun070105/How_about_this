@@ -21,16 +21,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
     // Responsive calculations
     final isTablet = screenWidth >= 768;
-    
 
     // Dynamic font sizes
     final appBarFontSize = (screenWidth * (isTablet ? 0.032 : 0.05)).clamp(
       16.0,
       28.0,
-    );
-    final titleFontSize = (screenWidth * (isTablet ? 0.038 : 0.06)).clamp(
-      18.0,
-      32.0,
     );
 
     // Dynamic spacing
@@ -75,8 +70,6 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: verticalSpacing),
-
-              
 
               // History list with responsive design
               Expanded(

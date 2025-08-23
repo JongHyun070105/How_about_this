@@ -31,7 +31,8 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
     try {
       final loadedStats = await RecommendationService.getUserStats();
       final usageTrackingService = ref.read(usageTrackingServiceProvider);
-      final remainingRecs = await usageTrackingService.getRemainingRecommendationCount();
+      final remainingRecs = await usageTrackingService
+          .getRemainingRecommendationCount();
       final remainingRev = await usageTrackingService.getRemainingReviewCount();
 
       setState(() {
@@ -40,7 +41,9 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
         _remainingReviews = remainingRev;
         isLoading = false;
       });
-    } catch (e) {
+    }
+    // ignore: avoid_catches_without_on_clauses
+    catch (e) {
       setState(() {
         errorMessage = '통계를 불러오는데 실패했습니다: $e';
         isLoading = false;
@@ -70,9 +73,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
             maxHeight: screenHeight * 0.3,
             minWidth: screenWidth * 0.6,
           ),
-          child: const Center(
-            child: CircularProgressIndicator(),
-          ),
+          child: const Center(child: CircularProgressIndicator()),
         ),
       );
     }
@@ -149,13 +150,8 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
     );
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 24,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
-      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: screenHeight * 0.62,
@@ -185,17 +181,12 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             IconButton(
-                              icon: const Icon(
-                                Icons.arrow_left,
-                                size: 24,
-                              ),
+                              icon: const Icon(Icons.arrow_left, size: 24),
                               onPressed: () {
                                 if (pageController.hasClients &&
                                     currentPage > 0) {
                                   pageController.previousPage(
-                                    duration: const Duration(
-                                      milliseconds: 300,
-                                    ),
+                                    duration: const Duration(milliseconds: 300),
                                     curve: Curves.ease,
                                   );
                                   setState(() {
@@ -216,17 +207,12 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(
-                                Icons.arrow_right,
-                                size: 24,
-                              ),
+                              icon: const Icon(Icons.arrow_right, size: 24),
                               onPressed: () {
                                 if (pageController.hasClients &&
                                     currentPage < 1) {
                                   pageController.nextPage(
-                                    duration: const Duration(
-                                      milliseconds: 300,
-                                    ),
+                                    duration: const Duration(milliseconds: 300),
                                     curve: Curves.ease,
                                   );
                                   setState(() {
@@ -394,46 +380,39 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                               Expanded(
                                 flex: 5,
                                 child: TweenAnimationBuilder<double>(
-                                  duration: const Duration(
-                                    milliseconds: 2000,
-                                  ),
+                                  duration: const Duration(milliseconds: 2000),
                                   tween: Tween<double>(begin: 0, end: 1),
                                   curve: Curves.easeOutCubic,
                                   builder: (context, animationValue, child) {
                                     return PieChart(
                                       PieChartData(
-                                        sections: categoryList.asMap().entries.map(( 
+                                        sections: categoryList.asMap().entries.map((
                                           entry,
                                         ) {
-                                          final int index = entry.key;
                                           final cat = entry.value;
-                                          final double percent = 
+                                          final double percent =
                                               cat['percent'] ?? 0.0;
-                                          final color = 
+                                          final color =
                                               categoryColorMap[cat['name']] ??
                                               Colors.grey.shade400;
 
-                                          double adjustedProgress = 
+                                          double adjustedProgress =
                                               animationValue;
 
-                                          bool shouldShowTitle = 
+                                          bool shouldShowTitle =
                                               percent >= 8.0 &&
                                               animationValue > 0.8;
 
                                           return PieChartSectionData(
                                             color: color,
-                                            value:
-                                                percent * 
-                                                adjustedProgress,
+                                            value: percent * adjustedProgress,
                                             title: shouldShowTitle
                                                 ? '${percent.toStringAsFixed(0)}%'
                                                 : '',
                                             radius: screenWidth * 0.22,
                                             titleStyle: TextStyle(
                                               fontSize: shouldShowTitle
-                                                  ? (percent >= 15
-                                                          ? 16
-                                                          : 14)
+                                                  ? (percent >= 15 ? 16 : 14)
                                                   : 0,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black,
@@ -442,25 +421,22 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                             titlePositionPercentageOffset:
                                                 percent >= 15
                                                 ? 0.6
-                                                : (percent >= 8
-                                                      ? 0.7
-                                                      : 0.8),
+                                                : (percent >= 8 ? 0.7 : 0.8),
                                           );
                                         }).toList(),
                                         pieTouchData: PieTouchData(
                                           enabled: true,
                                           touchCallback:
-                                              (FlTouchEvent event, pieTouchResponse) {
+                                              (
+                                                FlTouchEvent event,
+                                                pieTouchResponse,
+                                              ) {
                                                 // 터치 시 추가 정보 표시 가능
                                               },
                                         ),
-                                        borderData: FlBorderData(
-                                          show: false,
-                                        ),
+                                        borderData: FlBorderData(show: false),
                                         sectionsSpace: 3,
-                                        centerSpaceRadius:
-                                            screenWidth * 
-                                            0.12,
+                                        centerSpaceRadius: screenWidth * 0.12,
                                         startDegreeOffset: 270,
                                       ),
                                     );
@@ -471,75 +447,89 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                               Expanded(
                                 flex: 2,
                                 child: TweenAnimationBuilder<double>(
-                                  duration: const Duration(
-                                    milliseconds: 1500,
-                                  ),
+                                  duration: const Duration(milliseconds: 1500),
                                   tween: Tween<double>(begin: 0, end: 1),
                                   curve: Curves.easeOutBack,
                                   builder: (context, animationValue, child) {
-                                    double clampedValue = animationValue
-                                        .clamp(0.0, 1.0);
+                                    double clampedValue = animationValue.clamp(
+                                      0.0,
+                                      1.0,
+                                    );
                                     return Opacity(
                                       opacity: clampedValue,
                                       child: Transform.scale(
-                                        scale:
-                                            0.7 + 
-                                            (clampedValue * 
-                                                0.3),
+                                        scale: 0.7 + (clampedValue * 0.3),
                                         child: Center(
                                           child: Column(
                                             children: [
                                               Wrap(
                                                 spacing: 12.0,
                                                 runSpacing: 8.0,
-                                                alignment:
-                                                    WrapAlignment.center,
-                                                children: categoryList.take(4).map(( 
+                                                alignment: WrapAlignment.center,
+                                                children: categoryList.take(4).map((
                                                   cat,
                                                 ) {
-                                                  final color = 
+                                                  final color =
                                                       categoryColorMap[cat['name']] ??
-                                                      Colors
-                                                          .grey
-                                                          .shade400;
-                                                  final percent = 
-                                                      cat['percent'] ??
-                                                      0.0;
+                                                      Colors.grey.shade400;
+                                                  final percent =
+                                                      cat['percent'] ?? 0.0;
                                                   return Container(
-                                                    constraints: 
-                                                        BoxConstraints(
-                                                          maxWidth: 
-                                                              screenWidth * 
-                                                              0.25,
-                                                        ),
+                                                    constraints: BoxConstraints(
+                                                      maxWidth:
+                                                          screenWidth * 0.25,
+                                                    ),
                                                     child: Row(
                                                       mainAxisSize:
-                                                          MainAxisSize
-                                                              .min,
+                                                          MainAxisSize.min,
                                                       children: [
-                                                        Container(width: 12, height: 12, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
-                                                        const SizedBox(width: 6),
+                                                        Container(
+                                                          width: 12,
+                                                          height: 12,
+                                                          decoration: BoxDecoration(
+                                                            color: color,
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  2,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 6,
+                                                        ),
                                                         Flexible(
                                                           child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            mainAxisSize: MainAxisSize.min,
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
                                                             children: [
                                                               Text(
                                                                 cat['name'],
                                                                 style: const TextStyle(
-                                                                  fontFamily: 'Do Hyeon',
+                                                                  fontFamily:
+                                                                      'Do Hyeon',
                                                                   fontSize: 12,
-                                                                  color: Colors.black87,
+                                                                  color: Colors
+                                                                      .black87,
                                                                 ),
-                                                                overflow: TextOverflow.ellipsis,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
                                                               ),
                                                               Text(
                                                                 '${percent.toStringAsFixed(0)}%',
                                                                 style: TextStyle(
-                                                                  fontFamily: 'Do Hyeon',
+                                                                  fontFamily:
+                                                                      'Do Hyeon',
                                                                   fontSize: 10,
-                                                                  color: Colors.grey[600],
-                                                                  fontWeight: FontWeight.bold,
+                                                                  color: Colors
+                                                                      .grey[600],
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
                                                                 ),
                                                               ),
                                                             ],
@@ -550,43 +540,82 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                   );
                                                 }).toList(),
                                               ),
-                                              if (categoryList.length > 4) ...[
-                                                const SizedBox(height: 8),
+                                              if (categoryList.length > 4)
                                                 Wrap(
                                                   spacing: 12.0,
                                                   runSpacing: 8.0,
-                                                  alignment: WrapAlignment.center,
-                                                  children: categoryList.skip(4).take(3).map(( 
+                                                  alignment:
+                                                      WrapAlignment.center,
+                                                  children: categoryList.skip(4).take(3).map((
                                                     cat,
                                                   ) {
-                                                    final color = 
+                                                    final color =
                                                         categoryColorMap[cat['name']] ??
-                                                        Colors
-                                                            .grey
-                                                            .shade400;
-                                                    final percent = 
-                                                        cat['percent'] ??
-                                                        0.0;
+                                                        Colors.grey.shade400;
+                                                    final percent =
+                                                        cat['percent'] ?? 0.0;
                                                     return Container(
-                                                      constraints: BoxConstraints(maxWidth: screenWidth * 0.25),
+                                                      constraints:
+                                                          BoxConstraints(
+                                                            maxWidth:
+                                                                screenWidth *
+                                                                0.25,
+                                                          ),
                                                       child: Row(
-                                                        mainAxisSize: MainAxisSize.min,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
                                                         children: [
-                                                          Container(width: 12, height: 12, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
-                                                          const SizedBox(width: 6),
+                                                          Container(
+                                                            width: 12,
+                                                            height: 12,
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                  color: color,
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        2,
+                                                                      ),
+                                                                ),
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 6,
+                                                          ),
                                                           Flexible(
                                                             child: Column(
-                                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                                              mainAxisSize: MainAxisSize.min,
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              mainAxisSize:
+                                                                  MainAxisSize
+                                                                      .min,
                                                               children: [
                                                                 Text(
                                                                   cat['name'],
-                                                                  style: const TextStyle(fontFamily: 'Do Hyeon', fontSize: 12, color: Colors.black87),
-                                                                  overflow: TextOverflow.ellipsis,
+                                                                  style: const TextStyle(
+                                                                    fontFamily:
+                                                                        'Do Hyeon',
+                                                                    fontSize:
+                                                                        12,
+                                                                    color: Colors
+                                                                        .black87,
+                                                                  ),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
                                                                 ),
                                                                 Text(
                                                                   '${percent.toStringAsFixed(0)}%',
-                                                                  style: TextStyle(fontFamily: 'Do Hyeon', fontSize: 10, color: Colors.grey[600], fontWeight: FontWeight.bold),
+                                                                  style: TextStyle(
+                                                                    fontFamily:
+                                                                        'Do Hyeon',
+                                                                    fontSize:
+                                                                        10,
+                                                                    color: Colors
+                                                                        .grey[600],
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                  ),
                                                                 ),
                                                               ],
                                                             ),
@@ -596,7 +625,6 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                     );
                                                   }).toList(),
                                                 ),
-                                              ],
                                             ],
                                           ),
                                         ),
@@ -620,7 +648,12 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
     );
   }
 
-  Widget _buildStatItem(double screenWidth, bool isTablet, String label, String value) {
+  Widget _buildStatItem(
+    double screenWidth,
+    bool isTablet,
+    String label,
+    String value,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(
         vertical: (MediaQuery.of(context).size.height * 0.008).clamp(4.0, 8.0),
@@ -670,8 +703,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
   }
 
   Widget _buildUsageIndicator(
-    double screenWidth,
-    {
+    double screenWidth, {
     required String label,
     required int used,
     required int max,

@@ -102,33 +102,36 @@ class GeminiService {
 
       if (data['candidates'] == null || data['candidates'].isEmpty) {
         throw Exception('API 응답에 후보가 없습니다');
+      } else {
+        final content =
+            data['candidates'][0]['content']['parts'][0]['text'] as String;
+        final cleanContent = content.trim();
+
+        final reviews = cleanContent
+            .split('\n')
+            .where((line) => line.trim().startsWith('- '))
+            .map((line) {
+              final reviewText = line.substring(line.indexOf('- ') + 2).trim();
+              return reviewText.isEmpty ? null : reviewText;
+            })
+            .where((review) => review != null)
+            .cast<String>()
+            .toList();
+
+        if (reviews.isEmpty) {
+          throw Exception('유효한 리뷰가 생성되지 않았습니다');
+        } else {
+          return reviews.length >= 3 ? reviews.take(3).toList() : reviews;
+        }
       }
-
-      final content =
-          data['candidates'][0]['content']['parts'][0]['text'] as String;
-      final cleanContent = content.trim();
-
-      final reviews = cleanContent
-          .split('\n')
-          .where((line) => line.trim().startsWith('- '))
-          .map((line) {
-            final reviewText = line.substring(line.indexOf('- ') + 2).trim();
-            return reviewText.isEmpty ? null : reviewText;
-          })
-          .where((review) => review != null)
-          .cast<String>()
-          .toList();
-
-      if (reviews.isEmpty) {
-        throw Exception('유효한 리뷰가 생성되지 않았습니다');
-      }
-
-      return reviews.length >= 3 ? reviews.take(3).toList() : reviews;
     } on FormatException catch (e) {
       throw Exception('응답 파싱 실패: $e');
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('알 수 없는 오류: $e');
+      if (e is Exception) {
+        rethrow;
+      } else {
+        throw Exception('알 수 없는 오류: $e');
+      }
     }
   }
 
@@ -154,36 +157,44 @@ class GeminiService {
 
       if (data['candidates'] == null || data['candidates'].isEmpty) {
         throw Exception('부적절한 이미지: 모델이 이미지를 분석할 수 없습니다.');
-      }
-
-      final content =
-          data['candidates'][0]['content']['parts'][0]['text'] as String;
-      final cleanContent = content.trim().toUpperCase();
-
-      if (cleanContent.contains('YES')) {
-        return true;
       } else {
-        throw Exception('부적절한 이미지: 이 사진은 음식 사진이 아니거나 리뷰에 적합하지 않습니다.');
+        final content =
+            data['candidates'][0]['content']['parts'][0]['text'] as String;
+        final cleanContent = content.trim().toUpperCase();
+
+        if (cleanContent.contains('YES')) {
+          return true;
+        } else {
+          throw Exception('부적절한 이미지: 이 사진은 음식 사진이 아니거나 리뷰에 적합하지 않습니다.');
+        }
       }
     } on FormatException catch (e) {
       throw Exception('응답 파싱 실패: $e');
     } catch (e) {
-      if (e is Exception) rethrow;
-      throw Exception('이미지 검증 중 알 수 없는 오류: $e');
+      if (e is Exception) {
+        rethrow;
+      } else {
+        throw Exception('이미지 검증 중 알 수 없는 오류: $e');
+      }
     }
   }
 
   String _getRatingText(double rating) {
-    if (rating >= 4.5)
+    if (rating >= 4.5) {
       return '매우좋음';
-    if (rating >= 4.0)
+    }
+    if (rating >= 4.0) {
       return '좋음';
-    if (rating >= 3.5)
+    }
+    if (rating >= 3.5) {
       return '보통';
-    if (rating >= 3.0)
+    }
+    if (rating >= 3.0) {
       return '아쉬움';
-    if (rating >= 2.5)
+    }
+    if (rating >= 2.5) {
       return '별로';
+    }
     return '나쁨';
   }
 
@@ -199,39 +210,39 @@ class GeminiService {
       try {
         if (imageBytes.length > 4 * 1024 * 1024) {
           throw Exception('이미지 크기가 너무 큽니다 (최대 4MB)');
-        }
+        } else {
+          final base64Image = base64Encode(imageBytes);
 
-        final base64Image = base64Encode(imageBytes);
-
-        String mimeType = 'application/octet-stream';
-        if (imageBytes.length >= 4) {
-          final header = imageBytes.sublist(0, 4);
-          if (header[0] == 0x89 &&
-              header[1] == 0x50 &&
-              header[2] == 0x4E &&
-              header[3] == 0x47) {
-            mimeType = 'image/png';
-          } else if (header[0] == 0xFF &&
-              header[1] == 0xD8 &&
-              header[2] == 0xFF) {
-            mimeType = 'image/jpeg';
-          } else if (header[0] == 0x52 &&
-              header[1] == 0x49 &&
-              header[2] == 0x46 &&
-              header[3] == 0x46) {
-            if (imageBytes.length >= 12 &&
-                imageBytes[8] == 0x57 &&
-                imageBytes[9] == 0x45 &&
-                imageBytes[10] == 0x42 &&
-                imageBytes[11] == 0x50) {
-              mimeType = 'image/webp';
+          String mimeType = 'application/octet-stream';
+          if (imageBytes.length >= 4) {
+            final header = imageBytes.sublist(0, 4);
+            if (header[0] == 0x89 &&
+                header[1] == 0x50 &&
+                header[2] == 0x4E &&
+                header[3] == 0x47) {
+              mimeType = 'image/png';
+            } else if (header[0] == 0xFF &&
+                header[1] == 0xD8 &&
+                header[2] == 0xFF) {
+              mimeType = 'image/jpeg';
+            } else if (header[0] == 0x52 &&
+                header[1] == 0x49 &&
+                header[2] == 0x46 &&
+                header[3] == 0x46) {
+              if (imageBytes.length >= 12 &&
+                  imageBytes[8] == 0x57 &&
+                  imageBytes[9] == 0x45 &&
+                  imageBytes[10] == 0x42 &&
+                  imageBytes[11] == 0x50) {
+                mimeType = 'image/webp';
+              }
             }
           }
-        }
 
-        parts.add({
-          'inline_data': {'mime_type': mimeType, 'data': base64Image},
-        });
+          parts.add({
+            'inline_data': {'mime_type': mimeType, 'data': base64Image},
+          });
+        }
       } catch (e) {
         throw Exception('이미지 처리 실패: $e');
       }
@@ -360,7 +371,7 @@ $recentFoodsText
 - 추천하는 메뉴들은 서로 다른 국가의, 다양한 종류의 음식으로 구성해주세요. 예를 들어, 쌀국수, 분짜, 나시고랭처럼 여러 국가의 대표 메뉴를 섞어주세요.
 - 개수: 8-12개.
 - 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
-- JSON 형식: [{ "name":"메뉴명"}, { "name":"메뉴명"}, ...]
+- JSON 형식: [{"name":"메뉴명"}, {"name":"메뉴명"}, ...]
 
 $examples
 이제 결과를 JSON 배열로만 출력하세요.
@@ -402,7 +413,7 @@ $examples
 - 매우 다양한 종류의 음식으로 구성해주세요.
 - 개수: 15-20개.
 - 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
-- JSON 형식: [{ "name":"메뉴명"}, { "name":"메뉴명"}, ...]
+- JSON 형식: [{"name":"메뉴명"}, {"name":"메뉴명"}, ...]
 
 $examples
 이제 결과를 JSON 배열로만 출력하세요.

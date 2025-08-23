@@ -184,8 +184,8 @@ class _TodayRecommendationScreenState
       child: Text('카테고리를 선택해주세요',
           style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
-            fontFamily: 'Do Hyeon',
             fontSize: responsive.titleFontSize(),
+            fontFamily: 'Do Hyeon',
             color: Colors.grey[800],
           )),
     );
@@ -263,7 +263,7 @@ class _TodayRecommendationScreenState
   Widget _buildLoadingOverlay(BuildContext context, Responsive responsive) {
     return Positioned.fill(
       child: Container(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withAlpha(128),
         child: Center(child: _buildLoadingDialog(context, responsive)),
       ),
     );
@@ -299,7 +299,7 @@ class _TodayRecommendationScreenState
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withAlpha(25),
           blurRadius: responsive.isTablet ? 20.0 : 15.0,
           offset: const Offset(0, 8),
         ),
@@ -338,7 +338,8 @@ class _TodayRecommendationScreenState
     final recentFoods = <String>[];
 
     void openDialog() async {
-      final recommended = await _pickSmartFood(foods, recentFoods);
+      final analysis = await UserPreferenceService.analyzeUserPreferences();
+      final recommended = RecommendationService.pickSmartFood(foods, recentFoods, analysis);
       ref.read(selectedFoodProvider.notifier).state = recommended;
 
       if (!context.mounted) return;
@@ -350,6 +351,8 @@ class _TodayRecommendationScreenState
         builder: (_) =>
             _buildAnimatedDialog(context, category, recommended, foods, color),
       );
+
+      if (!context.mounted) return; // Check context.mounted after async operation
 
       await _handleDialogResult(context, result, openDialog);
     }
@@ -428,13 +431,5 @@ class _TodayRecommendationScreenState
       context,
       MaterialPageRoute(builder: (_) => ReviewScreen(food: food)),
     );
-  }
-
-  Future<FoodRecommendation> _pickSmartFood(
-    List<FoodRecommendation> foods,
-    List<String> recentFoods,
-  ) async {
-    final analysis = await UserPreferenceService.analyzeUserPreferences();
-    return RecommendationService.pickSmartFood(foods, recentFoods, analysis);
   }
 }

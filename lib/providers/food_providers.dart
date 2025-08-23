@@ -138,8 +138,6 @@ final recommendationListProvider =
 final recommendationProvider = FutureProvider.autoDispose
     .family<List<FoodRecommendation>, String>((ref, category) async {
       try {
-        final foodHistory = ref.watch(foodHistoryProvider);
-
         // 서비스에서 추천 목록 가져오기
         final recommendations =
             await RecommendationService.getFoodRecommendations(

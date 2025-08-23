@@ -64,10 +64,14 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 const TodayRecommendationScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) {
+              return FadeTransition(opacity: animation, child: child);
+            },
             transitionDuration: const Duration(milliseconds: 300),
           ),
         );
@@ -178,18 +182,6 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
     final isTablet = screenSize.width >= 768;
     final isSmallScreen = screenSize.height < 600;
 
-    // 반응형 크기 계산 - Only calculate needed values
-    final spacingMedium = _getResponsiveSpacing(
-      screenSize,
-      isTablet,
-      large: false,
-    );
-    final titleFontSize = _getResponsiveTitleFontSize(screenSize, isTablet);
-    final subtitleFontSize = _getResponsiveSubtitleFontSize(
-      screenSize,
-      isTablet,
-    );
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -220,44 +212,6 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
         ),
       ),
     );
-  }
-
-  // 반응형 간격 계산
-  double _getResponsiveSpacing(
-    Size screenSize,
-    bool isTablet, {
-    required bool large,
-  }) {
-    if (isTablet) {
-      return large ? 60.0 : 36.0;
-    } else {
-      final baseSpacing = large
-          ? screenSize.height * 0.06
-          : screenSize.height * 0.035;
-      return large
-          ? baseSpacing.clamp(40.0, 80.0)
-          : baseSpacing.clamp(20.0, 40.0);
-    }
-  }
-
-  // 반응형 제목 폰트 크기 계산
-  double _getResponsiveTitleFontSize(Size screenSize, bool isTablet) {
-    if (isTablet) {
-      return 24.0;
-    } else {
-      final baseFontSize = screenSize.width * 0.045;
-      return baseFontSize.clamp(16.0, 22.0);
-    }
-  }
-
-  // 반응형 부제목 폰트 크기 계산
-  double _getResponsiveSubtitleFontSize(Size screenSize, bool isTablet) {
-    if (isTablet) {
-      return 18.0;
-    } else {
-      final baseFontSize = screenSize.width * 0.035;
-      return baseFontSize.clamp(12.0, 16.0);
-    }
   }
 }
 

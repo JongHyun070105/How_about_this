@@ -33,7 +33,7 @@ class RecommendationService {
 
     final geminiService = GeminiService(http.Client(), _apiKey!);
 
-    final prompt = await geminiService.buildGenericRecommendationPrompt(
+    final prompt = geminiService.buildGenericRecommendationPrompt(
       category: category,
     );
 

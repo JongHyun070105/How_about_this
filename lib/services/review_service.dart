@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/main.dart';
 import 'package:review_ai/providers/review_provider.dart';
-import 'package:review_ai/services/gemini_service.dart';
 
 // Provider for the new ReviewService
 final reviewServiceProvider = Provider((ref) => ReviewService(ref));

@@ -23,7 +23,7 @@ class FoodCategory {
   Map<String, dynamic> toJson() => _$FoodCategoryToJson(this);
 
   static Color _colorFromJson(int json) => Color(json);
-  static int _colorToJson(Color color) => color.value;
+  static int _colorToJson(Color color) => color.toARGB32();
 
   @override
   bool operator ==(Object other) =>

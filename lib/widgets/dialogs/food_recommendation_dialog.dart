@@ -2,9 +2,8 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/models/food_recommendation.dart';
-import 'package:review_ai/providers/food_providers.dart';
 import 'package:review_ai/services/user_preference_service.dart';
-import 'package:review_ai/widgets/dialogs/review_prompt_dialog.dart'; // Import the new dialog
+import 'package:review_ai/widgets/dialogs/review_prompt_dialog.dart';
 
 class FoodRecommendationDialog extends ConsumerStatefulWidget {
   final String category;
@@ -113,15 +112,6 @@ class _FoodRecommendationDialogState
       );
       await UserPreferenceService.recordReviewPromptDialogShown();
     }
-  }
-
-  Future<bool?> _showReviewLimitAlert(
-    BuildContext context,
-    double screenWidth,
-    int remainingReviews,
-  ) {
-    // 리뷰 경고는 이제 Dialog 내부에서는 호출하지 않음
-    return Future.value(null); // ⚡ Future 타입으로 수정
   }
 
   @override
