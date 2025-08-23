@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:eat_this_app/providers/review_provider.dart';
+import 'package:review_ai/providers/review_provider.dart';
 
 class EditReviewDialog extends ConsumerStatefulWidget {
   final int index;
@@ -85,10 +84,10 @@ class _EditReviewDialogState extends ConsumerState<EditReviewDialog> {
           onPressed: () {
             final newReview = _editController.text;
             if (newReview.isNotEmpty) {
-              final currentReviews = ref.read(generatedReviewsProvider);
-              final updatedReviews = List<String>.from(currentReviews);
+              final reviewState = ref.read(reviewProvider);
+              final updatedReviews = List<String>.from(reviewState.generatedReviews);
               updatedReviews[widget.index] = newReview;
-              ref.read(generatedReviewsProvider.notifier).state = updatedReviews;
+              ref.read(reviewProvider.notifier).setGeneratedReviews(updatedReviews);
               Navigator.of(context).pop();
             } else {
               // Optionally show a snackbar or error message if review is empty

@@ -1,7 +1,3 @@
-// =============================================================================
-// 보안 관련 설정 및 유틸리티
-// =============================================================================
-
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -23,13 +19,22 @@ class SecurityConfig {
 
   /// 플랫폼별 리워드 광고 ID 반환
   static String get rewardedAdUnitId {
-    // 테스트용 AdMob 리워드 광고 ID (플랫폼별)
     if (Platform.isAndroid) {
-      return 'ca-app-pub-6555743055922387/7073803440'; // Android 리워드 ID
+      return 'ca-app-pub-6555743055922387/7073803440';
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-6555743055922387/1329741925'; // iOS 리워드 ID
+      return 'ca-app-pub-6555743055922387/1329741925';
     }
-    return ''; // 기본값 (도달하지 않음)
+    return '';
+  }
+
+  /// 플랫폼별 배너 광고 ID 반환
+  static String get bannerAdUnitId {
+    if (Platform.isAndroid) {
+      return 'ca-app-pub-6555743055922387/8087007370';
+    } else if (Platform.isIOS) {
+      return 'ca-app-pub-6555743055922387/7591365110';
+    }
+    return '';
   }
 
   // =============================================================================
@@ -461,7 +466,7 @@ class SecurityConfig {
 
       // 패키지명 확인
       const expectedPackageName =
-          'com.example.food_rating_app'; // 실제 패키지명으로 변경 필요
+          'com.example.reviewai_flutter'; // 실제 패키지명으로 변경 필요
       if (packageInfo.packageName != expectedPackageName) {
         return false;
       }
@@ -488,7 +493,7 @@ class SecurityConfig {
     try {
       // Bundle ID 확인
       const expectedBundleId =
-          'com.example.food-rating-app'; // 실제 Bundle ID로 변경 필요
+          'com.example.reviewaiFlutter'; // 실제 Bundle ID로 변경 필요
 
       try {
         final result = await MethodChannel(
@@ -755,7 +760,9 @@ class SecurityInitializer {
         debugPrint('디버거: ${result.isDebuggerAttached ? "연결됨" : "정상"}');
         debugPrint('앱 무결성: ${result.isAppIntegrityValid ? "정상" : "손상됨"}');
         debugPrint('에뮬레이터: ${result.isEmulator ? "감지됨" : "정상"}');
-        debugPrint('보안 요구사항: ${result.isSecurityRequirementsMet ? "충족" : "미충족"}');
+        debugPrint(
+          '보안 요구사항: ${result.isSecurityRequirementsMet ? "충족" : "미충족"}',
+        );
         debugPrint('전체 보안 상태: ${result.isSecure ? "안전" : "위험"}');
         debugPrint('==================');
       }

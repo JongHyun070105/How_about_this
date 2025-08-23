@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:review_ai/models/review_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // 리뷰 기록 항목을 위한 데이터 모델
@@ -35,18 +36,18 @@ class ReviewHistoryEntry {
 
   // JSON 직렬화 (안전하게)
   Map<String, dynamic> toJson() => {
-    'foodName': foodName,
-    'restaurantName': restaurantName,
-    'imagePath': imagePath,
-    'deliveryRating': deliveryRating.toString(), // double을 string으로 안전하게 저장
-    'tasteRating': tasteRating.toString(),
-    'portionRating': portionRating.toString(),
-    'priceRating': priceRating.toString(),
-    'reviewStyle': reviewStyle,
-    'emphasis': emphasis,
-    'generatedReviews': generatedReviews,
-    'createdAt': createdAt.millisecondsSinceEpoch.toString(),
-  };
+        'foodName': foodName,
+        'restaurantName': restaurantName,
+        'imagePath': imagePath,
+        'deliveryRating': deliveryRating.toString(), // double을 string으로 안전하게 저장
+        'tasteRating': tasteRating.toString(),
+        'portionRating': portionRating.toString(),
+        'priceRating': priceRating.toString(),
+        'reviewStyle': reviewStyle,
+        'emphasis': emphasis,
+        'generatedReviews': generatedReviews,
+        'createdAt': createdAt.millisecondsSinceEpoch.toString(),
+      };
 
   // JSON 역직렬화 (안전하게)
   factory ReviewHistoryEntry.fromJson(Map<String, dynamic> json) {
@@ -139,41 +140,66 @@ class ReviewHistoryEntry {
   }
 }
 
-// 1. 선택된 이미지를 관리하는 Provider
-final imageProvider = StateProvider<File?>((ref) => null);
+class ReviewNotifier extends StateNotifier<ReviewState> {
+  ReviewNotifier() : super(ReviewState());
 
-// 2. 음식 이름 텍스트를 관리하는 Provider
-final foodNameProvider = StateProvider<String>((ref) => '');
+  void setImage(File? image) {
+    state = state.copyWith(image: image);
+  }
 
-// 음식점 이름 텍스트를 관리하는 Provider
-final restaurantNameProvider = StateProvider<String>((ref) => '');
+  void setFoodName(String foodName) {
+    state = state.copyWith(foodName: foodName);
+  }
 
-// 3. 강조하고 싶은 내용을 관리하는 Provider
-final emphasisProvider = StateProvider<String>((ref) => '');
+  void setRestaurantName(String restaurantName) {
+    state = state.copyWith(restaurantName: restaurantName);
+  }
 
-// 4. 별점을 관리하는 Provider들
-final deliveryRatingProvider = StateProvider<double>((ref) => 0.0);
-final tasteRatingProvider = StateProvider<double>((ref) => 0.0);
-final portionRatingProvider = StateProvider<double>((ref) => 0.0);
-final priceRatingProvider = StateProvider<double>((ref) => 0.0);
+  void setEmphasis(String emphasis) {
+    state = state.copyWith(emphasis: emphasis);
+  }
+
+  void setDeliveryRating(double rating) {
+    state = state.copyWith(deliveryRating: rating);
+  }
+
+  void setTasteRating(double rating) {
+    state = state.copyWith(tasteRating: rating);
+  }
+
+  void setPortionRating(double rating) {
+    state = state.copyWith(portionRating: rating);
+  }
+
+  void setPriceRating(double rating) {
+    state = state.copyWith(priceRating: rating);
+  }
+
+  void setSelectedReviewStyle(String style) {
+    state = state.copyWith(selectedReviewStyle: style);
+  }
+
+  void setLoading(bool isLoading) {
+    state = state.copyWith(isLoading: isLoading);
+  }
+
+  void setGeneratedReviews(List<String> reviews) {
+    state = state.copyWith(generatedReviews: reviews);
+  }
+
+  void reset() {
+    state = ReviewState();
+  }
+}
+
+final reviewProvider = StateNotifierProvider<ReviewNotifier, ReviewState>((ref) {
+  return ReviewNotifier();
+});
 
 // 5. 리뷰 스타일 리스트 Provider
 final reviewStylesProvider = Provider<List<String>>(
   (ref) => ['재미있게', '전문가처럼', '간결하게', 'SNS 스타일', '감성적으로'],
 );
-
-// 6. 선택된 리뷰 스타일을 관리하는 Provider
-final selectedReviewStyleProvider = StateProvider<String>((ref) {
-  // 기본값으로 첫 번째 스타일을 선택 (ref.watch 사용 없이 직접 초기화)
-  const defaultStyles = ['재미있게', '전문가처럼', '간결하게', 'SNS 스타일', '감성적으로'];
-  return defaultStyles.first;
-});
-
-// 7. 리뷰 생성 로딩 상태를 관리하는 Provider
-final reviewLoadingProvider = StateProvider<bool>((ref) => false);
-
-// 8. 생성된 리뷰 리스트를 관리하는 Provider
-final generatedReviewsProvider = StateProvider<List<String>>((ref) => []);
 
 // 9. 리뷰 기록을 관리하는 StateNotifier 및 Provider
 class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
@@ -280,20 +306,9 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
 
 final reviewHistoryProvider =
     StateNotifierProvider<ReviewHistoryNotifier, List<ReviewHistoryEntry>>(
-      (ref) => ReviewHistoryNotifier(),
-    );
+  (ref) => ReviewHistoryNotifier(),
+);
 // 모든 Provider를 초기화하는 함수
 void resetAllProviders(WidgetRef ref) {
-  ref.read(imageProvider.notifier).state = null;
-  ref.read(foodNameProvider.notifier).state = '';
-  ref.read(emphasisProvider.notifier).state = '';
-  ref.read(deliveryRatingProvider.notifier).state = 0.0;
-  ref.read(tasteRatingProvider.notifier).state = 0.0;
-  ref.read(portionRatingProvider.notifier).state = 0.0;
-  ref.read(priceRatingProvider.notifier).state = 0.0;
-  ref.read(selectedReviewStyleProvider.notifier).state = ref
-      .read(reviewStylesProvider)
-      .first;
-  ref.read(reviewLoadingProvider.notifier).state = false;
-  ref.read(generatedReviewsProvider.notifier).state = [];
+  ref.read(reviewProvider.notifier).reset();
 }

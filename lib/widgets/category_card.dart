@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:eat_this_app/providers/food_providers.dart';
+import 'package:review_ai/models/food_category.dart';
 
 class CategoryCard extends StatelessWidget {
   final FoodCategory category;

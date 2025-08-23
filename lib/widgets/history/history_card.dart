@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:eat_this_app/providers/review_provider.dart';
-import 'package:eat_this_app/widgets/review/rating_row.dart';
+import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/widgets/review/rating_row.dart';
 
 class HistoryCard extends StatelessWidget {
   final ReviewHistoryEntry entry;

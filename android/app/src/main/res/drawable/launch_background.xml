@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/white" /> <!-- Set background to white -->
     <item>
-        <bitmap android:gravity="fill" android:src="@drawable/background"/>
-    </item>
-    <item>
-        <bitmap android:gravity="center" android:src="@drawable/splash"/>
+        <bitmap android:gravity="center" android:src="@drawable/app_icon"/>
     </item>
 </layer-list>

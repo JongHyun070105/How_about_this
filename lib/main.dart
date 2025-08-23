@@ -2,17 +2,16 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:eat_this_app/config/theme.dart'; // Updated import
-import 'package:eat_this_app/screens/today_recommendation_screen.dart'; // Updated import
-import 'package:eat_this_app/config/security_config.dart'; // Updated import
+import 'package:review_ai/config/theme.dart';
+import 'package:review_ai/config/security_config.dart';
 import 'package:clarity_flutter/clarity_flutter.dart';
-import 'dart:async'; // unawaited를 위해 추가
-import 'package:eat_this_app/widgets/common/error_widget.dart'; // Updated import
+import 'dart:async';
+import 'package:review_ai/widgets/common/error_widget.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:eat_this_app/services/gemini_api_client.dart'; // Updated import
-import 'package:eat_this_app/services/gemini_service.dart'; // Updated import
-import 'package:eat_this_app/screens/loading_screen.dart'; // Moved and updated import
+import 'package:review_ai/services/gemini_service.dart';
+import 'package:review_ai/screens/loading_screen.dart';
+import 'package:review_ai/services/usage_tracking_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -22,9 +21,10 @@ final geminiServiceProvider = Provider<GeminiService>((ref) {
     throw Exception('GEMINI_API_KEY not found in .env file');
   }
   final httpClient = http.Client();
-  final apiClient = GeminiApiClient(httpClient, apiKey);
-  return GeminiService(apiClient);
+  return GeminiService(httpClient, apiKey);
 });
+
+final usageTrackingServiceProvider = Provider((ref) => UsageTrackingService());
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +40,8 @@ Future<void> main() async {
     await MobileAds.instance.initialize();
     await _configureSystemUI();
     runApp(
-      ClarityWidget( // Wrapped with ClarityWidget
+      ClarityWidget(
+        // Wrapped with ClarityWidget
         app: const ProviderScope(child: ReviewAIApp()),
         clarityConfig: config,
       ),
@@ -49,7 +50,9 @@ Future<void> main() async {
     debugPrint(
       '앱 초기화 실패: ${SecurityConfig.sanitizeErrorMessage(e.toString())}',
     );
-    runApp(const ProviderScope(child: ReviewAIApp())); // Fallback if Clarity fails
+    runApp(
+      const ProviderScope(child: ReviewAIApp()),
+    ); // Fallback if Clarity fails
   }
 }
 
@@ -58,7 +61,7 @@ Future<void> _configureSystemUI() async {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
       systemNavigationBarColor: Colors.white,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
@@ -72,7 +75,7 @@ class ReviewAIApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '이거 먹어봐',
+      title: '이거 어때',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       locale: const Locale('ko', 'KR'),

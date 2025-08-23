@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:eat_this_app/providers/review_provider.dart';
+import 'package:review_ai/providers/review_provider.dart';
 
 class ReviewStyleSection extends ConsumerWidget {
   const ReviewStyleSection({super.key});
@@ -10,7 +10,7 @@ class ReviewStyleSection extends ConsumerWidget {
     final textTheme = Theme.of(context).textTheme;
     final screenSize = MediaQuery.of(context).size;
     final reviewStyles = ref.watch(reviewStylesProvider);
-    final selectedStyle = ref.watch(selectedReviewStyleProvider);
+    final selectedStyle = ref.watch(reviewProvider).selectedReviewStyle;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,11 +44,17 @@ class ReviewStyleSection extends ConsumerWidget {
                 selected: selectedStyle == style,
                 onSelected: (isSelected) {
                   if (isSelected) {
-                    ref.read(selectedReviewStyleProvider.notifier).state =
-                        style;
+                    ref.read(reviewProvider.notifier).setSelectedReviewStyle(style);
                   }
                 },
-                selectedColor: Colors.black,
+                selectedColor: Colors.black, // 선택된 상태: 검은색
+                backgroundColor: Colors.white, // 기본 상태: 흰색 배경
+                side: BorderSide(
+                  color: selectedStyle == style
+                      ? Colors.black
+                      : Colors.grey[400]!,
+                  width: 1.0,
+                ),
               ),
             );
           }).toList(),

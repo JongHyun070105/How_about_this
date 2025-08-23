@@ -1,43 +1,50 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:eat_this_app/providers/food_providers.dart';
-import 'user_preference_service.dart'; // 위에서 만든 서비스 import
+import 'package:review_ai/models/food_recommendation.dart';
+import 'package:review_ai/services/gemini_service.dart';
+import 'user_preference_service.dart';
 import 'dart:math';
-import 'package:eat_this_app/config/app_constants.dart';
+import 'package:review_ai/config/app_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class RecommendationService {
   static final _apiKey = dotenv.env['GEMINI_API_KEY'];
+  static const String _cacheKeyPrefix = 'recommendation_cache_';
+  static const Duration _cacheExpiration = Duration(hours: 24);
 
   static Future<List<FoodRecommendation>> getFoodRecommendations({
     required String category,
-    required List<String> history,
   }) async {
+    final cacheKey = '$_cacheKeyPrefix$category';
+
+    final cachedData = await _getFromCache(cacheKey);
+    if (cachedData != null) {
+      debugPrint('Serving recommendation from cache for category: $category');
+      return cachedData;
+    }
+
+    debugPrint('Cache miss for category: $category. Fetching from API.');
+
     if (_apiKey == null) {
       throw Exception('API 키가 없습니다. .env 파일을 확인하세요.');
     }
 
-    final model = GenerativeModel(
-      model: 'gemini-2.5-flash-lite',
-      apiKey: _apiKey!,
-    );
+    final geminiService = GeminiService(http.Client(), _apiKey!);
 
-    // 개인화된 프롬프트 생성
-    final prompt = await UserPreferenceService.buildPersonalizedPrompt(
+    final prompt = await geminiService.buildGenericRecommendationPrompt(
       category: category,
-      recentFoods: history,
     );
 
     try {
-      final response = await model.generateContent([Content.text(prompt)]);
-      final jsonString = response.text;
+      final response = await geminiService.generateContent(prompt);
+      final jsonString = response['candidates'][0]['content']['parts'][0]['text'];
 
       if (jsonString == null) {
         throw Exception('Gemini API로부터 응답을 받지 못했습니다.');
       }
 
-      // JSON 문자열 정리 (마크다운 코드 블록 제거)
       final cleanedJson = jsonString
           .replaceAll('```json', '')
           .replaceAll('```', '')
@@ -49,20 +56,52 @@ class RecommendationService {
           .map((item) => FoodRecommendation.fromJson(item))
           .toList();
 
-      // 싫어하는 음식 필터링 (추가 안전장치)
-      final dislikedFoods = await UserPreferenceService.getDislikedFoods();
-      final filteredRecommendations = recommendations
-          .where((food) => !dislikedFoods.contains(food.name))
-          .toList();
+      await _saveToCache(cacheKey, recommendations);
 
-      return filteredRecommendations;
+      return recommendations;
     } catch (e) {
       debugPrint('Gemini API 호출 또는 파싱 오류: $e');
       return Future.error('음식 추천을 받아오는 데 실패했습니다. 다시 시도해주세요.');
     }
   }
 
-  // 개인화된 추천을 위한 스마트 음식 선택
+  static Future<void> _saveToCache(String key, List<FoodRecommendation> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = data.map((e) => e.toJson()).toList();
+    final encodedData = jsonEncode(jsonList);
+    final expirationTime = DateTime.now().add(_cacheExpiration).toIso8601String();
+
+    await prefs.setString(key, encodedData);
+    await prefs.setString('${key}_expiry', expirationTime);
+  }
+
+  static Future<List<FoodRecommendation>?> _getFromCache(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final encodedData = prefs.getString(key);
+    final expiryTimeStr = prefs.getString('${key}_expiry');
+
+    if (encodedData == null || expiryTimeStr == null) {
+      return null;
+    }
+
+    final expiryTime = DateTime.parse(expiryTimeStr);
+    if (DateTime.now().isAfter(expiryTime)) {
+      await prefs.remove(key);
+      await prefs.remove('${key}_expiry');
+      return null;
+    }
+
+    try {
+      final decodedList = jsonDecode(encodedData) as List;
+      return decodedList.map((item) => FoodRecommendation.fromJson(item)).toList();
+    } catch (e) {
+      debugPrint('Error decoding cached data: $e');
+      await prefs.remove(key);
+      await prefs.remove('${key}_expiry');
+      return null;
+    }
+  }
+
   static FoodRecommendation pickSmartFood(
     List<FoodRecommendation> foods,
     List<String> recentFoods,
@@ -72,43 +111,36 @@ class RecommendationService {
       throw Exception("추천 가능한 음식이 없습니다.");
     }
 
-    final random = Random(); // Create a single Random instance
+    final random = Random();
 
-    // 1단계: 싫어하는 음식과 최근 먹은 음식 제외
     List<FoodRecommendation> available = foods
         .where((f) => !recentFoods.contains(f.name))
         .where((f) => !preferences.dislikedFoods.contains(f.name))
         .toList();
 
     if (available.isEmpty) {
-      // 최근 음식 기록 초기화하고 다시 시도 (싫어하는 음식은 유지)
       recentFoods.clear();
       available = foods
           .where((f) => !preferences.dislikedFoods.contains(f.name))
           .toList();
 
       if (available.isEmpty) {
-        // 모든 음식을 싫어하는 경우 - 전체에서 랜덤 선택
         available = List.from(foods);
       }
     }
 
-    // 2단계: 선호도 기반 가중치 적용
     if (preferences.preferredFoods.isNotEmpty) {
       final preferredAvailable = available
           .where((f) => preferences.preferredFoods.contains(f.name))
           .toList();
 
-      // 선호하는 음식이 있으면 70% 확률로 선호 음식에서 선택
       if (preferredAvailable.isNotEmpty && random.nextDouble() < 0.7) {
         available = preferredAvailable;
       }
     }
 
-    // 3단계: 최종 선택
     final chosen = available[random.nextInt(available.length)];
 
-    // 4단계: 기록 업데이트
     recentFoods.add(chosen.name);
     if (recentFoods.length > AppConstants.recentFoodsLimit) {
       recentFoods.removeAt(0);
@@ -117,7 +149,6 @@ class RecommendationService {
     return chosen;
   }
 
-  // 사용자 통계 조회
   static Future<Map<String, dynamic>> getUserStats() async {
     final history = await UserPreferenceService.getFoodSelectionHistory();
     final analysis = await UserPreferenceService.analyzeUserPreferences();
@@ -127,16 +158,16 @@ class RecommendationService {
         .where((s) => s.selectedAt.isAfter(thirtyDaysAgo))
         .toList();
 
-    // 카테고리별 통계
     final categoryStats = <String, int>{};
     for (final selection in recentSelections) {
       categoryStats[selection.category] =
           (categoryStats[selection.category] ?? 0) + 1;
     }
 
-    // 가장 자주 선택한 음식 TOP 5
     final foodFrequency = <String, int>{};
-    for (final selection in recentSelections) {
+    final likedSelections = recentSelections.where((s) => s.liked).toList();
+
+    for (final selection in likedSelections) {
       foodFrequency[selection.foodName] =
           (foodFrequency[selection.foodName] ?? 0) + 1;
     }

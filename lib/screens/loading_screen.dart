@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:eat_this_app/providers/food_providers.dart';
-import 'package:eat_this_app/screens/today_recommendation_screen.dart';
-import 'package:eat_this_app/widgets/dialogs/review_dialogs.dart';
+import 'package:review_ai/providers/food_providers.dart';
+import 'package:review_ai/screens/today_recommendation_screen.dart';
+import 'package:review_ai/widgets/dialogs/review_dialogs.dart';
 
 class LoadingScreen extends ConsumerStatefulWidget {
   const LoadingScreen({super.key});
@@ -16,6 +16,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  bool _isInitialized = false; // 플래그 추가
 
   @override
   void initState() {
@@ -36,6 +37,9 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
   }
 
   Future<void> _initializeApp() async {
+    if (_isInitialized) return; // 이미 초기화되었으면 중복 실행 방지
+    _isInitialized = true; // 초기화 플래그 설정
+
     // 최소 로딩 시간 보장 (사용자 경험 향상)
     const minLoadingTime = Duration(milliseconds: 1200);
     final stopwatch = Stopwatch()..start();
@@ -89,7 +93,7 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
         ),
       ]);
 
-      if (connectivityResult == ConnectivityResult.none) {
+      if (connectivityResult.contains(ConnectivityResult.none)) {
         throw Exception('No internet connection');
       }
     } catch (e) {
@@ -174,20 +178,12 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
     final isTablet = screenSize.width >= 768;
     final isSmallScreen = screenSize.height < 600;
 
-    // 반응형 크기 계산
-    final iconSize = _getResponsiveIconSize(screenSize, isTablet);
-    final borderRadius = _getResponsiveBorderRadius(isTablet);
-    final spacingLarge = _getResponsiveSpacing(
-      screenSize,
-      isTablet,
-      large: true,
-    );
+    // 반응형 크기 계산 - Only calculate needed values
     final spacingMedium = _getResponsiveSpacing(
       screenSize,
       isTablet,
       large: false,
     );
-    final loadingSize = _getResponsiveLoadingSize(isTablet);
     final titleFontSize = _getResponsiveTitleFontSize(screenSize, isTablet);
     final subtitleFontSize = _getResponsiveSubtitleFontSize(
       screenSize,
@@ -209,27 +205,12 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // 로딩 텍스트
-                    Text(
-                      '앱을 준비하는 중...', // Changed text
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Do Hyeon',
-                        fontSize: titleFontSize,
-                        fontWeight: FontWeight.w500,
-                        height: 1.3,
-                      ),
-                    ),
-                    SizedBox(height: spacingMedium * 0.3),
-                    Text(
-                      '잠시만 기다려 주세요...', // Changed text
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: 'Do Hyeon',
-                        fontSize: subtitleFontSize,
-                        color: Colors.grey[600],
-                        height: 1.2,
-                      ),
+                    Image.asset(
+                      'icon/app_logo.png',
+                      width: isTablet ? 300 : 200,
+                      height: isTablet ? 300 : 200,
+                      filterQuality: FilterQuality.high,
+                      fit: BoxFit.contain,
                     ),
                   ],
                 ),
@@ -239,21 +220,6 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
         ),
       ),
     );
-  }
-
-  // 반응형 아이콘 크기 계산
-  double _getResponsiveIconSize(Size screenSize, bool isTablet) {
-    if (isTablet) {
-      return 350.0; // 태블릿용 더 큰 크기
-    } else {
-      final baseSize = screenSize.width * 0.6; // 화면 너비의 60% (더 크게)
-      return baseSize.clamp(200.0, 300.0); // 최소 200, 최대 300
-    }
-  }
-
-  // 반응형 테두리 반지름 계산
-  double _getResponsiveBorderRadius(bool isTablet) {
-    return isTablet ? 40.0 : 30.0;
   }
 
   // 반응형 간격 계산
@@ -272,11 +238,6 @@ class _LoadingScreenState extends ConsumerState<LoadingScreen>
           ? baseSpacing.clamp(40.0, 80.0)
           : baseSpacing.clamp(20.0, 40.0);
     }
-  }
-
-  // 반응형 로딩 인디케이터 크기 계산
-  double _getResponsiveLoadingSize(bool isTablet) {
-    return isTablet ? 40.0 : 30.0;
   }
 
   // 반응형 제목 폰트 크기 계산

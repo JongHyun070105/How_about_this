@@ -1,444 +1,700 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:review_ai/main.dart';
+import 'package:review_ai/providers/food_providers.dart';
+import 'package:review_ai/services/recommendation_service.dart';
 
-// CustomPainter for leader lines in the pie chart
-class LeaderLinePainter extends CustomPainter {
-  final Offset start;
-  final Offset end;
-  final Color color;
-  LeaderLinePainter({
-    required this.start,
-    required this.end,
-    required this.color,
-  });
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.2
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(start, end, paint);
-  }
+class UserStatsDialog extends ConsumerStatefulWidget {
+  const UserStatsDialog({super.key});
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  ConsumerState<UserStatsDialog> createState() => _UserStatsDialogState();
 }
 
-// PieChart animation dialog widget for user stats
-class AnimatedStatsDialog extends StatefulWidget {
-  final double screenWidth;
-  final double screenHeight;
-  final Map<String, dynamic> stats;
-  final List<dynamic> topFoodsList;
-  final int totalTop5Count;
-  final List<Map<String, dynamic>> categoryList;
-  final Map<String, Color> categoryColorMap;
-  final PageController pageController;
-  final Widget Function(String, String) buildStatItem;
-
-  const AnimatedStatsDialog({
-    super.key,
-    required this.screenWidth,
-    required this.screenHeight,
-    required this.stats,
-    required this.topFoodsList,
-    required this.totalTop5Count,
-    required this.categoryList,
-    required this.categoryColorMap,
-    required this.pageController,
-    required this.buildStatItem,
-  });
-
-  @override
-  State<AnimatedStatsDialog> createState() => _AnimatedStatsDialogState();
-}
-
-class _AnimatedStatsDialogState extends State<AnimatedStatsDialog> {
-  int _currentPage = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = widget.screenWidth;
-    final screenHeight = widget.screenHeight;
-    final stats = widget.stats;
-    final topFoodsList = widget.topFoodsList;
-    final totalTop5Count = widget.totalTop5Count;
-    final categoryList = widget.categoryList;
-    final categoryColorMap = widget.categoryColorMap;
-    final buildStatItem = widget.buildStatItem;
-    final pageController = widget.pageController;
-
-    return AlertDialog(
-      titlePadding: EdgeInsets.only(
-        left: screenWidth * 0.05,
-        right: screenWidth * 0.02,
-        top: screenHeight * 0.025,
-        bottom: 0,
-      ),
-      contentPadding: EdgeInsets.only(
-        left: screenWidth * 0.03,
-        right: screenWidth * 0.03,
-        top: screenHeight * 0.01,
-        bottom: screenHeight * 0.01,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(screenWidth * 0.05),
-      ),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '📊 내 식습관 통계',
-              style: const TextStyle(fontFamily: 'Do Hyeon'),
-            ),
-          ),
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: Icon(
-              Icons.close,
-              color: Colors.grey,
-              size: screenWidth * 0.05,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-          ),
-        ],
-      ),
-      content: SingleChildScrollView(
-        // Added SingleChildScrollView here
-        child: SizedBox(
-          width: screenWidth * 0.85,
-          height: screenHeight * 0.45,
-          child: Stack(
-            children: [
-              PageView(
-                controller: pageController,
-                physics: const BouncingScrollPhysics(),
-                onPageChanged: (int idx) {
-                  setState(() {
-                    _currentPage = idx;
-                  });
-                },
-                children: [
-                  // Page 1: 자주 먹는 음식 TOP 5
-                  Stack(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(bottom: screenHeight * 0.07),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              buildStatItem(
-                                '총 선택 횟수',
-                                '${stats['totalSelections']}회',
-                              ),
-                              buildStatItem(
-                                '최근 30일 선택',
-                                '${stats['recentSelections']}회',
-                              ),
-                              buildStatItem(
-                                '만족도',
-                                '${stats['likedPercentage'].toStringAsFixed(1)}%',
-                              ),
-                              const SizedBox(height: 14),
-                              const Text(
-                                '🏆 자주 먹는 음식 TOP 5',
-                                style: TextStyle(
-                                  fontFamily: 'Do Hyeon',
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 19,
-                                ),
-                              ),
-                              const SizedBox(height: 7),
-                              ...topFoodsList.map((food) {
-                                int count = (food['count'] as num).toInt();
-                                int percent = (totalTop5Count > 0)
-                                    ? ((count / totalTop5Count) * 100).round()
-                                    : 0;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '• ${food['name']} ($count회)  $percent%',
-                                          style: const TextStyle(
-                                            fontFamily: 'Do Hyeon',
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }),
-                              const SizedBox(height: 8),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Arrow indicator at the right, vertically centered to page content
-                      Positioned(
-                        top: 0,
-                        bottom: 0,
-                        right: 2,
-                        child:
-                            _currentPage <
-                                1 // Only show if not on the last page
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.arrow_forward_ios_rounded,
-                                  size: screenWidth * 0.045,
-                                  color: Colors.grey.shade400,
-                                ),
-                                onPressed: () {
-                                  pageController.nextPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeOut,
-                                  );
-                                },
-                                splashColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
-                              )
-                            : const SizedBox.shrink(), // Hide if on the last page
-                      ),
-                    ],
-                  ),
-                  // Page 2: PieChart + Legend (with animation)
-                  Stack(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(top: 10),
-                        child: SingleChildScrollView(
-                          // Removed physics: const NeverScrollableScrollPhysics(),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const SizedBox(height: 2),
-                              const Text(
-                                '카테고리별 선호도',
-                                style: TextStyle(
-                                  fontFamily: 'Do Hyeon',
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              const SizedBox(height: 14),
-                              SizedBox(
-                                height: 148,
-                                child:
-                                    (_currentPage == 1 &&
-                                        categoryList.isNotEmpty)
-                                    ? AnimatedPieChart(
-                                        categoryList: categoryList,
-                                        categoryColorMap: categoryColorMap,
-                                      )
-                                    : const SizedBox(),
-                              ),
-                              const SizedBox(height: 22),
-                              if (categoryList.isNotEmpty)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 8,
-                                  ),
-                                  child: Wrap(
-                                    alignment: WrapAlignment.center,
-                                    spacing: 14,
-                                    runSpacing: 6,
-                                    children: List.generate(
-                                      categoryList.length,
-                                      (int i) {
-                                        final cat = categoryList[i];
-                                        final Color legendColor =
-                                            categoryColorMap[cat['name']] ??
-                                            Colors.grey.shade400;
-                                        return Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              width: 13,
-                                              height: 13,
-                                              decoration: BoxDecoration(
-                                                color: legendColor,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 5),
-                                            SizedBox(
-                                              width: 70,
-                                              child: Text(
-                                                cat['name'],
-                                                style: const TextStyle(
-                                                  fontFamily: 'Do Hyeon',
-                                                  fontSize: 13,
-                                                  color: Colors.black,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                                softWrap: false,
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(height: 8),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Arrow indicator at the LEFT, vertically centered to page content (swipe back)
-                      Positioned(
-                        top: 0,
-                        bottom: 0,
-                        left: 2,
-                        child:
-                            _currentPage >
-                                0 // Only show if not on the first page
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  size: screenWidth * 0.045,
-                                  color: Colors.grey.shade400,
-                                ),
-                                onPressed: () {
-                                  pageController.previousPage(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeOut,
-                                  );
-                                },
-                                splashColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
-                              )
-                            : const SizedBox.shrink(), // Hide if on the first page
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// PieChart animation widget for user stats page
-class AnimatedPieChart extends StatefulWidget {
-  final List<Map<String, dynamic>> categoryList;
-  final Map<String, Color> categoryColorMap;
-  const AnimatedPieChart({
-    super.key,
-    required this.categoryList,
-    required this.categoryColorMap,
-  });
-
-  @override
-  State<AnimatedPieChart> createState() => _AnimatedPieChartState();
-}
-
-class _AnimatedPieChartState extends State<AnimatedPieChart>
-    with TickerProviderStateMixin {
-  late AnimationController _pieController;
-  late AnimationController _percentTextController;
-  late Animation<double> _pieAnimation;
-  late Animation<double> _percentTextAnimation;
+class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
+  PageController pageController = PageController();
+  int currentPage = 0;
+  Map<String, dynamic>? stats;
+  int _remainingRecommendations = 0;
+  int _remainingReviews = 0;
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _pieController = AnimationController(
-      duration: const Duration(milliseconds: 1100),
-      vsync: this,
-    );
-    _pieAnimation = CurvedAnimation(
-      parent: _pieController,
-      curve: Curves.easeOutCubic,
-    );
-    _percentTextController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _percentTextAnimation = CurvedAnimation(
-      parent: _percentTextController,
-      curve: Curves.easeOutCubic,
-    );
-    _pieAnimation.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _percentTextController.forward();
-      }
-    });
-    // Start the pie animation on mount
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _pieController.forward();
-    });
+    _loadUserStats();
+  }
+
+  Future<void> _loadUserStats() async {
+    try {
+      final loadedStats = await RecommendationService.getUserStats();
+      final usageTrackingService = ref.read(usageTrackingServiceProvider);
+      final remainingRecs = await usageTrackingService.getRemainingRecommendationCount();
+      final remainingRev = await usageTrackingService.getRemainingReviewCount();
+
+      setState(() {
+        stats = loadedStats;
+        _remainingRecommendations = remainingRecs;
+        _remainingReviews = remainingRev;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = '통계를 불러오는데 실패했습니다: $e';
+        isLoading = false;
+      });
+    }
   }
 
   @override
   void dispose() {
-    _pieController.dispose();
-    _percentTextController.dispose();
+    pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final categoryList = widget.categoryList;
-    final categoryColorMap = widget.categoryColorMap;
-    return AnimatedBuilder(
-      animation: Listenable.merge([_pieAnimation, _percentTextAnimation]),
-      builder: (context, child) {
-        double animationValue = _pieAnimation.value;
-        double percentTextValue = _percentTextAnimation.value;
-        List<PieChartSectionData> sections = [];
-        for (int i = 0; i < categoryList.length; i++) {
-          final cat = categoryList[i];
-          final percent = cat['percent'] as double;
-          final percentValue = percent > 0 ? percent : 0.01;
-          final double animatedValue = percentValue * animationValue;
-          final int animatedPercent = (animationValue < 1.0)
-              ? 0
-              : (percentTextValue * percent).round();
-          String percentStr = '$animatedPercent%';
-          final Color sectionColor =
-              categoryColorMap[cat['name']] ?? Colors.grey.shade400;
-          sections.add(
-            PieChartSectionData(
-              value: animatedValue,
-              color: sectionColor,
-              showTitle: true,
-              title: percentStr,
-              titleStyle: const TextStyle(
-                fontFamily: 'Do Hyeon',
-                color: Color(0xFF000000),
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-              titlePositionPercentageOffset: 0.65,
-              radius: 52,
-            ),
-          );
-        }
-        return PieChart(
-          PieChartData(
-            sections: sections,
-            sectionsSpace: 3,
-            centerSpaceRadius: 32,
-            startDegreeOffset: 180,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isTablet = screenWidth >= 768;
+
+    if (isLoading) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: screenHeight * 0.3,
+            minWidth: screenWidth * 0.6,
           ),
-        );
-      },
+          child: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return AlertDialog(
+        title: const Text('오류'),
+        content: Text(errorMessage!),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인'),
+          ),
+        ],
+      );
+    }
+
+    if (stats == null) {
+      return AlertDialog(
+        title: const Text('데이터 없음'),
+        content: const Text('통계 데이터를 불러올 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인'),
+          ),
+        ],
+      );
+    }
+
+    final foodCategories = ref.watch(foodCategoriesProvider);
+    final Map<String, Color> categoryColorMap = {
+      for (final cat in foodCategories) cat.name: cat.color,
+    };
+
+    List<Map<String, dynamic>> categoryList = [];
+    int totalSelections = stats!['totalSelections'] ?? 0;
+    if (stats!['categoryStats'] != null &&
+        stats!['categoryStats'] is Map<String, dynamic>) {
+      final Map<String, dynamic> catStats = Map<String, dynamic>.from(
+        stats!['categoryStats'],
+      );
+      final filteredCats = catStats.entries
+          .where((e) => e.key != '상관없음' && (e.value ?? 0) > 0)
+          .toList();
+      int denominator = totalSelections > 0
+          ? totalSelections
+          : filteredCats.fold<int>(
+              0,
+              (sum, e) => sum + ((e.value ?? 0) as num).toInt(),
+            );
+      categoryList = filteredCats.map<Map<String, dynamic>>((e) {
+        int count = (e.value ?? 0) as int;
+        double percent = denominator > 0 ? (count / denominator * 100) : 0.0;
+        return {'name': e.key, 'count': count, 'percent': percent};
+      }).toList();
+    }
+
+    final List<dynamic> topFoodsList = (stats!['topFoods'] as List)
+        .take(5)
+        .toList();
+
+    final int maxRecommendations = 20;
+    final int maxReviews = 5;
+    int usedRecommendations = (maxRecommendations - _remainingRecommendations)
+        .clamp(0, maxRecommendations);
+    int usedReviews = (maxReviews - _remainingReviews).clamp(0, maxReviews);
+
+    final usageTextStyle = TextStyle(
+      fontFamily: 'Do Hyeon',
+      fontSize: (screenWidth * 0.037).clamp(13.0, 18.0),
+      color: Colors.grey[700],
+      fontWeight: FontWeight.w500,
+    );
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: 24,
+        vertical: 24,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: screenHeight * 0.62,
+          minWidth: screenWidth * 0.8,
+        ),
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 16.0,
+                    right: 8.0,
+                    top: 8.0,
+                    bottom: 8.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(
+                        width: 48, // Balance for close button
+                      ),
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.arrow_left,
+                                size: 24,
+                              ),
+                              onPressed: () {
+                                if (pageController.hasClients &&
+                                    currentPage > 0) {
+                                  pageController.previousPage(
+                                    duration: const Duration(
+                                      milliseconds: 300,
+                                    ),
+                                    curve: Curves.ease,
+                                  );
+                                  setState(() {
+                                    currentPage = currentPage - 1;
+                                  });
+                                }
+                              },
+                              splashColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                            ),
+                            Text(
+                              currentPage == 0 ? "통계" : "카테고리별 선호도",
+                              style: TextStyle(
+                                fontFamily: 'Do Hyeon',
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.arrow_right,
+                                size: 24,
+                              ),
+                              onPressed: () {
+                                if (pageController.hasClients &&
+                                    currentPage < 1) {
+                                  pageController.nextPage(
+                                    duration: const Duration(
+                                      milliseconds: 300,
+                                    ),
+                                    curve: Curves.ease,
+                                  );
+                                  setState(() {
+                                    currentPage = currentPage + 1;
+                                  });
+                                }
+                              },
+                              splashColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                        splashColor: Colors.transparent,
+                        highlightColor: Colors.transparent,
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: PageView(
+                    controller: pageController,
+                    onPageChanged: (idx) {
+                      setState(() {
+                        currentPage = idx;
+                      });
+                    },
+                    children: [
+                      // Page 0: Statistics
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildStatItem(
+                              screenWidth,
+                              isTablet,
+                              "총 선택 횟수",
+                              "${stats!['totalSelections']}회",
+                            ),
+                            _buildStatItem(
+                              screenWidth,
+                              isTablet,
+                              "최근 30일 선택",
+                              "${stats!['recentSelections']}회",
+                            ),
+                            const SizedBox(height: 10),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: (screenWidth * 0.02).clamp(
+                                  8.0,
+                                  16.0,
+                                ),
+                              ),
+                              child: const Text(
+                                "🏆 자주 먹는 음식 TOP 5",
+                                style: TextStyle(
+                                  fontFamily: 'Do Hyeon',
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: topFoodsList.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 8),
+                              itemBuilder: (context, index) {
+                                final food = topFoodsList[index];
+                                return _buildStatItem(
+                                  screenWidth,
+                                  isTablet,
+                                  food['name'],
+                                  "${food['count']}회",
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            _buildUsageIndicator(
+                              screenWidth,
+                              label: "음식 추천 사용량",
+                              used: usedRecommendations,
+                              max: maxRecommendations,
+                              color: Colors.blue.shade400,
+                              style: usageTextStyle,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildUsageIndicator(
+                              screenWidth,
+                              label: "리뷰 사용량",
+                              used: usedReviews,
+                              max: maxReviews,
+                              color: Colors.green.shade400,
+                              style: usageTextStyle,
+                            ),
+                            const SizedBox(height: 12),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: (screenWidth * 0.02).clamp(
+                                  8.0,
+                                  16.0,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "매일 00:00시에 초기화",
+                                    style: TextStyle(
+                                      fontFamily: 'Do Hyeon',
+                                      fontSize: 12,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                  Text(
+                                    "현재 시간: ${DateTime.now().hour.toString().padLeft(2, '0')}:${DateTime.now().minute.toString().padLeft(2, '0')}",
+                                    style: TextStyle(
+                                      fontFamily: 'Do Hyeon',
+                                      fontSize: 12,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Page 1: Category Preference Chart
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: 16.0,
+                          left: 16.0,
+                          right: 16.0,
+                          top: 8.0,
+                        ),
+                        child: Column(
+                          children: [
+                            if (categoryList.isEmpty)
+                              const Expanded(
+                                child: Center(
+                                  child: Text(
+                                    "아직 데이터가 없어요.\n리뷰를 작성해서 통계를 확인해보세요!",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontFamily: 'Do Hyeon',
+                                      fontSize: 16,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else ...[
+                              Expanded(
+                                flex: 5,
+                                child: TweenAnimationBuilder<double>(
+                                  duration: const Duration(
+                                    milliseconds: 2000,
+                                  ),
+                                  tween: Tween<double>(begin: 0, end: 1),
+                                  curve: Curves.easeOutCubic,
+                                  builder: (context, animationValue, child) {
+                                    return PieChart(
+                                      PieChartData(
+                                        sections: categoryList.asMap().entries.map(( 
+                                          entry,
+                                        ) {
+                                          final int index = entry.key;
+                                          final cat = entry.value;
+                                          final double percent = 
+                                              cat['percent'] ?? 0.0;
+                                          final color = 
+                                              categoryColorMap[cat['name']] ??
+                                              Colors.grey.shade400;
+
+                                          double adjustedProgress = 
+                                              animationValue;
+
+                                          bool shouldShowTitle = 
+                                              percent >= 8.0 &&
+                                              animationValue > 0.8;
+
+                                          return PieChartSectionData(
+                                            color: color,
+                                            value:
+                                                percent * 
+                                                adjustedProgress,
+                                            title: shouldShowTitle
+                                                ? '${percent.toStringAsFixed(0)}%'
+                                                : '',
+                                            radius: screenWidth * 0.22,
+                                            titleStyle: TextStyle(
+                                              fontSize: shouldShowTitle
+                                                  ? (percent >= 15
+                                                          ? 16
+                                                          : 14)
+                                                  : 0,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                              fontFamily: 'Do Hyeon',
+                                            ),
+                                            titlePositionPercentageOffset:
+                                                percent >= 15
+                                                ? 0.6
+                                                : (percent >= 8
+                                                      ? 0.7
+                                                      : 0.8),
+                                          );
+                                        }).toList(),
+                                        pieTouchData: PieTouchData(
+                                          enabled: true,
+                                          touchCallback:
+                                              (FlTouchEvent event, pieTouchResponse) {
+                                                // 터치 시 추가 정보 표시 가능
+                                              },
+                                        ),
+                                        borderData: FlBorderData(
+                                          show: false,
+                                        ),
+                                        sectionsSpace: 3,
+                                        centerSpaceRadius:
+                                            screenWidth * 
+                                            0.12,
+                                        startDegreeOffset: 270,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Expanded(
+                                flex: 2,
+                                child: TweenAnimationBuilder<double>(
+                                  duration: const Duration(
+                                    milliseconds: 1500,
+                                  ),
+                                  tween: Tween<double>(begin: 0, end: 1),
+                                  curve: Curves.easeOutBack,
+                                  builder: (context, animationValue, child) {
+                                    double clampedValue = animationValue
+                                        .clamp(0.0, 1.0);
+                                    return Opacity(
+                                      opacity: clampedValue,
+                                      child: Transform.scale(
+                                        scale:
+                                            0.7 + 
+                                            (clampedValue * 
+                                                0.3),
+                                        child: Center(
+                                          child: Column(
+                                            children: [
+                                              Wrap(
+                                                spacing: 12.0,
+                                                runSpacing: 8.0,
+                                                alignment:
+                                                    WrapAlignment.center,
+                                                children: categoryList.take(4).map(( 
+                                                  cat,
+                                                ) {
+                                                  final color = 
+                                                      categoryColorMap[cat['name']] ??
+                                                      Colors
+                                                          .grey
+                                                          .shade400;
+                                                  final percent = 
+                                                      cat['percent'] ??
+                                                      0.0;
+                                                  return Container(
+                                                    constraints: 
+                                                        BoxConstraints(
+                                                          maxWidth: 
+                                                              screenWidth * 
+                                                              0.25,
+                                                        ),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize
+                                                              .min,
+                                                      children: [
+                                                        Container(width: 12, height: 12, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+                                                        const SizedBox(width: 6),
+                                                        Flexible(
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              Text(
+                                                                cat['name'],
+                                                                style: const TextStyle(
+                                                                  fontFamily: 'Do Hyeon',
+                                                                  fontSize: 12,
+                                                                  color: Colors.black87,
+                                                                ),
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                              Text(
+                                                                '${percent.toStringAsFixed(0)}%',
+                                                                style: TextStyle(
+                                                                  fontFamily: 'Do Hyeon',
+                                                                  fontSize: 10,
+                                                                  color: Colors.grey[600],
+                                                                  fontWeight: FontWeight.bold,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                              ),
+                                              if (categoryList.length > 4) ...[
+                                                const SizedBox(height: 8),
+                                                Wrap(
+                                                  spacing: 12.0,
+                                                  runSpacing: 8.0,
+                                                  alignment: WrapAlignment.center,
+                                                  children: categoryList.skip(4).take(3).map(( 
+                                                    cat,
+                                                  ) {
+                                                    final color = 
+                                                        categoryColorMap[cat['name']] ??
+                                                        Colors
+                                                            .grey
+                                                            .shade400;
+                                                    final percent = 
+                                                        cat['percent'] ??
+                                                        0.0;
+                                                    return Container(
+                                                      constraints: BoxConstraints(maxWidth: screenWidth * 0.25),
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Container(width: 12, height: 12, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+                                                          const SizedBox(width: 6),
+                                                          Flexible(
+                                                            child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              mainAxisSize: MainAxisSize.min,
+                                                              children: [
+                                                                Text(
+                                                                  cat['name'],
+                                                                  style: const TextStyle(fontFamily: 'Do Hyeon', fontSize: 12, color: Colors.black87),
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                ),
+                                                                Text(
+                                                                  '${percent.toStringAsFixed(0)}%',
+                                                                  style: TextStyle(fontFamily: 'Do Hyeon', fontSize: 10, color: Colors.grey[600], fontWeight: FontWeight.bold),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(double screenWidth, bool isTablet, String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        vertical: (MediaQuery.of(context).size.height * 0.008).clamp(4.0, 8.0),
+        horizontal: (screenWidth * 0.02).clamp(8.0, 16.0),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Do Hyeon',
+                fontSize: (screenWidth * (isTablet ? 0.025 : 0.035)).clamp(
+                  12.0,
+                  18.0,
+                ),
+                color: Colors.grey[700],
+              ),
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+            ),
+          ),
+          SizedBox(width: (screenWidth * 0.04).clamp(12.0, 20.0)),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'Do Hyeon',
+                fontSize: (screenWidth * (isTablet ? 0.028 : 0.038)).clamp(
+                  14.0,
+                  20.0,
+                ),
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUsageIndicator(
+    double screenWidth,
+    {
+    required String label,
+    required int used,
+    required int max,
+    required Color color,
+    required TextStyle style,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: (screenWidth * 0.02).clamp(8.0, 16.0),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("$label: $used / $max", style: style),
+          const SizedBox(height: 4),
+          LinearProgressIndicator(
+            value: max > 0 ? used / max : 0,
+            minHeight: 10,
+            backgroundColor: Colors.grey[200],
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+        ],
+      ),
     );
   }
 }

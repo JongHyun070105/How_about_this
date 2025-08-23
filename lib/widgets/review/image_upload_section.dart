@@ -1,10 +1,8 @@
-
 import 'dart:io';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:eat_this_app/providers/review_provider.dart';
+import 'package:review_ai/providers/review_provider.dart';
 
 final isPickingImageProvider = StateProvider<bool>((ref) => false);
 
@@ -13,9 +11,9 @@ class ImageUploadSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final image = ref.watch(imageProvider);
+    final reviewState = ref.watch(reviewProvider);
+    final image = reviewState.image;
     final isPicking = ref.watch(isPickingImageProvider);
-    final screenSize = MediaQuery.of(context).size;
 
     return GestureDetector(
       onTap: isPicking ? null : () => _pickImage(ref, context),
@@ -23,11 +21,16 @@ class ImageUploadSection extends ConsumerWidget {
         aspectRatio: 16 / 9,
         child: Container(
           decoration: BoxDecoration(
-            border: Border.all(color: const Color(0xFFBDBDBD), width: screenSize.width * 0.005),
-            borderRadius: BorderRadius.circular(screenSize.width * 0.0375),
-            color: const Color(0xFFF1F1F1),
+            color: Colors.white, // 음식명 필드와 같은 흰색 배경
+            borderRadius: BorderRadius.circular(
+              12.0,
+            ), // 음식명 필드와 같은 border radius
+            border: Border.all(
+              color: Colors.grey[300]!,
+              width: 1.0,
+            ), // 음식명 필드와 같은 border
           ),
-          child: _buildImageContent(context, image, screenSize.width, isPicking),
+          child: _buildImageContent(context, image, isPicking),
         ),
       ),
     );
@@ -36,7 +39,6 @@ class ImageUploadSection extends ConsumerWidget {
   Widget _buildImageContent(
     BuildContext context,
     File? imageFile,
-    double screenWidth,
     bool isPicking,
   ) {
     if (isPicking) {
@@ -50,17 +52,16 @@ class ImageUploadSection extends ConsumerWidget {
           children: [
             Icon(
               Icons.cloud_upload_outlined,
-              size: screenWidth * 0.1,
-              color: Colors.grey.shade600,
+              size: 48.0, // 고정된 크기로 변경
+              color: Colors.grey[400], // 음식명 필드 힌트 텍스트와 비슷한 색상
             ),
-            SizedBox(height: screenWidth * 0.02),
+            const SizedBox(height: 12.0), // 고정된 간격
             Text(
               '이미지 업로드',
               style: TextStyle(
-                fontSize: screenWidth * 0.04,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Do Hyeon',
-                color: Colors.black54,
+                fontSize: 16.0, // 고정된 폰트 크기
+                fontFamily: 'Do Hyeon', // 음식명 필드와 같은 폰트
+                color: Colors.grey[500], // 음식명 필드와 비슷한 색상
               ),
             ),
           ],
@@ -70,7 +71,7 @@ class ImageUploadSection extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(screenWidth * 0.0375),
+        borderRadius: BorderRadius.circular(12.0), // 음식명 필드와 같은 border radius
         image: DecorationImage(image: FileImage(imageFile), fit: BoxFit.cover),
       ),
     );
@@ -85,13 +86,13 @@ class ImageUploadSection extends ConsumerWidget {
       final picked = await picker.pickImage(source: ImageSource.gallery);
 
       if (picked != null) {
-        ref.read(imageProvider.notifier).state = File(picked.path);
+        ref.read(reviewProvider.notifier).setImage(File(picked.path));
       }
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('이미지 선택에 실패했습니다.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('이미지 선택에 실패했습니다.')));
     } finally {
       if (context.mounted) {
         ref.read(isPickingImageProvider.notifier).state = false;

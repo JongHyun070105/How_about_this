@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:eat_this_app/widgets/history/empty_history.dart';
-import 'package:eat_this_app/widgets/history/history_card.dart';
-import 'package:eat_this_app/providers/review_provider.dart';
+import 'package:review_ai/widgets/history/empty_history.dart';
+import 'package:review_ai/widgets/history/history_card.dart';
+import 'package:review_ai/providers/review_provider.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -21,7 +21,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
     // Responsive calculations
     final isTablet = screenWidth >= 768;
-    final isSmallScreen = screenWidth < 600;
+    
 
     // Dynamic font sizes
     final appBarFontSize = (screenWidth * (isTablet ? 0.032 : 0.05)).clamp(
@@ -76,21 +76,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             children: [
               SizedBox(height: verticalSpacing),
 
-              // Section title with responsive styling
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '리뷰 히스토리',
-                  style: textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Do Hyeon',
-                    fontSize: titleFontSize,
-                    color: Colors.grey[800],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: verticalSpacing),
+              
 
               // History list with responsive design
               Expanded(

@@ -1,16 +1,21 @@
-import 'package:eat_this_app/config/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:eat_this_app/providers/food_providers.dart';
-import 'package:eat_this_app/screens/review_screen.dart';
-import 'package:eat_this_app/services/user_preference_service.dart';
-import 'package:eat_this_app/services/recommendation_service.dart';
-import 'package:eat_this_app/widgets/category_card.dart';
-import 'package:eat_this_app/widgets/dialogs/food_recommendation_dialog.dart';
-import 'package:eat_this_app/widgets/dialogs/user_stats_dialog.dart';
-
-// Loading state provider
-final isCategoryLoadingProvider = StateProvider<bool>((ref) => false);
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:review_ai/config/app_constants.dart';
+import 'package:review_ai/main.dart';
+import 'package:review_ai/models/food_category.dart';
+import 'package:review_ai/models/food_recommendation.dart';
+import 'package:review_ai/providers/food_providers.dart';
+import 'package:review_ai/screens/review_screen.dart';
+import 'package:review_ai/services/recommendation_service.dart';
+import 'package:review_ai/services/user_preference_service.dart';
+import 'package:review_ai/utils/responsive.dart';
+import 'package:review_ai/viewmodels/today_recommendation_viewmodel.dart';
+import 'package:review_ai/widgets/category_card.dart';
+import 'package:review_ai/widgets/dialogs/food_recommendation_dialog.dart';
+import 'package:review_ai/widgets/dialogs/user_stats_dialog.dart';
+import 'package:review_ai/widgets/dialogs/review_prompt_dialog.dart';
+import 'package:flutter/foundation.dart';
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
@@ -22,297 +27,306 @@ class TodayRecommendationScreen extends ConsumerStatefulWidget {
 
 class _TodayRecommendationScreenState
     extends ConsumerState<TodayRecommendationScreen> {
-  // Responsive variables
-  late double screenWidth;
-  late double screenHeight;
-  late bool isTablet;
-  late bool isSmallScreen;
-  late double appBarFontSize;
-  late double titleFontSize;
-  late double horizontalPadding;
-  late double verticalSpacing;
-  late double iconSize;
-  late int crossAxisCount;
-  late double childAspectRatio;
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
 
-  void _calculateResponsiveSizes() {
-    screenWidth = MediaQuery.of(context).size.width;
-    screenHeight = MediaQuery.of(context).size.height;
-    isTablet = screenWidth >= 768;
-    isSmallScreen = screenWidth < 600;
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
 
-    // Dynamic font sizes
-    appBarFontSize = (screenWidth * (isTablet ? 0.032 : 0.05)).clamp(
-      16.0,
-      28.0,
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  void _loadBannerAd() {
+    final adUnitId = _getAdUnitId();
+    _bannerAd = BannerAd(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      size: AdSize.fullBanner,
+      listener: _createBannerAdListener(),
+    )..load();
+  }
+
+  String _getAdUnitId() {
+    return defaultTargetPlatform == TargetPlatform.android
+        ? "ca-app-pub-3940256099942544/6300978111"
+        : "ca-app-pub-3940256099942544/2934735716";
+  }
+
+  BannerAdListener _createBannerAdListener() {
+    return BannerAdListener(
+      onAdLoaded: (ad) {
+        setState(() {
+          _bannerAd = ad as BannerAd;
+          _isBannerAdLoaded = true;
+        });
+      },
+      onAdFailedToLoad: (ad, error) {
+        debugPrint('BannerAd failed to load: $error');
+        ad.dispose();
+        setState(() {
+          _isBannerAdLoaded = false;
+        });
+      },
     );
-    titleFontSize = (screenWidth * (isTablet ? 0.032 : 0.05)).clamp(16.0, 26.0);
-
-    // Dynamic spacing and padding
-    horizontalPadding = (screenWidth * (isTablet ? 0.08 : 0.06)).clamp(
-      20.0,
-      60.0,
-    );
-    verticalSpacing = (screenHeight * (isTablet ? 0.025 : 0.02)).clamp(
-      12.0,
-      24.0,
-    );
-
-    // Icon size
-    iconSize = (screenWidth * (isTablet ? 0.045 : 0.06)).clamp(20.0, 36.0);
-
-    // Grid layout
-    if (isTablet) {
-      crossAxisCount = screenWidth > 1024
-          ? 4
-          : 3; // 4 columns for very large tablets
-      childAspectRatio = 0.95;
-    } else if (isSmallScreen) {
-      crossAxisCount = 2;
-      childAspectRatio = 0.88;
-    } else {
-      crossAxisCount = 2;
-      childAspectRatio = 0.92;
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    _calculateResponsiveSizes();
+    final responsive = Responsive(context);
     final foodCategories = ref.watch(foodCategoriesProvider);
-    final isCategoryLoading = ref.watch(isCategoryLoadingProvider);
+    final isCategoryLoading = ref.watch(todayRecommendationViewModelProvider);
     final textTheme = Theme.of(context).textTheme;
 
     return Stack(
       children: [
         Scaffold(
           backgroundColor: Colors.white,
-          appBar: _buildAppBar(textTheme),
-          body: _buildBody(foodCategories, textTheme),
+          appBar: _buildAppBar(context, responsive, textTheme),
+          body: _buildBody(context, responsive, foodCategories, textTheme),
         ),
-        if (isCategoryLoading) _buildLoadingOverlay(),
+        if (isCategoryLoading) _buildLoadingOverlay(context, responsive),
       ],
     );
   }
 
-  PreferredSizeWidget _buildAppBar(TextTheme textTheme) {
+  PreferredSizeWidget _buildAppBar(
+      BuildContext context, Responsive responsive, TextTheme textTheme) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      titleSpacing: horizontalPadding,
+      titleSpacing: responsive.horizontalPadding(),
       centerTitle: false,
-      title: Container(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          '오늘 뭐 먹지?',
-          style: textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: appBarFontSize,
-            fontFamily: 'Do Hyeon',
-            color: Colors.grey[800],
-          ),
-        ),
-      ),
-      actions: [
-        // Statistics button with enhanced design
-        Container(
-          margin: EdgeInsets.only(right: (screenWidth * 0.02).clamp(8.0, 16.0)),
-          child: IconButton(
-            icon: Container(
-              padding: EdgeInsets.all((screenWidth * 0.02).clamp(6.0, 10.0)),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(isTablet ? 12.0 : 10.0),
-                border: Border.all(
-                  color: Colors.blue.withOpacity(0.3),
-                  width: 1.0,
-                ),
-              ),
-              child: Icon(
-                Icons.analytics,
-                size: iconSize * 0.9,
-                color: Colors.blue.shade600,
-              ),
-            ),
-            onPressed: () => _showUserStatsDialog(context),
-            tooltip: '내 식습관 통계',
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-          ),
-        ),
-
-        // Review button with enhanced design
-        Container(
-          margin: EdgeInsets.only(right: horizontalPadding * 0.7),
-          child: IconButton(
-            icon: Container(
-              padding: EdgeInsets.all((screenWidth * 0.02).clamp(6.0, 10.0)),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(isTablet ? 12.0 : 10.0),
-                border: Border.all(
-                  color: Colors.green.withOpacity(0.3),
-                  width: 1.0,
-                ),
-              ),
-              child: Icon(
-                Icons.rate_review,
-                size: iconSize * 0.9,
-                color: Colors.green.shade600,
-              ),
-            ),
-            onPressed: () =>
-                _navigateToReviewScreen(context, _createDefaultFood()),
-            tooltip: '리뷰 작성',
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-          ),
-        ),
-      ],
+      title: _buildAppBarTitle(responsive, textTheme),
+      actions: _buildAppBarActions(context, responsive),
     );
   }
 
-  Widget _buildBody(List<FoodCategory> foodCategories, TextTheme textTheme) {
+  Widget _buildAppBarTitle(Responsive responsive, TextTheme textTheme) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      child: Text('오늘 뭐 먹지?',
+          style: textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: responsive.appBarFontSize(),
+            fontFamily: 'Do Hyeon',
+            color: Colors.grey[800],
+          )),
+    );
+  }
+
+  List<Widget> _buildAppBarActions(BuildContext context, Responsive responsive) {
+    return [_buildStatsIconButton(context, responsive), _buildReviewIconButton(context, responsive)];
+  }
+
+  Widget _buildStatsIconButton(BuildContext context, Responsive responsive) {
+    return IconButton(
+      icon: Icon(
+        Icons.analytics,
+        size: responsive.iconSize(),
+        color: Colors.black,
+      ),
+      onPressed: () =>
+          showDialog(context: context, builder: (_) => const UserStatsDialog()),
+      tooltip: '내 식습관 통계',
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+    );
+  }
+
+  Widget _buildReviewIconButton(BuildContext context, Responsive responsive) {
+    return IconButton(
+      icon: Icon(
+        Icons.rate_review,
+        size: responsive.iconSize(),
+        color: Colors.black,
+      ),
+      onPressed: () => _navigateToReviewScreen(context, _createDefaultFood()),
+      tooltip: '리뷰 작성',
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+    );
+  }
+
+  Widget _buildBody(BuildContext context, Responsive responsive,
+      List<FoodCategory> foodCategories, TextTheme textTheme) {
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.horizontalPadding(),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(height: verticalSpacing),
-
-            // Title section with enhanced styling
-            Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.symmetric(vertical: verticalSpacing * 0.5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '카테고리를 선택해주세요',
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Do Hyeon',
-                      fontSize: titleFontSize,
-                      color: Colors.grey[800],
-                    ),
-                  ),
-                  SizedBox(height: verticalSpacing * 0.3),
-                  Container(
-                    height: 3.0,
-                    width: (screenWidth * 0.20).clamp(60.0, 100.0), // Increased underline width
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withOpacity(0.3),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(2.0),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: verticalSpacing),
-
-            // Enhanced grid view with responsive design
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(isTablet ? 20.0 : 16.0),
-                ),
-                child: GridView.builder(
-                  padding: EdgeInsets.symmetric(vertical: verticalSpacing),
-                  physics: const BouncingScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: (screenWidth * (isTablet ? 0.03 : 0.04))
-                        .clamp(12.0, 24.0),
-                    mainAxisSpacing: (screenHeight * (isTablet ? 0.02 : 0.02))
-                        .clamp(12.0, 20.0),
-                    childAspectRatio: childAspectRatio,
-                  ),
-                  itemCount: foodCategories.length,
-                  itemBuilder: (context, index) {
-                    final category = foodCategories[index];
-                    return AnimatedContainer(
-                      duration: Duration(milliseconds: 300 + (index * 100)),
-                      curve: Curves.easeOutBack,
-                      child: CategoryCard(
-                        category: category,
-                        onTap: () => _handleCategoryTap(
-                          context,
-                          ref,
-                          category,
-                          _showRecommendationDialog,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            SizedBox(height: verticalSpacing),
+            SizedBox(height: responsive.verticalSpacing()),
+            _buildBodyHeader(responsive, textTheme),
+            SizedBox(height: responsive.verticalSpacing()),
+            _buildCategoryGrid(context, responsive, foodCategories),
+            SizedBox(height: responsive.verticalSpacing()),
+            _buildBottomBannerAd(responsive),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLoadingOverlay() {
-    return Positioned.fill(
+  Widget _buildBodyHeader(Responsive responsive, TextTheme textTheme) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: EdgeInsets.symmetric(
+        vertical: responsive.verticalSpacing() * 0.5,
+      ),
+      child: Text('카테고리를 선택해주세요',
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Do Hyeon',
+            fontSize: responsive.titleFontSize(),
+            color: Colors.grey[800],
+          )),
+    );
+  }
+
+  Widget _buildCategoryGrid(BuildContext context, Responsive responsive,
+      List<FoodCategory> foodCategories) {
+    return Expanded(
       child: Container(
-        color: Colors.black38,
-        child: Center(
-          child: Container(
-            padding: EdgeInsets.all((screenWidth * 0.08).clamp(24.0, 48.0)),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(isTablet ? 20.0 : 16.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: isTablet ? 20.0 : 15.0,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // CircularProgressIndicator( // Removed
-                //   strokeWidth: isTablet ? 4.0 : 3.0,
-                //   color: Theme.of(context).primaryColor,
-                // ),
-                // SizedBox(height: verticalSpacing), // Removed
-                Text(
-                  '추천을 불러오는 중...',
-                  style: TextStyle(
-                    fontFamily: 'Do Hyeon',
-                    fontSize: (screenWidth * (isTablet ? 0.025 : 0.035)).clamp(
-                      12.0,
-                      18.0,
-                    ),
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(
+            responsive.isTablet ? 20.0 : 16.0,
           ),
+        ),
+        child: GridView.builder(
+          padding: EdgeInsets.symmetric(
+            vertical: responsive.verticalSpacing(),
+          ),
+          physics: const BouncingScrollPhysics(),
+          gridDelegate: _createGridDelegate(responsive),
+          itemCount: foodCategories.length,
+          itemBuilder: (context, index) =>
+              _buildCategoryItem(context, foodCategories[index], index),
         ),
       ),
     );
   }
 
-  Future<FoodRecommendation> _pickSmartFood(
-    List<FoodRecommendation> foods,
-    List<String> recentFoods,
-  ) async {
-    final preferences = await UserPreferenceService.analyzeUserPreferences();
-    return RecommendationService.pickSmartFood(foods, recentFoods, preferences);
+  SliverGridDelegateWithFixedCrossAxisCount _createGridDelegate(
+      Responsive responsive) {
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: responsive.crossAxisCount(),
+      crossAxisSpacing: responsive.horizontalPadding() * 0.5,
+      mainAxisSpacing: responsive.verticalSpacing(),
+      childAspectRatio: responsive.childAspectRatio(),
+    );
+  }
+
+  Widget _buildCategoryItem(BuildContext context, FoodCategory category, int index) {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300 + (index * 100)),
+      curve: Curves.easeOutBack,
+      child: CategoryCard(
+        category: category,
+        onTap: () => ref
+            .read(todayRecommendationViewModelProvider.notifier)
+            .handleCategoryTap(context, category, _showRecommendationDialog),
+      ),
+    );
+  }
+
+  Widget _buildBottomBannerAd(Responsive responsive) {
+    if (!_isBannerAdLoaded || _bannerAd == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      alignment: Alignment.center,
+      width: _bannerAd!.size.width.toDouble(),
+      height: _bannerAd!.size.height.toDouble(),
+      margin: EdgeInsets.only(bottom: responsive.verticalSpacing() * 0.5),
+      decoration: _getBannerAdDecoration(),
+      child: AdWidget(ad: _bannerAd!),
+    );
+  }
+
+  BoxDecoration _getBannerAdDecoration() {
+    return BoxDecoration(
+      color: Colors.grey[50],
+      borderRadius: BorderRadius.circular(8.0),
+      border: Border.all(color: Colors.grey[200]!, width: 1.0),
+    );
+  }
+
+  Widget _buildLoadingOverlay(BuildContext context, Responsive responsive) {
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withOpacity(0.5),
+        child: Center(child: _buildLoadingDialog(context, responsive)),
+      ),
+    );
+  }
+
+  Widget _buildLoadingDialog(BuildContext context, Responsive responsive) {
+    final padding = responsive.horizontalPadding() * 0.5;
+    final progressSize = responsive.iconSize();
+
+    return Container(
+      padding: EdgeInsets.all(padding),
+      decoration: _getLoadingDialogDecoration(responsive),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: progressSize,
+            height: progressSize,
+            child: _buildProgressIndicator(responsive),
+          ),
+          SizedBox(height: responsive.verticalSpacing()),
+          _buildLoadingText(responsive),
+        ],
+      ),
+    );
+  }
+
+  BoxDecoration _getLoadingDialogDecoration(Responsive responsive) {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(
+        responsive.isTablet ? 20.0 : 16.0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: responsive.isTablet ? 20.0 : 15.0,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressIndicator(Responsive responsive) {
+    return CircularProgressIndicator(
+      strokeWidth: responsive.isTablet ? 3.0 : 2.5,
+      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+    );
+  }
+
+  Widget _buildLoadingText(Responsive responsive) {
+    return Text('추천을 불러오는 중...', style: _getLoadingTextStyle(responsive));
+  }
+
+  TextStyle _getLoadingTextStyle(Responsive responsive) {
+    final fontSize = responsive.inputFontSize() * 0.8;
+
+    return TextStyle(
+      fontFamily: 'Do Hyeon',
+      fontSize: fontSize,
+      color: Colors.grey[700],
+      decoration: TextDecoration.none,
+    );
   }
 
   void _showRecommendationDialog(
@@ -328,36 +342,78 @@ class _TodayRecommendationScreenState
       ref.read(selectedFoodProvider.notifier).state = recommended;
 
       if (!context.mounted) return;
-      showDialog(
+
+      final result = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
-        builder: (_) => SlideTransition(
-          position:
-              Tween<Offset>(
-                begin: const Offset(0, -0.3),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(
-                  parent: ModalRoute.of(context)!.animation!,
-                  curve: Curves.easeOutBack,
-                ),
-              ),
-          child: FoodRecommendationDialog(
-            category: category,
-            recommended: recommended,
-            foods: foods,
-            color: color,
-          ),
-        ),
-      ).then((result) {
-        if (!context.mounted) return;
-        if (result == true) {
-          openDialog(); // Re-call if "싫어요" was pressed
-        }
-      });
+        barrierColor: Colors.black54,
+        builder: (_) =>
+            _buildAnimatedDialog(context, category, recommended, foods, color),
+      );
+
+      await _handleDialogResult(context, result, openDialog);
     }
 
     openDialog();
+  }
+
+  Widget _buildAnimatedDialog(
+    BuildContext context,
+    String category,
+    FoodRecommendation recommended,
+    List<FoodRecommendation> foods,
+    Color color,
+  ) {
+    return SlideTransition(
+      position: Tween<Offset>(begin: const Offset(0, -0.3), end: Offset.zero)
+          .animate(
+            CurvedAnimation(
+              parent: ModalRoute.of(context)!.animation!,
+              curve: Curves.easeOutBack,
+            ),
+          ),
+      child: FoodRecommendationDialog(
+        category: category,
+        recommended: recommended,
+        foods: foods,
+        color: color,
+      ),
+    );
+  }
+
+  Future<void> _handleDialogResult(
+    BuildContext context,
+    bool? result,
+    VoidCallback openDialog,
+  ) async {
+    if (!context.mounted) return;
+
+    await _showReviewPromptIfNeeded(context);
+
+    if (result == true) {
+      openDialog();
+    }
+  }
+
+  Future<void> _showReviewPromptIfNeeded(BuildContext context) async {
+    final usageTrackingService = ref.read(usageTrackingServiceProvider);
+    final currentCount = await usageTrackingService
+        .getTotalRecommendationCount();
+
+    if (_shouldShowReviewPrompt(currentCount) && context.mounted) {
+      final responsive = Responsive(context);
+      await showDialog(
+        context: context,
+        builder: (_) => ReviewPromptDialog(
+          screenWidth: responsive.screenWidth,
+          screenHeight: responsive.screenHeight,
+        ),
+      );
+    }
+  }
+
+  bool _shouldShowReviewPrompt(int count) {
+    return count == 1 || count == 10 || count == 20;
   }
 
   FoodRecommendation _createDefaultFood() {
@@ -370,228 +426,15 @@ class _TodayRecommendationScreenState
   void _navigateToReviewScreen(BuildContext context, FoodRecommendation food) {
     Navigator.push(
       context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            ReviewScreen(food: food),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position:
-                Tween<Offset>(
-                  begin: const Offset(1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeOutCubic,
-                  ),
-                ),
-            child: child,
-          );
-        },
-        transitionDuration: Duration(milliseconds: isTablet ? 500 : 400),
-      ),
+      MaterialPageRoute(builder: (_) => ReviewScreen(food: food)),
     );
   }
 
-  Future<void> _handleCategoryTap(
-    BuildContext context,
-    WidgetRef ref,
-    FoodCategory category,
-    Function(
-      BuildContext, {
-      required String category,
-      required List<FoodRecommendation> foods,
-      required Color color,
-    })
-    showDialogFn,
+  Future<FoodRecommendation> _pickSmartFood(
+    List<FoodRecommendation> foods,
+    List<String> recentFoods,
   ) async {
-    if (ref.read(isCategoryLoadingProvider)) return;
-
-    ref.read(isCategoryLoadingProvider.notifier).state = true;
-    try {
-      ref.read(selectedCategoryProvider.notifier).state = category.name;
-      ref.read(selectedFoodProvider.notifier).state = null;
-
-      final foods = await ref.read(
-        recommendationProvider(category.name).future,
-      );
-
-      if (foods.isNotEmpty) {
-        if (!context.mounted) return;
-        showDialogFn(
-          context,
-          category: category.name,
-          foods: foods,
-          color: category.color,
-        );
-      } else {
-        if (!context.mounted) return;
-        _showErrorSnackBar(context, '추천을 불러오지 못했습니다.');
-      }
-    } catch (e) {
-      if (!context.mounted) return;
-      _showErrorSnackBar(context, '오류가 발생했습니다: $e');
-    } finally {
-      ref.read(isCategoryLoadingProvider.notifier).state = false;
-    }
-  }
-
-  void _showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.error_outline,
-              color: Colors.white,
-              size: iconSize * 0.8,
-            ),
-            SizedBox(width: (screenWidth * 0.03).clamp(8.0, 12.0)),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(
-                  fontFamily: 'Do Hyeon',
-                  fontSize: (screenWidth * (isTablet ? 0.025 : 0.035)).clamp(
-                    12.0,
-                    18.0,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.red.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(isTablet ? 12.0 : 8.0),
-        ),
-        margin: EdgeInsets.all(horizontalPadding),
-      ),
-    );
-  }
-
-  void _showUserStatsDialog(BuildContext context) async {
-    try {
-      final stats = await RecommendationService.getUserStats();
-      final foodCategories = ref.read(foodCategoriesProvider);
-
-      // Map category name to color
-      final Map<String, Color> categoryColorMap = {
-        for (final cat in foodCategories) cat.name: cat.color,
-      };
-
-      // Process category stats
-      List<Map<String, dynamic>> categoryList = [];
-      int totalSelections = stats['totalSelections'] ?? 0;
-      if (stats['categoryStats'] != null &&
-          stats['categoryStats'] is Map<String, dynamic>) {
-        final Map<String, dynamic> catStats = Map<String, dynamic>.from(
-          stats['categoryStats'],
-        );
-        // Filter out "상관없음", include all with count > 0
-        final filteredCats = catStats.entries
-            .where((e) => e.key != '상관없음' && (e.value ?? 0) > 0)
-            .toList();
-        int denominator = totalSelections > 0
-            ? totalSelections
-            : filteredCats.fold<int>(
-                0,
-                (sum, e) => sum + ((e.value ?? 0) as num).toInt(),
-              );
-        categoryList = filteredCats.map<Map<String, dynamic>>((e) {
-          int count = (e.value ?? 0) as int;
-          double percent = denominator > 0 ? (count / denominator * 100) : 0.0;
-          return {'name': e.key, 'count': count, 'percent': percent};
-        }).toList();
-      }
-
-      // Calculate total count of top 5 foods
-      final List<dynamic> topFoodsList = (stats['topFoods'] as List)
-          .take(5)
-          .toList();
-      int totalTop5Count = 0;
-      for (final food in topFoodsList) {
-        if (food['count'] != null) {
-          totalTop5Count += (food['count'] as num).toInt();
-        }
-      }
-
-      if (!context.mounted) return;
-      showDialog(
-        context: context,
-        builder: (context) {
-          PageController pageController = PageController();
-          // 반응형 계산을 dialog builder 내부로 이동
-          final screenWidth = MediaQuery.of(context).size.width;
-          final screenHeight = MediaQuery.of(context).size.height;
-
-          return AnimatedStatsDialog(
-            screenWidth: screenWidth,
-            screenHeight: screenHeight,
-            stats: stats,
-            topFoodsList: topFoodsList,
-            totalTop5Count: totalTop5Count,
-            categoryList: categoryList,
-            categoryColorMap: categoryColorMap,
-            pageController: pageController,
-            buildStatItem: _buildStatItem,
-          );
-        },
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      _showErrorSnackBar(context, '통계를 불러오는데 실패했습니다.');
-    }
-  }
-
-  // Statistics item builder helper method
-  Widget _buildStatItem(String label, String value) {
-    return Padding( // Changed Container to Padding for simpler styling
-      padding: EdgeInsets.symmetric(
-        vertical: (screenHeight * 0.008).clamp(4.0, 8.0),
-        horizontal: (screenWidth * 0.02).clamp(8.0, 16.0),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            flex: 3,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Do Hyeon',
-                fontSize: (screenWidth * (isTablet ? 0.025 : 0.035)).clamp(
-                  12.0,
-                  18.0,
-                ),
-                color: Colors.grey[700],
-              ),
-              overflow: TextOverflow.ellipsis,
-              softWrap: false,
-            ),
-          ),
-          SizedBox(width: (screenWidth * 0.04).clamp(12.0, 20.0)),
-          Expanded(
-            flex: 2,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontFamily: 'Do Hyeon',
-                fontSize: (screenWidth * (isTablet ? 0.028 : 0.038)).clamp(
-                  14.0,
-                  20.0,
-                ),
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-              overflow: TextOverflow.ellipsis,
-              softWrap: false,
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
+    final analysis = await UserPreferenceService.analyzeUserPreferences();
+    return RecommendationService.pickSmartFood(foods, recentFoods, analysis);
   }
 }

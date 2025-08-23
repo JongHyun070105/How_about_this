@@ -1,13 +1,10 @@
-
-
-
 import 'package:confetti/confetti.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:eat_this_app/providers/food_providers.dart';
-import 'package:eat_this_app/services/user_preference_service.dart';
+import 'package:review_ai/models/food_recommendation.dart';
+import 'package:review_ai/providers/food_providers.dart';
+import 'package:review_ai/services/user_preference_service.dart';
+import 'package:review_ai/widgets/dialogs/review_prompt_dialog.dart'; // Import the new dialog
 
 class FoodRecommendationDialog extends ConsumerStatefulWidget {
   final String category;
@@ -34,7 +31,6 @@ class _FoodRecommendationDialogState
   late AnimationController _rouletteController;
   late AnimationController _scaleController;
   late ConfettiController _confettiController;
-  
   late Animation<double> _scaleAnimation;
 
   String _displayText = '?';
@@ -60,8 +56,6 @@ class _FoodRecommendationDialogState
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-
-    
 
     _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
@@ -107,35 +101,27 @@ class _FoodRecommendationDialogState
     BuildContext context,
     double screenWidth,
     double screenHeight,
+  ) async {
+    if (await UserPreferenceService.shouldShowReviewPromptDialog()) {
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => ReviewPromptDialog(
+          screenWidth: screenWidth,
+          screenHeight: screenHeight,
+        ),
+      );
+      await UserPreferenceService.recordReviewPromptDialogShown();
+    }
+  }
+
+  Future<bool?> _showReviewLimitAlert(
+    BuildContext context,
+    double screenWidth,
+    int remainingReviews,
   ) {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text(
-          '팁!',
-          style: TextStyle(
-            fontFamily: 'Do Hyeon',
-            fontSize: screenWidth * 0.045,
-          ),
-        ),
-        content: Text(
-          '좋아요! 맛있게 드시고, 나중에 상단의 리뷰 작성 아이콘을 눌러 AI에게 리뷰 작성을 맡겨보세요!',
-          style: TextStyle(
-            fontFamily: 'Do Hyeon',
-            fontSize: screenWidth * 0.04,
-          ),
-        ),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
-            onPressed: () {
-              if (!context.mounted) return;
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
-    );
+    // 리뷰 경고는 이제 Dialog 내부에서는 호출하지 않음
+    return Future.value(null); // ⚡ Future 타입으로 수정
   }
 
   @override
@@ -195,13 +181,16 @@ class _FoodRecommendationDialogState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Roulette display (without "재추천" button)
+                // Roulette display
                 Container(
                   width: double.infinity,
                   height: screenHeight * 0.1875,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [widget.color, widget.color.withAlpha((255 * 0.5).round())],
+                      colors: [
+                        widget.color,
+                        widget.color.withAlpha((255 * 0.5).round()),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -263,23 +252,19 @@ class _FoodRecommendationDialogState
                           ),
                         ),
                         SizedBox(height: screenHeight * 0.0225),
-                        // 좋아요/싫어요 버튼을 나란히 배치
+                        // 좋아요/싫어요 버튼
                         Row(
                           children: [
-                            // 좋아요 버튼
                             Expanded(
                               child: ElevatedButton.icon(
                                 onPressed: () async {
-                                  // 선택 기록 저장 (좋아요)
                                   await UserPreferenceService.recordFoodSelection(
                                     foodName: widget.recommended.name,
                                     category: widget.category,
                                     liked: true,
                                   );
-                                  // 다이얼로그 닫기
                                   if (!context.mounted) return;
                                   Navigator.of(context).pop();
-                                  // 안내 다이얼로그 표시
                                   _showPostRecommendationInfo(
                                     context,
                                     screenWidth,
@@ -310,17 +295,14 @@ class _FoodRecommendationDialogState
                               ),
                             ),
                             SizedBox(width: screenWidth * 0.02),
-                            // 싫어요 버튼
                             Expanded(
                               child: ElevatedButton.icon(
                                 onPressed: () async {
-                                  // 선택 기록 저장 (싫어요)
                                   await UserPreferenceService.recordFoodSelection(
                                     foodName: widget.recommended.name,
                                     category: widget.category,
                                     liked: false,
                                   );
-                                  // 다이얼로그 닫기하고 재추천
                                   if (!context.mounted) return;
                                   Navigator.of(context).pop(true);
                                 },
@@ -350,7 +332,6 @@ class _FoodRecommendationDialogState
                           ],
                         ),
                         SizedBox(height: screenHeight * 0.01),
-                        // 단순히 닫기만 하는 버튼
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
                           child: Text(

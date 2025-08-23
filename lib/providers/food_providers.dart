@@ -1,71 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:eat_this_app/services/recommendation_service.dart';
+import 'package:review_ai/models/food_category.dart';
+import 'package:review_ai/models/food_recommendation.dart';
+import 'package:review_ai/services/recommendation_service.dart';
 import 'package:flutter/material.dart';
-
-// =============================================================================
-// 모델 클래스들
-// =============================================================================
-
-/// 음식 카테고리를 나타내는 모델 클래스
-class FoodCategory {
-  final String name;
-  final String imageUrl;
-  final Color color;
-
-  const FoodCategory({
-    required this.name,
-    required this.imageUrl,
-    required this.color,
-  });
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FoodCategory &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          imageUrl == other.imageUrl &&
-          color == other.color;
-
-  @override
-  int get hashCode => name.hashCode ^ imageUrl.hashCode ^ color.hashCode;
-
-  @override
-  String toString() => 'FoodCategory(name: $name, imageUrl: $imageUrl)';
-}
-
-/// 추천받은 음식을 나타내는 모델 클래스
-class FoodRecommendation {
-  final String name;
-  final String? imageUrl;
-
-  const FoodRecommendation({required this.name, this.imageUrl});
-
-  factory FoodRecommendation.fromJson(Map<String, dynamic> json) {
-    return FoodRecommendation(
-      name: json['name'] as String? ?? '',
-      imageUrl: json['imageUrl'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'name': name, 'imageUrl': imageUrl};
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FoodRecommendation &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          imageUrl == other.imageUrl;
-
-  @override
-  int get hashCode => name.hashCode ^ imageUrl.hashCode;
-
-  @override
-  String toString() => 'FoodRecommendation(name: $name, imageUrl: $imageUrl)';
-}
 
 // =============================================================================
 // StateNotifier 클래스들
@@ -207,7 +144,6 @@ final recommendationProvider = FutureProvider.autoDispose
         final recommendations =
             await RecommendationService.getFoodRecommendations(
               category: category,
-              history: foodHistory,
             );
 
         // 추천 목록을 recommendationListProvider에도 동기화

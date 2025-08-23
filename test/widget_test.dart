@@ -9,7 +9,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:reviewai_flutter/main.dart';
+import 'package:review_ai/main.dart';
 
 void main() {
   testWidgets('Main screen smoke test', (WidgetTester tester) async {

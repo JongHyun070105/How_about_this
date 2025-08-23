@@ -1,5 +1,5 @@
-name: eat_this_app
-description: "A new Flutter project."
+name: review_ai
+description: "AI Food Review App"
 publish_to: "none"
 version: 1.0.0+1
 
@@ -32,19 +32,16 @@ dependencies:
   geolocator: ^12.0.0
   geocoding: ^2.2.1
   permission_handler: ^11.0.0
+  url_launcher: ^6.2.5
+  json_annotation: ^4.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_native_splash: ^2.4.0
   flutter_lints: ^5.0.0
   flutter_launcher_icons: "^0.13.1"
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "icon/app_icon.png"
-  remove_alpha_ios: true
+  json_serializable: ^6.10.0
+  build_runner: ^2.7.0
 
 flutter:
   uses-material-design: true
@@ -52,13 +49,13 @@ flutter:
     - .env
     - assets/images/
     - assets/images/categories/
+    - icon/ # 이 줄로 변경
   fonts:
     - family: Do Hyeon
       fonts:
         - asset: assets/fonts/BMDOHYEON.otf
 
-flutter_native_splash:
-  color: "#FFFFFF"
-  image: icon/app_icon.png # Use the app icon as the splash image
+flutter_launcher_icons:
   android: true
   ios: true
+  image_path: "icon/app_icon.png"
