@@ -1,5 +1,9 @@
 # ReviewAI Flutter
 
+## 프로젝트 목표
+
+ReviewAI Flutter는 이미지, 음식명, 별점을 입력받아 Gemini API(gemini-2.5-flash)를 통해 음식 리뷰를 3개 생성하고, 사용자가 선택하여 복사할 수 있는 Flutter 앱 개발을 목표로 합니다.
+
 ## 개요
 
 ReviewAI Flutter는 이미지, 음식명, 별점을 입력받아 Gemini API(gemini-2.5-flash)를 통해 음식 리뷰를 3개 생성하고, 사용자가 선택하여 복사할 수 있는 Flutter 애플리케이션입니다. 이 앱은 사용자에게 편리하고 다양한 리뷰 옵션을 제공하여 음식 리뷰 작성 과정을 간소화합니다.
@@ -12,13 +16,18 @@ ReviewAI Flutter는 이미지, 음식명, 별점을 입력받아 Gemini API(gemi
 - **리뷰 선택 및 복사**: 생성된 리뷰 중 마음에 드는 것을 선택하여 간편하게 복사할 수 있습니다.
 - **리뷰 기록**: 생성된 리뷰들을 기록하여 다시 볼 수 있습니다.
 
+## 중점 사항
+
+- **API 키 보안**: Gemini API 키를 안전하게 관리하고 보호합니다.
+- **사용자 경험(UX)**: 직관적이고 사용하기 쉬운 인터페이스를 제공하여 최상의 사용자 경험을 보장합니다.
+
 ## 기술 스택
 
 - **프레임워크**: Flutter
 - **언어**: Dart
 - **AI 모델**: Google Gemini API (gemini-2.5-flash)
 - **상태 관리**: Riverpod
-- **UI/UX**: Figma 디자인 기반 (Material Design 원칙 준수)
+- **UI/UX**: [Figma 디자인](https://www.figma.com/design/yBlezU34APYMBfmmFAd46U/Review?node-id=155-155&t=twjO1ug9YOjaQ7Ed-4) 기반 (Material Design 원칙 준수)
 
 ## 시작하기
 
