@@ -1,3 +1,4 @@
+import 'package:review_ai/widgets/common/app_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,19 @@ class ReviewSelectionScreen extends ConsumerStatefulWidget {
 class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
   final PageController _pageController = PageController();
   int? selectedReviewIndex;
+  List<String> _cachedReviews = []; // 리뷰를 캐시하여 상태 변화에 영향받지 않도록 함
+
+  @override
+  void initState() {
+    super.initState();
+    // 화면 초기화 시 리뷰를 캐시
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final reviewState = ref.read(reviewProvider);
+      setState(() {
+        _cachedReviews = List<String>.from(reviewState.generatedReviews);
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -28,19 +42,26 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final responsive = Responsive(context);
-    final reviewState = ref.watch(reviewProvider);
-    final reviews = reviewState.generatedReviews;
     final textTheme = Theme.of(context).textTheme;
+
+    // 캐시된 리뷰가 비어있다면 provider에서 다시 가져오기
+    if (_cachedReviews.isEmpty) {
+      final reviewState = ref.watch(reviewProvider);
+      _cachedReviews = List<String>.from(reviewState.generatedReviews);
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context, responsive, textTheme),
-      body: _buildBody(context, responsive, reviews, textTheme),
+      body: _buildBody(context, responsive, _cachedReviews, textTheme),
     );
   }
 
   PreferredSizeWidget _buildAppBar(
-      BuildContext context, Responsive responsive, TextTheme textTheme) {
+    BuildContext context,
+    Responsive responsive,
+    TextTheme textTheme,
+  ) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -55,7 +76,11 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       ),
       leading: IconButton(
         icon: Icon(Icons.arrow_back, size: responsive.iconSize()),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: () {
+          // 뒤로 가기 시 리뷰 상태를 리셋하여 무한 루프 방지
+          ref.read(reviewProvider.notifier).setGeneratedReviews([]);
+          Navigator.of(context).pop();
+        },
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
       ),
@@ -63,14 +88,18 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
         if (selectedReviewIndex != null)
           Center(
             child: Container(
-              margin: EdgeInsets.only(right: responsive.horizontalPadding() * 0.5),
+              margin: EdgeInsets.only(
+                right: responsive.horizontalPadding() * 0.5,
+              ),
               padding: EdgeInsets.symmetric(
                 horizontal: responsive.horizontalPadding() * 0.2,
                 vertical: responsive.verticalSpacing() * 0.2,
               ),
               decoration: BoxDecoration(
                 color: Colors.blue.withAlpha((0.1 * 255).round()),
-                borderRadius: BorderRadius.circular(responsive.isTablet ? 20.0 : 16.0),
+                borderRadius: BorderRadius.circular(
+                  responsive.isTablet ? 20.0 : 16.0,
+                ),
               ),
               child: Text(
                 '선택됨',
@@ -87,15 +116,50 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, Responsive responsive,
-      List<String> reviews, TextTheme textTheme) {
+  Widget _buildBody(
+    BuildContext context,
+    Responsive responsive,
+    List<String> reviews,
+    TextTheme textTheme,
+  ) {
+    // 리뷰가 없는 경우 처리
+    if (reviews.isEmpty) {
+      return SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: responsive.iconSize() * 2,
+                color: Colors.grey[400],
+              ),
+              SizedBox(height: responsive.verticalSpacing()),
+              Text(
+                '생성된 리뷰가 없습니다.',
+                style: textTheme.titleMedium?.copyWith(
+                  color: Colors.grey[600],
+                  fontFamily: 'Do Hyeon',
+                ),
+              ),
+              SizedBox(height: responsive.verticalSpacing()),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('뒤로 가기', style: TextStyle(fontFamily: 'Do Hyeon')),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding() * 0.8),
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.horizontalPadding() * 0.8,
+        ),
         child: Padding(
-          padding: EdgeInsets.only(
-            bottom: responsive.verticalSpacing() * 2,
-          ), // extra bottom padding
+          padding: EdgeInsets.only(bottom: responsive.verticalSpacing() * 2),
           child: Column(
             children: [
               SizedBox(height: responsive.verticalSpacing() * 2),
@@ -189,9 +253,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
               // Page indicator with responsive styling
               if (reviews.isNotEmpty)
                 Container(
-                  padding: EdgeInsets.all(
-                    responsive.horizontalPadding() * 0.2,
-                  ),
+                  padding: EdgeInsets.all(responsive.horizontalPadding() * 0.2),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(
@@ -273,7 +335,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                 ),
               ),
 
-              SizedBox(height: responsive.verticalSpacing()), // Reduced bottom spacing
+              SizedBox(height: responsive.verticalSpacing()),
             ],
           ),
         ),
@@ -281,13 +343,15 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     );
   }
 
-  Future<void> _saveSelectedReview(BuildContext context, Responsive responsive) async {
+  Future<void> _saveSelectedReview(
+    BuildContext context,
+    Responsive responsive,
+  ) async {
     if (selectedReviewIndex == null) return;
 
     try {
       final reviewState = ref.read(reviewProvider);
-      final reviews = reviewState.generatedReviews;
-      final selectedReviewText = reviews[selectedReviewIndex!];
+      final selectedReviewText = _cachedReviews[selectedReviewIndex!];
 
       final newEntry = ReviewHistoryEntry(
         foodName: reviewState.foodName.isEmpty ? '이름 없음' : reviewState.foodName,
@@ -298,7 +362,8 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
         priceRating: reviewState.priceRating,
         reviewStyle: reviewState.selectedReviewStyle,
         emphasis: reviewState.emphasis.isEmpty ? null : reviewState.emphasis,
-        generatedReviews: [selectedReviewText],
+        category: reviewState.category,
+        generatedReviews: [selectedReviewText], // Save only the selected review
       );
 
       await ref.read(reviewHistoryProvider.notifier).addReview(newEntry);
@@ -310,47 +375,20 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
 
       if (!context.mounted) return;
 
-      // Fixed: Show success snackbar properly
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '리뷰가 성공적으로 저장되고 클립보드에 복사되었습니다.',
-            style: TextStyle(
-              fontFamily: 'Do Hyeon',
-              fontSize: responsive.subtitleFontSize(),
-            ),
-          ),
-          backgroundColor: Colors.green.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(responsive.isTablet ? 12.0 : 8.0),
-          ),
-          margin: EdgeInsets.all(responsive.horizontalPadding()),
-        ),
-      );
+      showAppDialog(context, title: '성공', message: '리뷰가 저장되고 클립보드에 복사되었습니다.');
 
+      // 리뷰 상태를 완전히 리셋하고 홈 화면으로 돌아가기
       ref.read(reviewProvider.notifier).reset();
 
       if (!context.mounted) return;
-      Navigator.pop(context);
+      // 모든 화면을 닫고 처음 화면으로 돌아가기
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '저장 중 오류가 발생했습니다. 다시 시도해주세요.',
-            style: TextStyle(
-              fontFamily: 'Do Hyeon',
-              fontSize: responsive.subtitleFontSize(),
-            ),
-          ),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(responsive.isTablet ? 12.0 : 8.0),
-          ),
-          margin: EdgeInsets.all(responsive.horizontalPadding()),
-        ),
+      showAppDialog(
+        context,
+        title: '오류',
+        message: '저장 중 오류가 발생했습니다. 다시 시도해주세요.',
       );
     }
   }
@@ -365,6 +403,15 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       builder: (BuildContext dialogContext) {
         return EditReviewDialog(index: index, currentReview: currentReview);
       },
-    );
+    ).then((_) {
+      // 다이얼로그가 닫힌 후 provider에서 최신 리뷰를 가져와서 캐시 업데이트
+      final reviewState = ref.read(reviewProvider);
+      if (reviewState.generatedReviews.isNotEmpty &&
+          index < reviewState.generatedReviews.length) {
+        setState(() {
+          _cachedReviews[index] = reviewState.generatedReviews[index];
+        });
+      }
+    });
   }
 }

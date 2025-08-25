@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:review_ai/config/security_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:review_ai/config/app_constants.dart';
@@ -14,8 +15,7 @@ import 'package:review_ai/viewmodels/today_recommendation_viewmodel.dart';
 import 'package:review_ai/widgets/category_card.dart';
 import 'package:review_ai/widgets/dialogs/food_recommendation_dialog.dart';
 import 'package:review_ai/widgets/dialogs/user_stats_dialog.dart';
-import 'package:review_ai/widgets/dialogs/review_prompt_dialog.dart';
-import 'package:flutter/foundation.dart';
+import 'package:review_ai/widgets/common/app_dialogs.dart';
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
@@ -53,9 +53,7 @@ class _TodayRecommendationScreenState
   }
 
   String _getAdUnitId() {
-    return defaultTargetPlatform == TargetPlatform.android
-        ? "ca-app-pub-3940256099942544/6300978111"
-        : "ca-app-pub-3940256099942544/2934735716";
+    return SecurityConfig.bannerAdUnitId;
   }
 
   BannerAdListener _createBannerAdListener() {
@@ -89,6 +87,9 @@ class _TodayRecommendationScreenState
           backgroundColor: Colors.white,
           appBar: _buildAppBar(context, responsive, textTheme),
           body: _buildBody(context, responsive, foodCategories, textTheme),
+          bottomNavigationBar: SafeArea(
+            child: _buildBottomBannerAd(responsive),
+          ),
         ),
         if (isCategoryLoading) _buildLoadingOverlay(context, responsive),
       ],
@@ -96,7 +97,10 @@ class _TodayRecommendationScreenState
   }
 
   PreferredSizeWidget _buildAppBar(
-      BuildContext context, Responsive responsive, TextTheme textTheme) {
+    BuildContext context,
+    Responsive responsive,
+    TextTheme textTheme,
+  ) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -110,18 +114,26 @@ class _TodayRecommendationScreenState
   Widget _buildAppBarTitle(Responsive responsive, TextTheme textTheme) {
     return Container(
       alignment: Alignment.centerLeft,
-      child: Text('오늘 뭐 먹지?',
-          style: textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: responsive.appBarFontSize(),
-            fontFamily: 'Do Hyeon',
-            color: Colors.grey[800],
-          )),
+      child: Text(
+        '오늘 뭐 먹지?',
+        style: textTheme.headlineMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: responsive.appBarFontSize(),
+          fontFamily: 'Do Hyeon',
+          color: Colors.grey[800],
+        ),
+      ),
     );
   }
 
-  List<Widget> _buildAppBarActions(BuildContext context, Responsive responsive) {
-    return [_buildStatsIconButton(context, responsive), _buildReviewIconButton(context, responsive)];
+  List<Widget> _buildAppBarActions(
+    BuildContext context,
+    Responsive responsive,
+  ) {
+    return [
+      _buildStatsIconButton(context, responsive),
+      _buildReviewIconButton(context, responsive),
+    ];
   }
 
   Widget _buildStatsIconButton(BuildContext context, Responsive responsive) {
@@ -146,15 +158,23 @@ class _TodayRecommendationScreenState
         size: responsive.iconSize(),
         color: Colors.black,
       ),
-      onPressed: () => _navigateToReviewScreen(context, _createDefaultFood()),
+      onPressed: () => _navigateToReviewScreen(
+        context,
+        _createDefaultFood(),
+        category: '기타',
+      ),
       tooltip: '리뷰 작성',
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
     );
   }
 
-  Widget _buildBody(BuildContext context, Responsive responsive,
-      List<FoodCategory> foodCategories, TextTheme textTheme) {
+  Widget _buildBody(
+    BuildContext context,
+    Responsive responsive,
+    List<FoodCategory> foodCategories,
+    TextTheme textTheme,
+  ) {
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -167,8 +187,6 @@ class _TodayRecommendationScreenState
             _buildBodyHeader(responsive, textTheme),
             SizedBox(height: responsive.verticalSpacing()),
             _buildCategoryGrid(context, responsive, foodCategories),
-            SizedBox(height: responsive.verticalSpacing()),
-            _buildBottomBannerAd(responsive),
           ],
         ),
       ),
@@ -181,41 +199,41 @@ class _TodayRecommendationScreenState
       padding: EdgeInsets.symmetric(
         vertical: responsive.verticalSpacing() * 0.5,
       ),
-      child: Text('카테고리를 선택해주세요',
-          style: textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: responsive.titleFontSize(),
-            fontFamily: 'Do Hyeon',
-            color: Colors.grey[800],
-          )),
-    );
-  }
-
-  Widget _buildCategoryGrid(BuildContext context, Responsive responsive,
-      List<FoodCategory> foodCategories) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(
-            responsive.isTablet ? 20.0 : 16.0,
-          ),
-        ),
-        child: GridView.builder(
-          padding: EdgeInsets.symmetric(
-            vertical: responsive.verticalSpacing(),
-          ),
-          physics: const BouncingScrollPhysics(),
-          gridDelegate: _createGridDelegate(responsive),
-          itemCount: foodCategories.length,
-          itemBuilder: (context, index) =>
-              _buildCategoryItem(context, foodCategories[index], index),
+      child: Text(
+        '카테고리를 선택해주세요',
+        style: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: responsive.titleFontSize(),
+          fontFamily: 'Do Hyeon',
+          color: Colors.grey[800],
         ),
       ),
     );
   }
 
+  Widget _buildCategoryGrid(
+    BuildContext context,
+    Responsive responsive,
+    List<FoodCategory> foodCategories,
+  ) {
+    return Expanded(
+      child: GridView.builder(
+        padding: EdgeInsets.only(
+          top: responsive.verticalSpacing(),
+          bottom: responsive.verticalSpacing(),
+        ),
+        physics: const BouncingScrollPhysics(),
+        gridDelegate: _createGridDelegate(responsive),
+        itemCount: foodCategories.length,
+        itemBuilder: (context, index) =>
+            _buildCategoryItem(context, foodCategories[index], index),
+      ),
+    );
+  }
+
   SliverGridDelegateWithFixedCrossAxisCount _createGridDelegate(
-      Responsive responsive) {
+    Responsive responsive,
+  ) {
     return SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: responsive.crossAxisCount(),
       crossAxisSpacing: responsive.horizontalPadding() * 0.5,
@@ -224,15 +242,44 @@ class _TodayRecommendationScreenState
     );
   }
 
-  Widget _buildCategoryItem(BuildContext context, FoodCategory category, int index) {
+  Widget _buildCategoryItem(
+    BuildContext context,
+    FoodCategory category,
+    int index,
+  ) {
     return AnimatedContainer(
       duration: Duration(milliseconds: 300 + (index * 100)),
       curve: Curves.easeOutBack,
       child: CategoryCard(
         category: category,
-        onTap: () => ref
-            .read(todayRecommendationViewModelProvider.notifier)
-            .handleCategoryTap(context, category, _showRecommendationDialog),
+        onTap: () async {
+          // 첫 번째 추천 전에도 제한 체크!
+          final usageTrackingService = ref.read(usageTrackingServiceProvider);
+          final hasReachedLimit = await usageTrackingService
+              .hasReachedDailyLimit();
+
+          if (hasReachedLimit && context.mounted) {
+            showAppDialog(
+              context,
+              title: '일일 추천 한도 초과',
+              message: '오늘의 음식 추천 한도에 도달했습니다. 내일 다시 이용해주세요!',
+            );
+            return;
+          }
+
+          // 제한 안 걸렸으면 카운트 증가 후 추천 실행
+          await usageTrackingService.incrementRecommendationCount();
+
+          if (context.mounted) {
+            ref
+                .read(todayRecommendationViewModelProvider.notifier)
+                .handleCategoryTap(
+                  context,
+                  category,
+                  _showRecommendationDialog,
+                );
+          }
+        },
       ),
     );
   }
@@ -294,9 +341,7 @@ class _TodayRecommendationScreenState
   BoxDecoration _getLoadingDialogDecoration(Responsive responsive) {
     return BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(
-        responsive.isTablet ? 20.0 : 16.0,
-      ),
+      borderRadius: BorderRadius.circular(responsive.isTablet ? 20.0 : 16.0),
       boxShadow: [
         BoxShadow(
           color: Colors.black.withAlpha(25),
@@ -339,7 +384,11 @@ class _TodayRecommendationScreenState
 
     void openDialog() async {
       final analysis = await UserPreferenceService.analyzeUserPreferences();
-      final recommended = RecommendationService.pickSmartFood(foods, recentFoods, analysis);
+      final recommended = RecommendationService.pickSmartFood(
+        foods,
+        recentFoods,
+        analysis,
+      );
       ref.read(selectedFoodProvider.notifier).state = recommended;
 
       if (!context.mounted) return;
@@ -352,7 +401,8 @@ class _TodayRecommendationScreenState
             _buildAnimatedDialog(context, category, recommended, foods, color),
       );
 
-      if (!context.mounted) return; // Check context.mounted after async operation
+      if (!context.mounted)
+        return; // Check context.mounted after async operation
 
       await _handleDialogResult(context, result, openDialog);
     }
@@ -391,10 +441,32 @@ class _TodayRecommendationScreenState
   ) async {
     if (!context.mounted) return;
 
-    await _showReviewPromptIfNeeded(context);
-
+    // '다시 추천'인 경우(result == true)
     if (result == true) {
-      openDialog();
+      final usageTrackingService = ref.read(usageTrackingServiceProvider);
+
+      // 다시 추천 전에도 제한 체크
+      final hasReachedLimit = await usageTrackingService.hasReachedDailyLimit();
+
+      if (hasReachedLimit && context.mounted) {
+        // 제한에 도달한 경우 알림 표시
+        showAppDialog(
+          context,
+          title: '일일 추천 한도 초과',
+          message: '오늘의 음식 추천 한도에 도달했습니다. 내일 다시 이용해주세요!',
+        );
+        return;
+      }
+
+      // 제한 안 걸렸으면 카운트 증가 후 새로운 추천
+      await usageTrackingService.incrementRecommendationCount();
+
+      if (context.mounted) {
+        openDialog();
+      }
+    } else {
+      // '다시 추천'이 아닌 경우에만 팁(리뷰 유도) 표시
+      await _showReviewPromptIfNeeded(context);
     }
   }
 
@@ -405,12 +477,11 @@ class _TodayRecommendationScreenState
 
     if (_shouldShowReviewPrompt(currentCount) && context.mounted) {
       final responsive = Responsive(context);
-      await showDialog(
-        context: context,
-        builder: (_) => ReviewPromptDialog(
-          screenWidth: responsive.screenWidth,
-          screenHeight: responsive.screenHeight,
-        ),
+      showAppDialog(
+        context,
+        title: '리뷰 작성 팁!',
+        message:
+            '추천된 음식이 마음에 드셨나요? 드신 후, 상단의 리뷰 작성 버튼을 눌러 AI를 활용해서 리뷰를 작성해보세요!',
       );
     }
   }
@@ -426,10 +497,16 @@ class _TodayRecommendationScreenState
     );
   }
 
-  void _navigateToReviewScreen(BuildContext context, FoodRecommendation food) {
+  void _navigateToReviewScreen(
+    BuildContext context,
+    FoodRecommendation food, {
+    String? category,
+  }) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ReviewScreen(food: food)),
+      MaterialPageRoute(
+        builder: (_) => ReviewScreen(food: food, category: category ?? '기타'),
+      ),
     );
   }
 }

@@ -6,31 +6,17 @@ plugins {
 }
 
 android {
-    namespace = "com.example.reviewai_flutter"
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("/Users/macintosh/myandroidkey")
+            keyAlias = "key"
+            storePassword = "brian07!"
+            keyPassword = "brian07!"
+        }
+    }
+    namespace = "com.jonghyun.reviewai_flutter"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
-
-    // Properties 파일을 Gradle 방식으로 로드
-    val keystorePropertiesFile = rootProject.file("key.properties")
-    val keystoreProperties = mutableMapOf<String, String>()
-    
-    if (keystorePropertiesFile.exists()) {
-        keystorePropertiesFile.readLines().forEach { line ->
-            if (line.contains("=") && !line.startsWith("#")) {
-                val (key, value) = line.split("=", limit = 2)
-                keystoreProperties[key.trim()] = value.trim()
-            }
-        }
-    }
-
-    signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties["keyAlias"]
-            keyPassword = keystoreProperties["keyPassword"]
-            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
-            storePassword = keystoreProperties["storePassword"]
-        }
-    }
 
     compileOptions {
         // Core library desugaring 활성화
@@ -45,13 +31,13 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.reviewai_flutter"
+        applicationId = "com.jonghyun.reviewai_flutter"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = 2  // 직접 2로 지정
+        versionName = "1.0.1"
         
         // MultiDex 지원 (필요시)
         multiDexEnabled = true
@@ -59,7 +45,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            // signingConfig = signingConfigs.getByName("release") // 서명 설정 제거
         }
     }
 }

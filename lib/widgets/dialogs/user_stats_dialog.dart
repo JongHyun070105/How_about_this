@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -64,41 +65,71 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
     final isTablet = screenWidth >= 768;
 
     if (isLoading) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: screenHeight * 0.3,
-            minWidth: screenWidth * 0.6,
+      return const Dialog(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator.adaptive(),
+              SizedBox(width: 20),
+              Text("불러오는 중...", style: TextStyle(fontFamily: 'Do Hyeon')),
+            ],
           ),
-          child: const Center(child: CircularProgressIndicator()),
         ),
       );
     }
 
     if (errorMessage != null) {
-      return AlertDialog(
-        title: const Text('오류'),
-        content: Text(errorMessage!),
+      return CupertinoAlertDialog(
+        title: const Text(
+          '오류',
+          style: TextStyle(
+            fontFamily: 'Do Hyeon',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 12.0),
+          child: Text(
+            errorMessage!,
+            style: const TextStyle(fontFamily: 'Do Hyeon', fontSize: 16),
+          ),
+        ),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
+            isDefaultAction: true,
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('확인'),
+            child: const Text(
+              '확인',
+              style: TextStyle(fontFamily: 'Do Hyeon'),
+            ),
           ),
         ],
       );
     }
 
     if (stats == null) {
-      return AlertDialog(
-        title: const Text('데이터 없음'),
-        content: const Text('통계 데이터를 불러올 수 없습니다.'),
+      return CupertinoAlertDialog(
+        title: const Text(
+          '데이터 없음',
+          style: TextStyle(fontFamily: 'Do Hyeon', fontWeight: FontWeight.bold),
+        ),
+        content: const Padding(
+          padding: EdgeInsets.only(top: 12.0),
+          child: Text(
+            '통계 데이터를 불러올 수 없습니다.',
+            style: TextStyle(fontFamily: 'Do Hyeon', fontSize: 16),
+          ),
+        ),
         actions: [
-          TextButton(
+          CupertinoDialogAction(
+            isDefaultAction: true,
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('확인'),
+            child: const Text(
+              '확인',
+              style: TextStyle(fontFamily: 'Do Hyeon'),
+            ),
           ),
         ],
       );
@@ -390,16 +421,16 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                           entry,
                                         ) {
                                           final cat = entry.value;
-                                          final double percent =
+                                          final double percent = 
                                               cat['percent'] ?? 0.0;
-                                          final color =
+                                          final color = 
                                               categoryColorMap[cat['name']] ??
                                               Colors.grey.shade400;
 
-                                          double adjustedProgress =
+                                          double adjustedProgress = 
                                               animationValue;
 
-                                          bool shouldShowTitle =
+                                          bool shouldShowTitle = 
                                               percent >= 8.0 &&
                                               animationValue > 0.8;
 
@@ -427,7 +458,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                         pieTouchData: PieTouchData(
                                           enabled: true,
                                           touchCallback:
-                                              (
+                                              ( 
                                                 FlTouchEvent event,
                                                 pieTouchResponse,
                                               ) {
@@ -469,10 +500,10 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                 children: categoryList.take(4).map((
                                                   cat,
                                                 ) {
-                                                  final color =
+                                                  final color = 
                                                       categoryColorMap[cat['name']] ??
                                                       Colors.grey.shade400;
-                                                  final percent =
+                                                  final percent = 
                                                       cat['percent'] ?? 0.0;
                                                   return Container(
                                                     constraints: BoxConstraints(
@@ -511,11 +542,13 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                                 style: const TextStyle(
                                                                   fontFamily:
                                                                       'Do Hyeon',
-                                                                  fontSize: 12,
-                                                                  color: Colors
-                                                                      .black87,
+                                                                  fontSize:
+                                                                      12,
+                                                                  color:
+                                                                      Colors
+                                                                          .black87,
                                                                 ),
-                                                                overflow:
+                                                                overflow: 
                                                                     TextOverflow
                                                                         .ellipsis,
                                                               ),
@@ -524,9 +557,11 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                                 style: TextStyle(
                                                                   fontFamily:
                                                                       'Do Hyeon',
-                                                                  fontSize: 10,
-                                                                  color: Colors
-                                                                      .grey[600],
+                                                                  fontSize:
+                                                                      10,
+                                                                  color:
+                                                                      Colors
+                                                                          .grey[600],
                                                                   fontWeight:
                                                                       FontWeight
                                                                           .bold,
@@ -549,16 +584,16 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                   children: categoryList.skip(4).take(3).map((
                                                     cat,
                                                   ) {
-                                                    final color =
+                                                    final color = 
                                                         categoryColorMap[cat['name']] ??
                                                         Colors.grey.shade400;
-                                                    final percent =
+                                                    final percent = 
                                                         cat['percent'] ?? 0.0;
                                                     return Container(
                                                       constraints:
                                                           BoxConstraints(
                                                             maxWidth:
-                                                                screenWidth *
+                                                                screenWidth * 
                                                                 0.25,
                                                           ),
                                                       child: Row(
@@ -596,10 +631,11 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                                         'Do Hyeon',
                                                                     fontSize:
                                                                         12,
-                                                                    color: Colors
-                                                                        .black87,
+                                                                    color:
+                                                                        Colors
+                                                                            .black87,
                                                                   ),
-                                                                  overflow:
+                                                                  overflow: 
                                                                       TextOverflow
                                                                           .ellipsis,
                                                                 ),
@@ -610,8 +646,9 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                                         'Do Hyeon',
                                                                     fontSize:
                                                                         10,
-                                                                    color: Colors
-                                                                        .grey[600],
+                                                                    color:
+                                                                        Colors
+                                                                            .grey[600],
                                                                     fontWeight:
                                                                         FontWeight
                                                                             .bold,
@@ -703,13 +740,14 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
   }
 
   Widget _buildUsageIndicator(
-    double screenWidth, {
+    double screenWidth,
+    {
     required String label,
     required int used,
     required int max,
     required Color color,
     required TextStyle style,
-  }) {
+  } ) {
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: (screenWidth * 0.02).clamp(8.0, 16.0),

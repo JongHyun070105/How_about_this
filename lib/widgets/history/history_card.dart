@@ -1,16 +1,19 @@
 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:review_ai/widgets/common/app_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:review_ai/providers/review_provider.dart';
 import 'package:review_ai/widgets/review/rating_row.dart';
 
-class HistoryCard extends StatelessWidget {
+class HistoryCard extends ConsumerWidget {
   final ReviewHistoryEntry entry;
 
   const HistoryCard({super.key, required this.entry});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
@@ -111,35 +114,68 @@ class HistoryCard extends StatelessWidget {
                     fontSize: screenWidth * 0.04,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.copy,
-                    color: Colors.blue,
-                    size: screenWidth * 0.05,
-                  ),
-                  onPressed: () {
-                    final allReviewsText = entry.generatedReviews.join('\n\n');
-                    Clipboard.setData(
-                      ClipboardData(
-                        text: allReviewsText,
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: screenWidth * 0.05,
                       ),
-                    );
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '모든 AI 생성 리뷰가 클립보드에 복사되었습니다.',
-                          style: const TextStyle(
-                            fontFamily: 'Do Hyeon',
+                      onPressed: () {
+                        showCupertinoDialog(
+                          context: context,
+                          builder: (BuildContext ctx) {
+                            return CupertinoAlertDialog(
+                              title: const Text('리뷰 삭제',
+                                  style: TextStyle(
+                                      fontFamily: 'Do Hyeon',
+                                      fontWeight: FontWeight.bold)),
+                              content: const Text('이 리뷰를 삭제하시겠습니까?',
+                                  style: TextStyle(fontFamily: 'Do Hyeon')),
+                              actions: [
+                                CupertinoDialogAction(
+                                  onPressed: () {
+                                    Navigator.of(ctx).pop();
+                                  },
+                                  child: const Text('취소',
+                                      style: TextStyle(fontFamily: 'Do Hyeon')),
+                                ),
+                                CupertinoDialogAction(
+                                  onPressed: () {
+                                    ref
+                                        .read(reviewHistoryProvider.notifier)
+                                        .deleteReview(entry.createdAt);
+                                    Navigator.of(ctx).pop();
+                                  },
+                                  isDestructiveAction: true,
+                                  child: const Text('삭제',
+                                      style: TextStyle(fontFamily: 'Do Hyeon'))
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.copy,
+                        color: Colors.blue,
+                        size: screenWidth * 0.05,
+                      ),
+                      onPressed: () {
+                        final allReviewsText = entry.generatedReviews.join('\n\n');
+                        Clipboard.setData(
+                          ClipboardData(
+                            text: allReviewsText,
                           ),
-                        ),
-                        duration: const Duration(
-                          seconds: 2,
-                        ),
-                      ),
-                    );
-                  },
+                        );
+                        showAppDialog(context,
+                            title: '알림', message: '모든 AI 생성 리뷰가 클립보드에 복사되었습니다.');
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),

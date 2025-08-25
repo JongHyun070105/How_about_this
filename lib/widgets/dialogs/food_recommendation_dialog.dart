@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/models/food_recommendation.dart';
 import 'package:review_ai/services/user_preference_service.dart';
-import 'package:review_ai/widgets/dialogs/review_prompt_dialog.dart';
+import 'package:review_ai/widgets/common/app_dialogs.dart';
 
 class FoodRecommendationDialog extends ConsumerStatefulWidget {
   final String category;
@@ -103,12 +103,10 @@ class _FoodRecommendationDialogState
   ) async {
     if (await UserPreferenceService.shouldShowReviewPromptDialog()) {
       if (!context.mounted) return;
-      showDialog(
-        context: context,
-        builder: (context) => ReviewPromptDialog(
-          screenWidth: screenWidth,
-          screenHeight: screenHeight,
-        ),
+      showAppDialog(
+        context,
+        title: '리뷰 작성 팁!',
+        message: '추천된 음식이 마음에 드셨나요? 드신 후, 상단의 리뷰 작성 버튼을 눌러 AI를 활용해서 리뷰를 작성해보세요!',
       );
       await UserPreferenceService.recordReviewPromptDialogShown();
     }
@@ -255,11 +253,6 @@ class _FoodRecommendationDialogState
                                   );
                                   if (!context.mounted) return;
                                   Navigator.of(context).pop();
-                                  _showPostRecommendationInfo(
-                                    context,
-                                    screenWidth,
-                                    screenHeight,
-                                  );
                                 },
                                 icon: Icon(
                                   Icons.thumb_up,

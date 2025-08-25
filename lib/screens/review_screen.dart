@@ -14,8 +14,9 @@ import 'package:review_ai/widgets/review/review_style_section.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final FoodRecommendation food;
+  final String category;
 
-  const ReviewScreen({super.key, required this.food});
+  const ReviewScreen({super.key, required this.food, required this.category});
 
   @override
   ConsumerState<ReviewScreen> createState() => _ReviewScreenState();
@@ -23,6 +24,7 @@ class ReviewScreen extends ConsumerStatefulWidget {
 
 class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   final TextEditingController _foodNameController = TextEditingController();
+  bool _hasNavigatedToSelection = false; // 중복 네비게이션 방지 플래그
 
   @override
   void initState() {
@@ -38,6 +40,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
       _foodNameController.text = foodNameToSet;
       ref.read(reviewProvider.notifier).setFoodName(foodNameToSet);
+
+      // 화면 진입 시 플래그 초기화
+      _hasNavigatedToSelection = false;
     });
   }
 
@@ -60,23 +65,34 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       }
     });
 
-    ref.listen(reviewViewModelProvider, (previous, next) {
-      if (next) {
-        // is loading
-      } else {
-        // is not loading
-        final reviews = ref.read(reviewProvider).generatedReviews;
-        if (reviews.isNotEmpty) {
-          _navigateToReviewSelection();
-        }
+    ref.listen(reviewProvider.select((state) => state.generatedReviews), (
+      previous,
+      next,
+    ) {
+      debugPrint('생성된 리뷰 상태 변경: ${previous?.length} -> ${next.length}');
+
+      // 새로운 리뷰가 생성되고 아직 선택 화면으로 이동하지 않은 경우만 네비게이션
+      if (previous?.isEmpty == true &&
+          next.isNotEmpty &&
+          !_hasNavigatedToSelection &&
+          context.mounted) {
+        debugPrint('새로운 리뷰 생성됨 - 화면 전환 준비');
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted && !_hasNavigatedToSelection) {
+            debugPrint('실제 화면 전환 실행');
+            _navigateToReviewSelection();
+          }
+        });
       }
     });
 
     return PopScope(
       canPop: !isLoading,
       onPopInvokedWithResult: (didPop, _) {
+        // no reset here; reset happens in ReviewSelectionScreen after save
         if (didPop) {
-          ref.read(reviewProvider.notifier).reset();
+          _hasNavigatedToSelection = false; // 뒤로 가기 시 플래그 리셋
         }
       },
       child: Stack(
@@ -92,20 +108,42 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  void _navigateToRecommendationScreen() => Navigator.pop(context);
+  void _navigateToRecommendationScreen() {
+    _hasNavigatedToSelection = false;
+    Navigator.pop(context);
+  }
 
   void _navigateToHistoryScreen() => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const HistoryScreen()),
-      );
+    context,
+    MaterialPageRoute(builder: (_) => const HistoryScreen()),
+  );
 
-  void _navigateToReviewSelection() => Navigator.push(
+  void _navigateToReviewSelection() {
+    if (!_hasNavigatedToSelection && context.mounted) {
+      _hasNavigatedToSelection = true; // 여기서 플래그 설정
+      debugPrint('ReviewSelectionScreen으로 네비게이션 시작');
+      Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ReviewSelectionScreen()),
-      );
+      ).then((_) {
+        // 선택 화면에서 돌아왔을 때 플래그 리셋
+        debugPrint('ReviewSelectionScreen에서 돌아옴');
+        if (mounted) {
+          _hasNavigatedToSelection = false;
+          // 필요시 상태도 리셋
+          ref.read(reviewProvider.notifier).setGeneratedReviews([]);
+        }
+      });
+    } else {
+      debugPrint('네비게이션 스킵 - 이미 이동했거나 컨텍스트가 마운트되지 않음');
+    }
+  }
 
   PreferredSizeWidget _buildAppBar(
-      BuildContext context, Responsive responsive, TextTheme textTheme) {
+    BuildContext context,
+    Responsive responsive,
+    TextTheme textTheme,
+  ) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -136,12 +174,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  Widget _buildBody(BuildContext context, Responsive responsive,
-      TextTheme textTheme, bool isLoading) {
+  Widget _buildBody(
+    BuildContext context,
+    Responsive responsive,
+    TextTheme textTheme,
+    bool isLoading,
+  ) {
     final reviewState = ref.watch(reviewProvider);
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: responsive.horizontalPadding()),
+        padding: EdgeInsets.symmetric(
+          horizontal: responsive.horizontalPadding(),
+        ),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -149,8 +193,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               SizedBox(height: responsive.verticalSpacing() * 0.4),
               Container(
                 constraints: BoxConstraints(
-                    maxHeight: responsive.screenHeight *
-                        (responsive.isTablet ? 0.28 : 0.26)),
+                  maxHeight:
+                      responsive.screenHeight *
+                      (responsive.isTablet ? 0.28 : 0.26),
+                ),
                 child: const ImageUploadSection(),
               ),
               SizedBox(height: responsive.verticalSpacing() * 0.8),
@@ -161,30 +207,32 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               Column(
                 children: [
                   RatingRow(
-                      label: '배달',
-                      rating: reviewState.deliveryRating,
-                      onRate: (r) => ref
-                          .read(reviewProvider.notifier)
-                          .setDeliveryRating(r)),
+                    label: '배달',
+                    rating: reviewState.deliveryRating,
+                    onRate: (r) =>
+                        ref.read(reviewProvider.notifier).setDeliveryRating(r),
+                  ),
                   SizedBox(height: responsive.verticalSpacing() * 0.02),
                   RatingRow(
-                      label: '맛',
-                      rating: reviewState.tasteRating,
-                      onRate: (r) =>
-                          ref.read(reviewProvider.notifier).setTasteRating(r)),
+                    label: '맛',
+                    rating: reviewState.tasteRating,
+                    onRate: (r) =>
+                        ref.read(reviewProvider.notifier).setTasteRating(r),
+                  ),
                   SizedBox(height: responsive.verticalSpacing() * 0.02),
                   RatingRow(
-                      label: '양',
-                      rating: reviewState.portionRating,
-                      onRate: (r) => ref
-                          .read(reviewProvider.notifier)
-                          .setPortionRating(r)),
+                    label: '양',
+                    rating: reviewState.portionRating,
+                    onRate: (r) =>
+                        ref.read(reviewProvider.notifier).setPortionRating(r),
+                  ),
                   SizedBox(height: responsive.verticalSpacing() * 0.02),
                   RatingRow(
-                      label: '가격',
-                      rating: reviewState.priceRating,
-                      onRate: (r) =>
-                          ref.read(reviewProvider.notifier).setPriceRating(r)),
+                    label: '가격',
+                    rating: reviewState.priceRating,
+                    onRate: (r) =>
+                        ref.read(reviewProvider.notifier).setPriceRating(r),
+                  ),
                 ],
               ),
               SizedBox(height: responsive.verticalSpacing() * 0.8),
@@ -197,8 +245,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     .generateReviews(context),
                 isLoading: isLoading,
               ),
-              SizedBox(
-                  height: MediaQuery.of(context).padding.bottom + 16.0),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 16.0),
             ],
           ),
         ),
@@ -209,12 +256,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Widget _buildSectionLabel(Responsive responsive, String title) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Text(title,
-          style: TextStyle(
-              fontSize: responsive.inputFontSize() * 1.1,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Do Hyeon',
-              color: Colors.grey[800])),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: responsive.inputFontSize() * 1.1,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Do Hyeon',
+          color: Colors.grey[800],
+        ),
+      ),
     );
   }
 
@@ -231,21 +281,25 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         onChanged: (text) =>
             ref.read(reviewProvider.notifier).setFoodName(text),
         style: TextStyle(
-            fontFamily: 'Do Hyeon',
-            fontSize: responsive.inputFontSize(),
-            color: Colors.grey[800]),
+          fontFamily: 'Do Hyeon',
+          fontSize: responsive.inputFontSize(),
+          color: Colors.grey[800],
+        ),
         decoration: InputDecoration(
           hintText: '음식명을 입력해주세요',
           counterText: "",
           hintStyle: TextStyle(
-              fontFamily: 'Do Hyeon',
-              fontSize: responsive.inputFontSize() * 0.9,
-              color: Colors.grey[400]),
+            fontFamily: 'Do Hyeon',
+            fontSize: responsive.inputFontSize() * 0.9,
+            color: Colors.grey[400],
+          ),
           border: InputBorder.none,
           focusedBorder: InputBorder.none,
           enabledBorder: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 16.0,
+          ),
           filled: false,
         ),
       ),
@@ -255,9 +309,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Widget _buildLoadingOverlay() {
     return Container(
       color: Colors.black.withAlpha(128),
-      child: const Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 }

@@ -23,6 +23,8 @@ class Responsive {
   double appBarFontSize() => _calculateFontSize(0.032, 0.05, 16.0, 28.0);
   double titleFontSize() => _calculateFontSize(0.032, 0.045, 16.0, 24.0);
   double subtitleFontSize() => _calculateFontSize(0.025, 0.04, 12.0, 18.0);
+  double bodyFontSize() => _calculateFontSize(0.027, 0.038, 13.0, 19.0);
+  double captionFontSize() => _calculateFontSize(0.022, 0.035, 11.0, 16.0);
   double buttonFontSize() => _calculateFontSize(0.03, 0.04, 14.0, 22.0);
   double inputFontSize() => _calculateFontSize(0.028, 0.04, 14.0, 20.0);
 
@@ -46,25 +48,41 @@ class Responsive {
   }
 
   double _calculateFontSize(
-      double tabletMultiplier, double phoneMultiplier, double min, double max) {
+    double tabletMultiplier,
+    double phoneMultiplier,
+    double min,
+    double max,
+  ) {
     final multiplier = _isTablet ? tabletMultiplier : phoneMultiplier;
     return (_screenWidth * multiplier).clamp(min, max);
   }
 
   double _calculatePadding(
-      double tabletMultiplier, double phoneMultiplier, double min, double max) {
+    double tabletMultiplier,
+    double phoneMultiplier,
+    double min,
+    double max,
+  ) {
     final multiplier = _isTablet ? tabletMultiplier : phoneMultiplier;
     return (_screenWidth * multiplier).clamp(min, max);
   }
 
   double _calculateSpacing(
-      double tabletMultiplier, double phoneMultiplier, double min, double max) {
+    double tabletMultiplier,
+    double phoneMultiplier,
+    double min,
+    double max,
+  ) {
     final multiplier = _isTablet ? tabletMultiplier : phoneMultiplier;
     return (_screenHeight * multiplier).clamp(min, max);
   }
 
   double _calculateIconSize(
-      double tabletMultiplier, double phoneMultiplier, double min, double max) {
+    double tabletMultiplier,
+    double phoneMultiplier,
+    double min,
+    double max,
+  ) {
     final multiplier = _isTablet ? tabletMultiplier : phoneMultiplier;
     return (_screenWidth * multiplier).clamp(min, max);
   }

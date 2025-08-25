@@ -1,4 +1,4 @@
-package com.example.reviewai_flutter;
+package com.jonghyun.reviewai_flutter;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;

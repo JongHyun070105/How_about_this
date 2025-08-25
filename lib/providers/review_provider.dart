@@ -11,6 +11,7 @@ class ReviewHistoryEntry {
   final String foodName;
   final String? restaurantName;
   final String? imagePath; // 이미지 파일 경로
+  final String category;
   final double deliveryRating;
   final double tasteRating;
   final double portionRating;
@@ -24,6 +25,7 @@ class ReviewHistoryEntry {
     required this.foodName,
     this.restaurantName,
     this.imagePath,
+    required this.category,
     required this.deliveryRating,
     required this.tasteRating,
     required this.portionRating,
@@ -39,6 +41,7 @@ class ReviewHistoryEntry {
         'foodName': foodName,
         'restaurantName': restaurantName,
         'imagePath': imagePath,
+        'category': category,
         'deliveryRating': deliveryRating.toString(), // double을 string으로 안전하게 저장
         'tasteRating': tasteRating.toString(),
         'portionRating': portionRating.toString(),
@@ -56,6 +59,7 @@ class ReviewHistoryEntry {
         foodName: json['foodName']?.toString() ?? '',
         restaurantName: json['restaurantName']?.toString(),
         imagePath: json['imagePath']?.toString(),
+        category: json['category']?.toString() ?? '기타',
         deliveryRating: _safeParseDouble(json['deliveryRating']),
         tasteRating: _safeParseDouble(json['tasteRating']),
         portionRating: _safeParseDouble(json['portionRating']),
@@ -70,6 +74,7 @@ class ReviewHistoryEntry {
       // 기본값으로 반환하여 앱이 크래시되지 않도록 함
       return ReviewHistoryEntry(
         foodName: '오류 발생',
+        category: '기타',
         deliveryRating: 0.0,
         tasteRating: 0.0,
         portionRating: 0.0,
@@ -153,6 +158,10 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
 
   void setRestaurantName(String restaurantName) {
     state = state.copyWith(restaurantName: restaurantName);
+  }
+
+  void setCategory(String category) {
+    state = state.copyWith(category: category);
   }
 
   void setEmphasis(String emphasis) {
@@ -288,6 +297,25 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
       }
     } catch (e) {
       debugPrint('Error adding review to history: $e');
+    }
+  }
+
+  Future<void> deleteReview(DateTime createdAt) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<ReviewHistoryEntry> currentHistory = [...state];
+
+      currentHistory.removeWhere((entry) => entry.createdAt == createdAt);
+
+      final historyJson = json.encode(
+        currentHistory.map((entry) => entry.toJson()).toList(),
+      );
+      await prefs.setString('review_history_v2', historyJson);
+
+      state = currentHistory;
+      debugPrint('Successfully deleted a review entry');
+    } catch (e) {
+      debugPrint('Error deleting review from history: $e');
     }
   }
 

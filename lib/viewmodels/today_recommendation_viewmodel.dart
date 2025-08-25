@@ -5,6 +5,7 @@ import 'package:review_ai/models/food_category.dart';
 import 'package:review_ai/models/food_recommendation.dart';
 import 'package:review_ai/providers/food_providers.dart';
 import 'package:review_ai/services/recommendation_service.dart';
+import 'package:review_ai/widgets/common/app_dialogs.dart';
 
 class TodayRecommendationViewModel extends StateNotifier<bool> {
   final Ref _ref;
@@ -29,7 +30,7 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
       final usageTrackingService = _ref.read(usageTrackingServiceProvider);
       if (await usageTrackingService.hasReachedTotalRecommendationLimit()) {
         if (context.mounted) {
-          _showErrorSnackBar(context, '음식 추천은 하루 20회까지만 이용 가능합니다.');
+          _showErrorDialog(context, '음식 추천은 하루 20회까지만 이용 가능합니다.');
         }
         return;
       }
@@ -49,12 +50,12 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
         }
       } else {
         if (context.mounted) {
-          _showErrorSnackBar(context, '추천을 불러오지 못했습니다.');
+          _showErrorDialog(context, '추천을 불러오지 못했습니다.');
         }
       }
     } catch (e) {
       if (context.mounted) {
-        _showErrorSnackBar(context, '오류가 발생했습니다: $e');
+        _showErrorDialog(context, '오류가 발생했습니다: $e');
       }
     } finally {
       state = false;
@@ -79,14 +80,8 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
     await usageTrackingService.incrementTotalRecommendationCount();
   }
 
-  void _showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red.shade600,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  void _showErrorDialog(BuildContext context, String message) {
+    showAppDialog(context, title: '알림', message: message);
   }
 }
 

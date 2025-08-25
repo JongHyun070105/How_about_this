@@ -13,30 +13,78 @@ import 'environment_config.dart';
 class SecurityConfig {
   SecurityConfig._(); // 인스턴스 생성 방지
 
+  // SecurityConfig.dart의 광고 ID 관리 부분을 다음과 같이 수정:
+
   // =============================================================================
   // 광고 ID 관리
   // =============================================================================
 
+  /// 개발/테스트 모드 여부 (배포 시 false로 변경)
+  static const bool _useTestAds = false; // 개발 중에는 true, 배포 시 false
+
+  /// 테스트용 광고 ID들
+  static const String _testRewardedAdUnitId =
+      'ca-app-pub-3940256099942544/5224354917';
+  static const String _testBannerAdUnitId =
+      'ca-app-pub-3940256099942544/6300978111';
+
+  /// 실제 광고 ID들 (배포 시에만 사용)
+  static const String _prodRewardedAdUnitIdAndroid =
+      'ca-app-pub-6555743055922387/7073803440';
+  static const String _prodRewardedAdUnitIdIOS =
+      'ca-app-pub-6555743055922387/1329741925';
+  static const String _prodBannerAdUnitIdAndroid =
+      'ca-app-pub-6555743055922387/8087007370';
+  static const String _prodBannerAdUnitIdIOS =
+      'ca-app-pub-6555743055922387/7591365110';
+
   /// 플랫폼별 리워드 광고 ID 반환
   static String get rewardedAdUnitId {
-    if (Platform.isAndroid) {
-      return 'ca-app-pub-6555743055922387/7073803440';
-    } else if (Platform.isIOS) {
-      return 'ca-app-pub-6555743055922387/1329741925';
+    // 개발/테스트 중에는 테스트 ID 사용
+    if (_useTestAds || kDebugMode) {
+      return _testRewardedAdUnitId;
     }
-    return '';
+
+    // 프로덕션에서는 플랫폼별 실제 ID 사용
+    if (Platform.isAndroid) {
+      return _prodRewardedAdUnitIdAndroid;
+    } else if (Platform.isIOS) {
+      return _prodRewardedAdUnitIdIOS;
+    }
+    return _testRewardedAdUnitId; // fallback
   }
 
   /// 플랫폼별 배너 광고 ID 반환
   static String get bannerAdUnitId {
-    if (Platform.isAndroid) {
-      return 'ca-app-pub-6555743055922387/8087007370';
-    } else if (Platform.isIOS) {
-      return 'ca-app-pub-6555743055922387/7591365110';
+    // 개발/테스트 중에는 테스트 ID 사용
+    if (_useTestAds || kDebugMode) {
+      return _testBannerAdUnitId;
     }
-    return '';
+
+    // 프로덕션에서는 플랫폼별 실제 ID 사용
+    if (Platform.isAndroid) {
+      return _prodBannerAdUnitIdAndroid;
+    } else if (Platform.isIOS) {
+      return _prodBannerAdUnitIdIOS;
+    }
+    return _testBannerAdUnitId; // fallback
   }
 
+  /// 현재 사용 중인 광고 ID가 테스트용인지 확인
+  static bool get isUsingTestAds {
+    return _useTestAds || kDebugMode;
+  }
+
+  /// 광고 설정 상태 로그 출력
+  static void logAdConfiguration() {
+    if (shouldLogDetailed) {
+      debugPrint('=== 광고 설정 상태 ===');
+      debugPrint('테스트 모드: ${isUsingTestAds ? "활성" : "비활성"}');
+      debugPrint('리워드 광고 ID: $rewardedAdUnitId');
+      debugPrint('배너 광고 ID: $bannerAdUnitId');
+      debugPrint('==================');
+    }
+  }
   // =============================================================================
   // API 키 관리
   // =============================================================================
@@ -492,8 +540,7 @@ class SecurityConfig {
   static Future<bool> _verifyAppSignatureIOS() async {
     try {
       // Bundle ID 확인
-      const expectedBundleId =
-          'com.example.reviewaiFlutter'; // 실제 Bundle ID로 변경 필요
+      const expectedBundleId = 'com.jonghyun.reviewapp'; // 실제 Bundle ID로 변경 필요
 
       try {
         final result = await MethodChannel(
@@ -731,6 +778,12 @@ class SecurityInitializer {
 
   /// 런타임 보안 검증
   static Future<SecurityCheckResult> performRuntimeSecurityCheck() async {
+    // iOS 임시 우회: 로딩 문제 해결을 위해 보안 검사 비활성화 (현재 비활성화됨)
+    // if (Platform.isIOS) {
+    //   debugPrint('iOS 임시 조치: 런타임 보안 검사를 우회합니다.');
+    //   return SecurityCheckResult()..isSecure = true;
+    // }
+
     final result = SecurityCheckResult();
 
     try {

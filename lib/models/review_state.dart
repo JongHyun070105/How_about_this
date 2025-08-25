@@ -4,6 +4,7 @@ class ReviewState {
   final File? image;
   final String foodName;
   final String restaurantName;
+  final String category;
   final String emphasis;
   final double deliveryRating;
   final double tasteRating;
@@ -17,6 +18,7 @@ class ReviewState {
     this.image,
     this.foodName = '',
     this.restaurantName = '',
+    this.category = '',
     this.emphasis = '',
     this.deliveryRating = 0.0,
     this.tasteRating = 0.0,
@@ -31,6 +33,7 @@ class ReviewState {
     File? image,
     String? foodName,
     String? restaurantName,
+    String? category,
     String? emphasis,
     double? deliveryRating,
     double? tasteRating,
@@ -44,6 +47,7 @@ class ReviewState {
       image: image ?? this.image,
       foodName: foodName ?? this.foodName,
       restaurantName: restaurantName ?? this.restaurantName,
+      category: category ?? this.category,
       emphasis: emphasis ?? this.emphasis,
       deliveryRating: deliveryRating ?? this.deliveryRating,
       tasteRating: tasteRating ?? this.tasteRating,

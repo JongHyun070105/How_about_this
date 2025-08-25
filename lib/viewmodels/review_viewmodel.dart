@@ -5,16 +5,18 @@ import 'package:review_ai/providers/review_provider.dart';
 import 'package:review_ai/services/ad_service.dart';
 import 'package:review_ai/services/review_service.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
-import 'package:review_ai/widgets/dialogs/review_dialogs.dart';
 
 class ReviewViewModel extends StateNotifier<bool> {
   final Ref _ref;
+  bool _rewardEarned = false; // 보상 획득 상태 추가
 
   ReviewViewModel(this._ref) : super(false);
 
   Future<void> generateReviews(BuildContext context) async {
-    if (state) return;
+    if (state) return; // 이미 진행 중이면 리턴
+
     state = true;
+    _rewardEarned = false; // 초기화
 
     if (!_validateInputs(context)) {
       state = false;
@@ -25,22 +27,20 @@ class ReviewViewModel extends StateNotifier<bool> {
     final reached = await usageTrackingService.hasReachedReviewLimit();
     if (reached) {
       state = false;
-      if (!context.mounted) {
-        return;
-      }
+      if (!context.mounted) return;
       showAppDialog(context, title: '알림', message: '리뷰 생성은 하루 5회까지만 가능합니다.');
       return;
     }
 
+    // 로딩 상태 설정
     _ref.read(reviewProvider.notifier).setLoading(true);
 
     try {
       final imageFile = _ref.read(reviewProvider).image;
       if (imageFile != null) {
-        // await _ref.read(geminiServiceProvider).validateImage(imageFile);
+        await _ref.read(geminiServiceProvider).validateImage(imageFile);
       }
 
-      // Check if context is still mounted before proceeding
       if (!context.mounted) return;
       await _handleAdFlow(context);
     } catch (e) {
@@ -55,44 +55,50 @@ class ReviewViewModel extends StateNotifier<bool> {
   Future<void> _handleAdFlow(BuildContext context) async {
     final adService = _ref.read(adServiceProvider.notifier);
 
-    _ref.read(reviewProvider.notifier).setLoading(false);
-
     final adShown = await adService.showAdWithRetry(
       onUserEarnedReward: () {
-        // Check context inside callback
-        if (context.mounted) {
-          _actualGenerateReviews(context);
-        }
+        debugPrint('보상 획득 콜백 실행됨');
+        _rewardEarned = true; // 보상 획득 표시만 하고 여기서는 리뷰 생성하지 않음
       },
       onAdFailedToLoad: (message) {
         if (!context.mounted) return;
-        showAppDialog(context, title: '알림', message: message);
+        debugPrint('광고 로딩 실패: $message');
       },
     );
 
-    if (!adShown) {
-      if (!context.mounted) return;
-      showAppDialog(context, title: '알림', message: '광고 로드에 실패하여 리뷰를 생성합니다.');
-      // Check context again before calling async method
-      if (!context.mounted) return;
-      await _actualGenerateReviews(context);
+    // 광고 표시 완료 후 리뷰 생성
+    if (!context.mounted) return;
+
+    if (adShown && _rewardEarned) {
+      debugPrint('광고 시청 완료 - 리뷰 생성 시작');
+      await _generateReviewsAfterAd(context);
+    } else if (!adShown) {
+      debugPrint('광고 실패 - 바로 리뷰 생성');
+      await _generateReviewsAfterAd(context);
     }
   }
 
-  Future<void> _actualGenerateReviews(BuildContext context) async {
-    // Check context at the beginning of the method
+  Future<void> _generateReviewsAfterAd(BuildContext context) async {
     if (!context.mounted) return;
 
-    _ref.read(reviewProvider.notifier).setLoading(true);
     try {
+      debugPrint('리뷰 생성 시작');
       final reviewService = _ref.read(reviewServiceProvider);
-      final reviews = await reviewService.generateReviewsFromState();
+      final rawReviews = await reviewService.generateReviewsFromState();
+      // 줄바꿈 기준으로 분리하여 여러 리뷰로 나누기
+      final reviews = rawReviews
+          .expand((r) => r.split(RegExp(r'\n\s*\n')))
+          .toList();
+
+      debugPrint('생성된 리뷰 개수: ${reviews.length}');
 
       _ref.read(reviewProvider.notifier).setGeneratedReviews(reviews);
 
       if (_isSuccessfulGeneration(reviews)) {
-        await reviewService.handleSuccessfulGeneration();
-        // Navigation should be handled in the UI
+        // 히스토리 저장을 제거하고, 사용량 추적만 업데이트
+        await _updateUsageTracking();
+        debugPrint('리뷰 생성 성공 - 화면 전환 준비');
+        // 화면 전환은 UI에서 listen을 통해 처리됨
       } else {
         if (!context.mounted) return;
         showAppDialog(
@@ -102,12 +108,19 @@ class ReviewViewModel extends StateNotifier<bool> {
         );
       }
     } catch (e) {
+      debugPrint('리뷰 생성 중 오류: $e');
       if (!context.mounted) return;
       _handleGenerationError(context, e);
-    } finally {
-      if (context.mounted) {
-        _ref.read(reviewProvider.notifier).setLoading(false);
-      }
+    }
+  }
+
+  Future<void> _updateUsageTracking() async {
+    try {
+      final usageTrackingService = _ref.read(usageTrackingServiceProvider);
+      await usageTrackingService.incrementReviewCount();
+      debugPrint('사용량 추적 업데이트 완료');
+    } catch (e) {
+      debugPrint('사용량 추적 업데이트 오류: $e');
     }
   }
 
@@ -120,7 +133,12 @@ class ReviewViewModel extends StateNotifier<bool> {
         reviewState.portionRating == 0 ||
         reviewState.priceRating == 0) {
       if (context.mounted) {
-        showValidationDialog(context, MediaQuery.of(context).size);
+        showAppDialog(
+          context,
+          title: '입력 오류',
+          message: '모든 입력을 완료해주세요.',
+          isError: true,
+        );
       }
       return false;
     }
@@ -132,7 +150,6 @@ class ReviewViewModel extends StateNotifier<bool> {
   }
 
   void _handleGenerationError(BuildContext context, dynamic error) {
-    // Additional context check at the start
     if (!context.mounted) return;
 
     final errorString = error.toString();
@@ -141,15 +158,21 @@ class ReviewViewModel extends StateNotifier<bool> {
     if (errorString.contains('부적절한 이미지') ||
         errorString.contains('이미지가 음식 리뷰에 적합하지 않습니다')) {
       if (context.mounted) {
-        showImageErrorDialog(
+        showAppDialog(
           context,
-          errorMessage,
-          MediaQuery.of(context).size,
+          title: '이미지 오류',
+          message: errorMessage,
+          isError: true,
         );
       }
     } else {
       if (context.mounted) {
-        showAppDialog(context, title: '오류', message: errorMessage);
+        showAppDialog(
+          context,
+          title: '오류',
+          message: errorMessage,
+          isError: true,
+        );
       }
     }
   }
@@ -161,6 +184,12 @@ class ReviewViewModel extends StateNotifier<bool> {
       return '음식을 명확히 식별할 수 있는 사진을 업로드해주세요.';
     }
     return '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+  }
+
+  @override
+  void dispose() {
+    _rewardEarned = false;
+    super.dispose();
   }
 }
 

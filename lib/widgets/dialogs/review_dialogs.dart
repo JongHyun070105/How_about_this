@@ -1,79 +1,62 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:review_ai/widgets/common/app_dialogs.dart';
 
+// Replaced showValidationDialog
 void showValidationDialog(BuildContext context, Size screenSize) {
-  showCupertinoDialog(
-    context: context,
-    builder: (_) => CupertinoAlertDialog(
-      title: const Text(
-        '입력 오류',
-        style: TextStyle(
-          fontFamily: 'Do Hyeon',
-          color: Colors.red,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      content: Padding(
-        padding: EdgeInsets.only(top: screenSize.height * 0.01),
-        child: Text(
-          '모든 입력을 완료해주세요.',
-          style: TextStyle(fontFamily: 'Do Hyeon', fontSize: screenSize.width * 0.04),
-        ),
-      ),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
-        ),
-      ],
-    ),
+  showAppDialog(
+    context,
+    title: '입력 오류',
+    message: '모든 입력을 완료해주세요.',
+    isError: true,
   );
 }
 
+// Replaced showImageErrorDialog
 void showImageErrorDialog(BuildContext context, String message, Size screenSize) {
-  showCupertinoDialog(
-    context: context,
-    builder: (_) => CupertinoAlertDialog(
-      title: const Text(
-        '이미지 오류',
-        style: TextStyle(
-          fontFamily: 'Do Hyeon',
-          color: Colors.red,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      content: Padding(
-        padding: const EdgeInsets.only(top: 8.0),
-        child: Text(
-          message,
-          style: TextStyle(fontFamily: 'Do Hyeon', fontSize: screenSize.width * 0.04),
-        ),
-      ),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
-        ),
-      ],
-    ),
+  showAppDialog(
+    context,
+    title: '이미지 오류',
+    message: message,
+    isError: true,
   );
 }
 
-void showAlertDialog(BuildContext context, String title, String message, {VoidCallback? onConfirm}) {
-  showDialog(
+void showReviewPromptDialog(
+    BuildContext context, double screenWidth, double screenHeight) {
+  showCupertinoDialog(
     context: context,
     builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text(title, style: const TextStyle(fontFamily: 'Do Hyeon')),
-        content: Text(message, style: const TextStyle(fontFamily: 'Do Hyeon')),
+      return CupertinoAlertDialog(
+        title: const Text(
+          '리뷰 작성은 어떠세요?',
+          style: TextStyle(fontFamily: 'Do Hyeon', fontWeight: FontWeight.bold),
+        ),
+        content: const Padding(
+          padding: EdgeInsets.only(top: 12.0),
+          child: Text(
+            '앱 개선을 위해 잠시 시간을 내어 리뷰를 작성해주시면 감사하겠습니다!',
+            style: TextStyle(fontFamily: 'Do Hyeon', fontSize: 16),
+          ),
+        ),
         actions: <Widget>[
-          TextButton(
-            child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
+          CupertinoDialogAction(
+            child: const Text(
+              '나중에',
+              style: TextStyle(fontFamily: 'Do Hyeon'),
+            ),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
             onPressed: () {
               Navigator.of(context).pop();
-              onConfirm?.call();
+              // TODO: Navigate to app store review page
             },
+            child: const Text(
+              '리뷰 작성',
+              style: TextStyle(fontFamily: 'Do Hyeon', fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       );

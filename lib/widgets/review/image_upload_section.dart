@@ -1,3 +1,4 @@
+import 'package:review_ai/widgets/common/app_dialogs.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -90,9 +91,7 @@ class ImageUploadSection extends ConsumerWidget {
       }
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('이미지 선택에 실패했습니다.')));
+      showAppDialog(context, title: '오류', message: '이미지 선택에 실패했습니다.');
     } finally {
       if (context.mounted) {
         ref.read(isPickingImageProvider.notifier).state = false;

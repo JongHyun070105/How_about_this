@@ -32,5 +32,29 @@ class ReviewService {
   Future<void> handleSuccessfulGeneration() async {
     final usageTrackingService = _ref.read(usageTrackingServiceProvider);
     await usageTrackingService.incrementReviewCount();
+
+    // Get the current review state
+    final reviewState = _ref.read(reviewProvider);
+
+    // Create a ReviewHistoryEntry
+    final newEntry = ReviewHistoryEntry(
+      foodName: reviewState.foodName,
+      restaurantName: reviewState.restaurantName,
+      imagePath: reviewState.image?.path,
+      deliveryRating: reviewState.deliveryRating,
+      tasteRating: reviewState.tasteRating,
+      portionRating: reviewState.portionRating,
+      priceRating: reviewState.priceRating,
+      reviewStyle: reviewState.selectedReviewStyle,
+      emphasis: reviewState.emphasis,
+      category: reviewState.category,
+      generatedReviews: reviewState.generatedReviews,
+    );
+
+    // Add to history
+    await _ref.read(reviewHistoryProvider.notifier).addReview(newEntry);
+
+    // Reset the review state after successful generation and saving
+    _ref.read(reviewProvider.notifier).reset();
   }
 }
