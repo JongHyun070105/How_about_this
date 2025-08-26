@@ -25,9 +25,8 @@ ReviewAI Flutter는 이미지, 음식명, 별점을 입력받아 Gemini API(gemi
 
 - **프레임워크**: Flutter
 - **언어**: Dart
-- **AI 모델**: Google Gemini API (gemini-2.5-flash)
+- **AI 모델**: Google Gemini API (gemini-2.5-flash-lite)
 - **상태 관리**: Riverpod
-- **UI/UX**: [Figma 디자인](https://www.figma.com/design/yBlezU34APYMBfmmFAd46U/Review?node-id=155-155&t=twjO1ug9YOjaQ7Ed-4) 기반 (Material Design 원칙 준수)
 
 ## 시작하기
 
