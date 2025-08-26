@@ -13,9 +13,10 @@ import 'package:review_ai/services/user_preference_service.dart';
 import 'package:review_ai/utils/responsive.dart';
 import 'package:review_ai/viewmodels/today_recommendation_viewmodel.dart';
 import 'package:review_ai/widgets/category_card.dart';
-import 'package:review_ai/widgets/dialogs/food_recommendation_dialog.dart';
-import 'package:review_ai/widgets/dialogs/user_stats_dialog.dart';
+import 'package:review_ai/widgets/history/dialogs/food_recommendation_dialog.dart';
+import 'package:review_ai/widgets/history/dialogs/user_stats_dialog.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
+import 'package:clarity_flutter/clarity_flutter.dart';
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
@@ -91,7 +92,7 @@ class _TodayRecommendationScreenState
             child: _buildBottomBannerAd(responsive),
           ),
         ),
-        if (isCategoryLoading) _buildLoadingOverlay(context, responsive),
+        if (isCategoryLoading) _buildLoadingOverlay(),
       ],
     );
   }
@@ -101,13 +102,18 @@ class _TodayRecommendationScreenState
     Responsive responsive,
     TextTheme textTheme,
   ) {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      titleSpacing: responsive.horizontalPadding(),
-      centerTitle: false,
-      title: _buildAppBarTitle(responsive, textTheme),
-      actions: _buildAppBarActions(context, responsive),
+    return PreferredSize(
+      preferredSize: Size.fromHeight(kToolbarHeight),
+      child: SafeArea(
+        child: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          titleSpacing: responsive.horizontalPadding(),
+          centerTitle: false,
+          title: _buildAppBarTitle(responsive, textTheme),
+          actions: _buildAppBarActions(context, responsive),
+        ),
+      ),
     );
   }
 
@@ -307,70 +313,26 @@ class _TodayRecommendationScreenState
     );
   }
 
-  Widget _buildLoadingOverlay(BuildContext context, Responsive responsive) {
-    return Positioned.fill(
-      child: Container(
-        color: Colors.black.withAlpha(128),
-        child: Center(child: _buildLoadingDialog(context, responsive)),
-      ),
-    );
-  }
-
-  Widget _buildLoadingDialog(BuildContext context, Responsive responsive) {
-    final padding = responsive.horizontalPadding() * 0.5;
-    final progressSize = responsive.iconSize();
-
+  Widget _buildLoadingOverlay() {
     return Container(
-      padding: EdgeInsets.all(padding),
-      decoration: _getLoadingDialogDecoration(responsive),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: progressSize,
-            height: progressSize,
-            child: _buildProgressIndicator(responsive),
-          ),
-          SizedBox(height: responsive.verticalSpacing()),
-          _buildLoadingText(responsive),
-        ],
-      ),
-    );
-  }
-
-  BoxDecoration _getLoadingDialogDecoration(Responsive responsive) {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(responsive.isTablet ? 20.0 : 16.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withAlpha(25),
-          blurRadius: responsive.isTablet ? 20.0 : 15.0,
-          offset: const Offset(0, 8),
+      color: Colors.black.withAlpha(102),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+                color: Colors.white, strokeWidth: 3.0),
+            const SizedBox(height: 20),
+            Opacity(
+              opacity: 0.0,
+              child: Text(
+                '음식 추천 불러오는 중...',
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildProgressIndicator(Responsive responsive) {
-    return CircularProgressIndicator(
-      strokeWidth: responsive.isTablet ? 3.0 : 2.5,
-      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
-    );
-  }
-
-  Widget _buildLoadingText(Responsive responsive) {
-    return Text('추천을 불러오는 중...', style: _getLoadingTextStyle(responsive));
-  }
-
-  TextStyle _getLoadingTextStyle(Responsive responsive) {
-    final fontSize = responsive.inputFontSize() * 0.8;
-
-    return TextStyle(
-      fontFamily: 'Do Hyeon',
-      fontSize: fontSize,
-      color: Colors.grey[700],
-      decoration: TextDecoration.none,
+      ),
     );
   }
 

@@ -20,7 +20,7 @@ class SecurityConfig {
   // =============================================================================
 
   /// 개발/테스트 모드 여부 (배포 시 false로 변경)
-  static const bool _useTestAds = false; // 개발 중에는 true, 배포 시 false
+  static const bool _useTestAds = true; // 개발 중에는 true, 배포 시 false
 
   /// 테스트용 광고 ID들
   static const String _testRewardedAdUnitId =
@@ -440,26 +440,6 @@ class SecurityConfig {
         }
       }
 
-      // 2. 샌드박스 제약 확인 (탈옥된 기기에서는 제약이 우회됨)
-      try {
-        final testFile = File('/private/test_jailbreak.txt');
-        await testFile.writeAsString('jailbreak_test');
-        await testFile.delete();
-        return true; // 샌드박스 밖에 파일 쓰기 성공 = 탈옥됨
-      } catch (e) {
-        // 파일 쓰기 실패는 정상 (샌드박스가 작동 중)
-      }
-
-      // 3. URL 스킴 확인
-      try {
-        await MethodChannel(
-          'flutter/platform',
-        ).invokeMethod('canOpenURL', 'cydia://package/com.example.package');
-        return true;
-      } catch (e) {
-        // URL 열기 실패는 정상
-      }
-
       return false;
     } catch (e) {
       if (shouldLogDetailed) {
@@ -514,7 +494,7 @@ class SecurityConfig {
 
       // 패키지명 확인
       const expectedPackageName =
-          'com.example.reviewai_flutter'; // 실제 패키지명으로 변경 필요
+          'com.jonghyun.reviewai_flutter'; // 실제 패키지명으로 변경 필요
       if (packageInfo.packageName != expectedPackageName) {
         return false;
       }
@@ -633,9 +613,9 @@ class SecurityConfig {
       signatureValid = true; // 다른 플랫폼은 일단 통과
     }
 
-    final fileIntegrityValid = await verifyFileIntegrity();
+    // final fileIntegrityValid = await verifyFileIntegrity();
 
-    return signatureValid && fileIntegrityValid;
+    return signatureValid; // && fileIntegrityValid;
   }
 
   // =============================================================================
@@ -778,11 +758,7 @@ class SecurityInitializer {
 
   /// 런타임 보안 검증
   static Future<SecurityCheckResult> performRuntimeSecurityCheck() async {
-    // iOS 임시 우회: 로딩 문제 해결을 위해 보안 검사 비활성화 (현재 비활성화됨)
-    // if (Platform.isIOS) {
-    //   debugPrint('iOS 임시 조치: 런타임 보안 검사를 우회합니다.');
-    //   return SecurityCheckResult()..isSecure = true;
-    // }
+    
 
     final result = SecurityCheckResult();
 

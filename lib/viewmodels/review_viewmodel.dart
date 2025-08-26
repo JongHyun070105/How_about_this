@@ -8,7 +8,7 @@ import 'package:review_ai/widgets/common/app_dialogs.dart';
 
 class ReviewViewModel extends StateNotifier<bool> {
   final Ref _ref;
-  bool _rewardEarned = false; // 보상 획득 상태 추가
+  bool _rewardEarned = false;
 
   ReviewViewModel(this._ref) : super(false);
 
@@ -38,6 +38,7 @@ class ReviewViewModel extends StateNotifier<bool> {
     try {
       final imageFile = _ref.read(reviewProvider).image;
       if (imageFile != null) {
+        // 이미지 검증 진행 (다이얼로그 없이)
         await _ref.read(geminiServiceProvider).validateImage(imageFile);
       }
 
@@ -58,10 +59,10 @@ class ReviewViewModel extends StateNotifier<bool> {
     final adShown = await adService.showAdWithRetry(
       onUserEarnedReward: () {
         debugPrint('보상 획득 콜백 실행됨');
-        _rewardEarned = true; // 보상 획득 표시만 하고 여기서는 리뷰 생성하지 않음
+        _rewardEarned = true;
       },
       onAdFailedToLoad: (message) {
-        if (!context.mounted) return;
+        // 광고 로딩 실패 메시지는 로그로만 처리
         debugPrint('광고 로딩 실패: $message');
       },
     );
@@ -84,7 +85,14 @@ class ReviewViewModel extends StateNotifier<bool> {
     try {
       debugPrint('리뷰 생성 시작');
       final reviewService = _ref.read(reviewServiceProvider);
-      final rawReviews = await reviewService.generateReviewsFromState();
+
+      final rawReviews = await reviewService.generateReviewsFromState(
+        onProgress: (progress) {
+          // 진행상황은 로그로만 처리
+          debugPrint('리뷰 생성 진행: $progress');
+        },
+      );
+
       // 줄바꿈 기준으로 분리하여 여러 리뷰로 나누기
       final reviews = rawReviews
           .expand((r) => r.split(RegExp(r'\n\s*\n')))
@@ -109,8 +117,9 @@ class ReviewViewModel extends StateNotifier<bool> {
       }
     } catch (e) {
       debugPrint('리뷰 생성 중 오류: $e');
-      if (!context.mounted) return;
-      _handleGenerationError(context, e);
+      if (context.mounted) {
+        _handleGenerationError(context, e);
+      }
     }
   }
 
@@ -153,37 +162,28 @@ class ReviewViewModel extends StateNotifier<bool> {
     if (!context.mounted) return;
 
     final errorString = error.toString();
-    final errorMessage = _getErrorMessage(errorString);
+    debugPrint("리뷰 생성 오류 상세: $errorString");
 
+    String userMessage;
     if (errorString.contains('부적절한 이미지') ||
-        errorString.contains('이미지가 음식 리뷰에 적합하지 않습니다')) {
-      if (context.mounted) {
-        showAppDialog(
-          context,
-          title: '이미지 오류',
-          message: errorMessage,
-          isError: true,
-        );
-      }
+        errorString.contains('리뷰에 적합하지 않습니다')) {
+      userMessage = '음식 사진이 아니거나 식별하기 어렵습니다. 다른 사진으로 시도해주세요.';
+    } else if (errorString.contains('API 호출 실패')) {
+      userMessage = '서버와 통신 중 오류가 발생했습니다. 네트워크 연결을 확인 후 다시 시도해주세요.';
+    } else if (errorString.contains('API 응답에 후보가 없습니다') ||
+        errorString.contains('유효한 리뷰가 생성되지 않았습니다')) {
+      userMessage = '리뷰를 생성하지 못했습니다. 입력 내용을 조금 바꾸거나 다른 스타일을 선택해보세요.';
+    } else if (errorString.contains('이미지 크기가 너무 큽니다')) {
+      userMessage = '이미지 파일이 너무 큽니다. 4MB 이하의 사진을 사용해주세요.';
+    } else if (errorString.contains('처리 시간이 너무 오래 걸립니다')) {
+      userMessage = errorString.replaceFirst('Exception: ', '');
     } else {
-      if (context.mounted) {
-        showAppDialog(
-          context,
-          title: '오류',
-          message: errorMessage,
-          isError: true,
-        );
-      }
+      // 그 외의 오류는 상세 내용을 포함하여 표시
+      final displayError = errorString.replaceFirst('Exception: ', '');
+      userMessage = '알 수 없는 오류가 발생했습니다.\n(상세: $displayError)';
     }
-  }
 
-  String _getErrorMessage(String errorString) {
-    if (errorString.contains('부적절한 이미지')) {
-      return '업로드하신 이미지가 음식 사진이 아닙니다. 음식 사진을 업로드해주세요.';
-    } else if (errorString.contains('이미지가 음식 리뷰에 적합하지 않습니다')) {
-      return '음식을 명확히 식별할 수 있는 사진을 업로드해주세요.';
-    }
-    return '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    showAppDialog(context, title: '오류', message: userMessage, isError: true);
   }
 
   @override

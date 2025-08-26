@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
 
 // Replaced showValidationDialog
@@ -13,17 +14,19 @@ void showValidationDialog(BuildContext context, Size screenSize) {
 }
 
 // Replaced showImageErrorDialog
-void showImageErrorDialog(BuildContext context, String message, Size screenSize) {
-  showAppDialog(
-    context,
-    title: '이미지 오류',
-    message: message,
-    isError: true,
-  );
+void showImageErrorDialog(
+  BuildContext context,
+  String message,
+  Size screenSize,
+) {
+  showAppDialog(context, title: '이미지 오류', message: message, isError: true);
 }
 
 void showReviewPromptDialog(
-    BuildContext context, double screenWidth, double screenHeight) {
+  BuildContext context,
+  double screenWidth,
+  double screenHeight,
+) {
   showCupertinoDialog(
     context: context,
     builder: (BuildContext context) {
@@ -41,21 +44,24 @@ void showReviewPromptDialog(
         ),
         actions: <Widget>[
           CupertinoDialogAction(
-            child: const Text(
-              '나중에',
-              style: TextStyle(fontFamily: 'Do Hyeon'),
-            ),
+            child: const Text('나중에', style: TextStyle(fontFamily: 'Do Hyeon')),
             onPressed: () => Navigator.of(context).pop(),
           ),
           CupertinoDialogAction(
             isDefaultAction: true,
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
-              // TODO: Navigate to app store review page
+              final InAppReview inAppReview = InAppReview.instance;
+              if (await inAppReview.isAvailable()) {
+                inAppReview.requestReview();
+              }
             },
             child: const Text(
               '리뷰 작성',
-              style: TextStyle(fontFamily: 'Do Hyeon', fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontFamily: 'Do Hyeon',
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

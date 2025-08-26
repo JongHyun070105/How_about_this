@@ -42,75 +42,144 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final screenWidth = MediaQuery.of(context).size.width;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return SizedBox(
+      width: double.infinity,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '정렬',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Do Hyeon',
+          // 핸들 바
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(top: 12, bottom: 20),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: HistorySortOption.values.map((option) {
-              final isSelected = _selectedSortOption == option;
-              return ChoiceChip(
-                label: Text(getSortOptionLabel(option)),
-                selected: isSelected,
-                selectedColor: Theme.of(context).primaryColor,
-                labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
-                onSelected: (selected) {
-                  if (selected) {
-                    setState(() {
-                      _selectedSortOption = option;
-                    });
-                  }
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '별점 필터',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Do Hyeon',
+
+          // 내용 영역
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '정렬',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Do Hyeon',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 4.0,
+                    children: HistorySortOption.values.map((option) {
+                      final isSelected = _selectedSortOption == option;
+                      return ChoiceChip(
+                        label: Text(
+                          getSortOptionLabel(option),
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                            fontFamily: 'Do Hyeon',
+                          ),
+                        ),
+                        selected: isSelected,
+                        selectedColor: Colors.black,
+                        backgroundColor: Colors.grey[100],
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              _selectedSortOption = option;
+                            });
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    '별점 필터',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Do Hyeon',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // "전체" 옵션 추가
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 4.0,
+                    children: [
+                      // 전체 옵션
+                      ChoiceChip(
+                        label: Text(
+                          '전체',
+                          style: TextStyle(
+                            color: _selectedRatingFilter == null
+                                ? Colors.white
+                                : Colors.black,
+                            fontFamily: 'Do Hyeon',
+                          ),
+                        ),
+                        selected: _selectedRatingFilter == null,
+                        selectedColor: Colors.black,
+                        backgroundColor: Colors.grey[100],
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              _selectedRatingFilter = null;
+                            });
+                          }
+                        },
+                      ),
+
+                      // 별점 옵션들
+                      ...List.generate(5, (index) {
+                        final rating = index + 1;
+                        final isSelected = _selectedRatingFilter == rating;
+                        return ChoiceChip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(
+                              rating,
+                              (starIndex) => const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                          selected: isSelected,
+                          selectedColor: Colors.black,
+                          backgroundColor: Colors.grey[100],
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedRatingFilter = selected ? rating : null;
+                            });
+                          },
+                        );
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 4.0,
-            children: List.generate(5, (index) {
-              final rating = index + 1;
-              final isSelected = _selectedRatingFilter == rating;
-              return ChoiceChip(
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(rating, (starIndex) => const Icon(Icons.star, color: Colors.amber, size: 18)),
-                ),
-                selected: isSelected,
-                selectedColor: Theme.of(context).primaryColor,
-                labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
-                onSelected: (selected) {
-                  setState(() {
-                    _selectedRatingFilter = selected ? rating : null;
-                  });
-                },
-              );
-            }),
-          ),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
+
+          // 적용 버튼 - 하단 고정
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 16.0,
+            ),
             child: ElevatedButton(
               onPressed: () {
                 Navigator.pop(context, {
@@ -118,7 +187,23 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                   'ratingFilter': _selectedRatingFilter,
                 });
               },
-              child: const Text('적용'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                '적용',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Do Hyeon',
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ],

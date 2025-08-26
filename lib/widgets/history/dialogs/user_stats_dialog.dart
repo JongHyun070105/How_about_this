@@ -397,7 +397,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                               const Expanded(
                                 child: Center(
                                   child: Text(
-                                    "아직 데이터가 없어요.\n리뷰를 작성해서 통계를 확인해보세요!",
+                                    "추천 메뉴에 '좋아요'를 눌러보세요.\n취향을 분석하여 선호도를 알려드려요!",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontFamily: 'Do Hyeon',

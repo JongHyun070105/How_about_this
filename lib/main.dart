@@ -83,7 +83,7 @@ Future<void> _configureSystemUI() async {
     // 상태바 및 네비게이션 바 스타일 설정
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
+        statusBarColor: Colors.white,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.dark,
         systemNavigationBarColor: Colors.white,
@@ -171,14 +171,10 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
                 const TodayRecommendationScreen(),
-            transitionsBuilder: (
-              context,
-              animation,
-              secondaryAnimation,
-              child,
-            ) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
             transitionDuration: const Duration(milliseconds: 500),
           ),
         );
@@ -192,7 +188,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       }
     }
   }
-  
+
   Future<void> _checkConnectivityWithTimeout() async {
     try {
       final connectivityResult = await Future.any([

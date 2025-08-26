@@ -5,12 +5,7 @@ import 'package:review_ai/widgets/history/history_card.dart';
 import 'package:review_ai/providers/review_provider.dart';
 import 'package:review_ai/widgets/history/filter_options_sheet.dart'; // Added import
 
-enum HistorySortOption {
-  latest,
-  oldest,
-  ratingHigh,
-  ratingLow,
-}
+enum HistorySortOption { latest, oldest, ratingHigh, ratingLow }
 
 class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
@@ -68,10 +63,22 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   void _showFilterOptionsSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: false, // SafeArea 비활성화
+      backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return FilterOptionsSheet(
-          currentSortOption: _sortOption,
-          currentRatingFilter: _ratingFilter,
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom + 16, // 수동으로 하단 패딩 추가
+          ),
+          child: FilterOptionsSheet(
+            currentSortOption: _sortOption,
+            currentRatingFilter: _ratingFilter,
+          ),
         );
       },
     ).then((result) {
@@ -90,6 +97,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final textTheme = Theme.of(context).textTheme;
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     final filteredHistory = history.where((entry) {
       final foodName = entry.foodName.toLowerCase();
@@ -97,7 +106,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       final averageRating = getAverageRating(entry);
 
       final searchMatch = foodName.contains(query);
-      final ratingMatch = _ratingFilter == null || (averageRating >= _ratingFilter! && averageRating < _ratingFilter! + 1);
+      final ratingMatch =
+          _ratingFilter == null ||
+          (averageRating >= _ratingFilter! &&
+              averageRating < _ratingFilter! + 1);
 
       return searchMatch && ratingMatch;
     }).toList();
@@ -160,125 +172,155 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           highlightColor: Colors.transparent,
         ),
       ),
+      // SafeArea를 body 전체에 적용하고 하단 패딩 조정
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: verticalSpacing),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: '음식 이름으로 검색',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+        bottom: true, // 하단 SafeArea 활성화
+        child: Column(
+          children: [
+            // 상단 검색 및 필터 영역
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: verticalSpacing),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: '음식 이름으로 검색',
+                              prefixIcon: const Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[200],
+                            ),
                           ),
-                          filled: true,
-                          fillColor: Colors.grey[200],
                         ),
+                        SizedBox(width: horizontalPadding * 0.2),
+                        IconButton(
+                          icon: Icon(
+                            Icons.filter_list,
+                            size: (screenWidth * 0.06).clamp(24.0, 36.0),
+                          ),
+                          onPressed: _showFilterOptionsSheet,
+                          tooltip: '필터 및 정렬',
+                          splashColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 필터 칩들
+                  Visibility(
+                    visible:
+                        _searchQuery.isNotEmpty ||
+                        _sortOption != HistorySortOption.latest ||
+                        _ratingFilter != null,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: [
+                          if (_searchQuery.isNotEmpty)
+                            Chip(
+                              backgroundColor: Colors.blue.shade50,
+                              label: Text(
+                                '검색: $_searchQuery',
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: Colors.blue.shade700,
+                                  fontFamily: 'Do Hyeon',
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                side: BorderSide.none,
+                                borderRadius: BorderRadius.circular(
+                                  screenWidth * 0.03,
+                                ),
+                              ),
+                              elevation: 0,
+                              shadowColor: Colors.transparent,
+                              onDeleted: () {
+                                setState(() {
+                                  _searchController.clear();
+                                  _searchQuery = '';
+                                });
+                              },
+                              deleteIconColor: Colors.blue.shade700,
+                            ),
+                          if (_sortOption != HistorySortOption.latest)
+                            Chip(
+                              backgroundColor: Colors.blue.shade50,
+                              label: Text(
+                                '정렬: ${getSortOptionLabel(_sortOption)}',
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: Colors.blue.shade700,
+                                  fontFamily: 'Do Hyeon',
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                side: BorderSide.none,
+                                borderRadius: BorderRadius.circular(
+                                  screenWidth * 0.03,
+                                ),
+                              ),
+                              elevation: 0,
+                              shadowColor: Colors.transparent,
+                              onDeleted: () {
+                                setState(() {
+                                  _sortOption = HistorySortOption.latest;
+                                });
+                              },
+                              deleteIconColor: Colors.blue.shade700,
+                            ),
+                          if (_ratingFilter != null)
+                            Chip(
+                              backgroundColor: Colors.blue.shade50,
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: List.generate(
+                                  _ratingFilter!,
+                                  (index) => const Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                side: BorderSide.none,
+                                borderRadius: BorderRadius.circular(
+                                  screenWidth * 0.03,
+                                ),
+                              ),
+                              elevation: 0,
+                              shadowColor: Colors.transparent,
+                              onDeleted: () {
+                                setState(() {
+                                  _ratingFilter = null;
+                                });
+                              },
+                              deleteIconColor: Colors.blue.shade700,
+                            ),
+                        ],
                       ),
                     ),
-                    SizedBox(width: horizontalPadding * 0.2),
-                    IconButton(
-                      icon: Icon(Icons.filter_list, size: (screenWidth * 0.06).clamp(24.0, 36.0)),
-                      onPressed: _showFilterOptionsSheet,
-                      tooltip: '필터 및 정렬',
-                      splashColor: Colors.transparent,
-                      highlightColor: Colors.transparent,
-                    ),
-                  ],
-                ),
-              ),
-              Visibility(
-                visible: _searchQuery.isNotEmpty || _sortOption != HistorySortOption.latest || _ratingFilter != null,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Wrap(
-                    spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: [
-                      if (_searchQuery.isNotEmpty)
-                        Chip(
-                          backgroundColor: Colors.blue.shade50,
-                          label: Text(
-                            '검색: $_searchQuery',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: Colors.blue.shade700,
-                              fontFamily: 'Do Hyeon',
-                            ),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide.none,
-                            borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                          ),
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                          onDeleted: () {
-                            setState(() {
-                              _searchController.clear();
-                              _searchQuery = '';
-                            });
-                          },
-                          deleteIconColor: Colors.blue.shade700,
-                        ),
-                      if (_sortOption != HistorySortOption.latest)
-                        Chip(
-                          backgroundColor: Colors.blue.shade50,
-                          label: Text(
-                            '정렬: ${getSortOptionLabel(_sortOption)}',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: Colors.blue.shade700,
-                              fontFamily: 'Do Hyeon',
-                            ),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide.none,
-                            borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                          ),
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                          onDeleted: () {
-                            setState(() {
-                              _sortOption = HistorySortOption.latest;
-                            });
-                          },
-                          deleteIconColor: Colors.blue.shade700,
-                        ),
-                      if (_ratingFilter != null)
-                        Chip(
-                          backgroundColor: Colors.blue.shade50,
-                          label: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(_ratingFilter!, (index) => const Icon(Icons.star, color: Colors.amber, size: 16)),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide.none,
-                            borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                          ),
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                          onDeleted: () {
-                            setState(() {
-                              _ratingFilter = null;
-                            });
-                          },
-                          deleteIconColor: Colors.blue.shade700,
-                        ),
-                    ],
                   ),
-                ),
+                  SizedBox(height: verticalSpacing),
+                ],
               ),
-              SizedBox(height: verticalSpacing),
-              // History list with responsive design
-              Expanded(
+            ),
+            // 히스토리 리스트 영역 - Expanded로 남은 공간 차지
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: sortedHistory.isEmpty
                     ? const EmptyHistory()
                     : RefreshIndicator(
@@ -291,6 +333,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         child: ListView.separated(
                           physics: const AlwaysScrollableScrollPhysics(),
                           itemCount: sortedHistory.length,
+                          // 하단에 충분한 패딩 추가 - 키보드와 시스템 UI 고려
+                          padding: EdgeInsets.only(
+                            bottom: keyboardHeight > 0
+                                ? keyboardHeight + 20
+                                : (screenHeight * 0.02).clamp(12.0, 20.0) +
+                                      bottomPadding,
+                          ),
                           separatorBuilder: (context, index) => SizedBox(
                             height: (screenHeight * (isTablet ? 0.015 : 0.01))
                                 .clamp(8.0, 16.0),
@@ -308,11 +357,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         ),
                       ),
               ),
-
-              // Bottom padding for better scrolling experience
-              SizedBox(height: (screenHeight * 0.02).clamp(12.0, 20.0)),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

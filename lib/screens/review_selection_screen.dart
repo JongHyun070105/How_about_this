@@ -195,7 +195,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
 
               SizedBox(height: responsive.verticalSpacing() * 2),
 
-              // Review cards with enhanced layout
+              // Review cards with improved layout to prevent button overlap
               Expanded(
                 flex: responsive.isTablet ? 6 : 5,
                 child: Container(
@@ -225,9 +225,11 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                             responsive.isTablet ? 16.0 : 12.0,
                           ),
                         ),
-                        child: ReviewCard(
+                        child: _buildImprovedReviewCard(
                           review: review,
                           isSelected: isSelected,
+                          responsive: responsive,
+                          textTheme: textTheme,
                           onTap: () {
                             setState(() {
                               HapticFeedback.lightImpact();
@@ -343,6 +345,187 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     );
   }
 
+  // Improved ReviewCard with better layout to prevent button overlap
+  Widget _buildImprovedReviewCard({
+    required String review,
+    required bool isSelected,
+    required Responsive responsive,
+    required TextTheme textTheme,
+    required VoidCallback onTap,
+    required VoidCallback onEdit,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected 
+            ? Theme.of(context).primaryColor.withAlpha((0.05 * 255).round())
+            : Colors.white,
+        borderRadius: BorderRadius.circular(
+          responsive.isTablet ? 16.0 : 12.0,
+        ),
+        border: Border.all(
+          color: isSelected 
+              ? Theme.of(context).primaryColor.withAlpha((0.3 * 255).round())
+              : Colors.grey.shade300,
+          width: isSelected ? 2.0 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isSelected
+                ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).round())
+                : Colors.grey.withAlpha((0.08 * 255).round()),
+            blurRadius: isSelected ? 8.0 : 4.0,
+            offset: Offset(0, isSelected ? 4.0 : 2.0),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header with edit button - fixed at top
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: responsive.horizontalPadding() * 0.6,
+              vertical: responsive.verticalSpacing() * 0.4,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+                topRight: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'AI 생성 리뷰',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                    fontFamily: 'Do Hyeon',
+                    fontSize: responsive.captionFontSize(),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(
+                      responsive.isTablet ? 8.0 : 6.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withAlpha((0.2 * 255).round()),
+                        blurRadius: 2.0,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(
+                      responsive.isTablet ? 8.0 : 6.0,
+                    ),
+                    child: InkWell(
+                      onTap: onEdit,
+                      borderRadius: BorderRadius.circular(
+                        responsive.isTablet ? 8.0 : 6.0,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(
+                          responsive.isTablet ? 8.0 : 6.0,
+                        ),
+                        child: Icon(
+                          Icons.edit,
+                          size: responsive.iconSize() * 0.7,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Content area - scrollable
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+                  bottomRight: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(responsive.horizontalPadding() * 0.6),
+                  child: Column(
+                    children: [
+                      // Review text - scrollable area
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Text(
+                            review,
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontFamily: 'Do Hyeon',
+                              fontSize: responsive.bodyFontSize(),
+                              color: Colors.grey.shade800,
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                      ),
+                      
+                      // Selection indicator at bottom
+                      if (isSelected)
+                        Container(
+                          margin: EdgeInsets.only(
+                            top: responsive.verticalSpacing() * 0.5,
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: responsive.horizontalPadding() * 0.4,
+                            vertical: responsive.verticalSpacing() * 0.2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor,
+                            borderRadius: BorderRadius.circular(
+                              responsive.isTablet ? 12.0 : 8.0,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                size: responsive.iconSize() * 0.6,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: responsive.horizontalPadding() * 0.2),
+                              Text(
+                                '선택됨',
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: Colors.white,
+                                  fontFamily: 'Do Hyeon',
+                                  fontSize: responsive.captionFontSize(),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _saveSelectedReview(
     BuildContext context,
     Responsive responsive,
@@ -375,7 +558,19 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
 
       if (!context.mounted) return;
 
-      showAppDialog(context, title: '성공', message: '리뷰가 저장되고 클립보드에 복사되었습니다.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('클립보드 복사 및 히스토리에 저장되었습니다.'),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+      );
+
+      // 약간의 딜레이를 주어 사용자가 스낵바를 인지할 수 있도록 함
+      await Future.delayed(const Duration(milliseconds: 500));
 
       // 리뷰 상태를 완전히 리셋하고 홈 화면으로 돌아가기
       ref.read(reviewProvider.notifier).reset();

@@ -11,6 +11,7 @@ import 'package:review_ai/widgets/review/image_upload_section.dart';
 import 'package:review_ai/widgets/review/rating_row.dart';
 import 'package:review_ai/widgets/common/primary_action_button.dart';
 import 'package:review_ai/widgets/review/review_style_section.dart';
+import 'package:clarity_flutter/clarity_flutter.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final FoodRecommendation food;
@@ -24,7 +25,7 @@ class ReviewScreen extends ConsumerStatefulWidget {
 
 class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   final TextEditingController _foodNameController = TextEditingController();
-  bool _hasNavigatedToSelection = false; // 중복 네비게이션 방지 플래그
+  bool _hasNavigatedToSelection = false;
 
   @override
   void initState() {
@@ -41,7 +42,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       _foodNameController.text = foodNameToSet;
       ref.read(reviewProvider.notifier).setFoodName(foodNameToSet);
 
-      // 화면 진입 시 플래그 초기화
       _hasNavigatedToSelection = false;
     });
   }
@@ -71,7 +71,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     ) {
       debugPrint('생성된 리뷰 상태 변경: ${previous?.length} -> ${next.length}');
 
-      // 새로운 리뷰가 생성되고 아직 선택 화면으로 이동하지 않은 경우만 네비게이션
       if (previous?.isEmpty == true &&
           next.isNotEmpty &&
           !_hasNavigatedToSelection &&
@@ -90,9 +89,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     return PopScope(
       canPop: !isLoading,
       onPopInvokedWithResult: (didPop, _) {
-        // no reset here; reset happens in ReviewSelectionScreen after save
         if (didPop) {
-          _hasNavigatedToSelection = false; // 뒤로 가기 시 플래그 리셋
+          _hasNavigatedToSelection = false;
         }
       },
       child: Stack(
@@ -120,17 +118,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
   void _navigateToReviewSelection() {
     if (!_hasNavigatedToSelection && context.mounted) {
-      _hasNavigatedToSelection = true; // 여기서 플래그 설정
+      _hasNavigatedToSelection = true;
       debugPrint('ReviewSelectionScreen으로 네비게이션 시작');
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ReviewSelectionScreen()),
       ).then((_) {
-        // 선택 화면에서 돌아왔을 때 플래그 리셋
         debugPrint('ReviewSelectionScreen에서 돌아옴');
         if (mounted) {
           _hasNavigatedToSelection = false;
-          // 필요시 상태도 리셋
           ref.read(reviewProvider.notifier).setGeneratedReviews([]);
         }
       });
@@ -191,6 +187,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: responsive.verticalSpacing() * 0.4),
+
+              // 개선된 이미지 업로드 섹션
               Container(
                 constraints: BoxConstraints(
                   maxHeight:
@@ -199,52 +197,66 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
                 child: const ImageUploadSection(),
               ),
+
               SizedBox(height: responsive.verticalSpacing() * 0.8),
+
+              // 음식명 섹션
               _buildSectionLabel(responsive, '음식명'),
               SizedBox(height: responsive.verticalSpacing() * 0.3),
               _buildFoodNameInput(responsive),
               SizedBox(height: responsive.verticalSpacing() * 0.6),
-              Column(
-                children: [
-                  RatingRow(
-                    label: '배달',
-                    rating: reviewState.deliveryRating,
-                    onRate: (r) =>
-                        ref.read(reviewProvider.notifier).setDeliveryRating(r),
-                  ),
-                  SizedBox(height: responsive.verticalSpacing() * 0.02),
-                  RatingRow(
-                    label: '맛',
-                    rating: reviewState.tasteRating,
-                    onRate: (r) =>
-                        ref.read(reviewProvider.notifier).setTasteRating(r),
-                  ),
-                  SizedBox(height: responsive.verticalSpacing() * 0.02),
-                  RatingRow(
-                    label: '양',
-                    rating: reviewState.portionRating,
-                    onRate: (r) =>
-                        ref.read(reviewProvider.notifier).setPortionRating(r),
-                  ),
-                  SizedBox(height: responsive.verticalSpacing() * 0.02),
-                  RatingRow(
-                    label: '가격',
-                    rating: reviewState.priceRating,
-                    onRate: (r) =>
-                        ref.read(reviewProvider.notifier).setPriceRating(r),
-                  ),
-                ],
+
+              // 평점 섹션
+              _buildSectionLabel(responsive, '평점'),
+              SizedBox(height: responsive.verticalSpacing() * 0.4),
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(color: Colors.grey[200]!, width: 1.0),
+                ),
+                child: Column(
+                  children: [
+                    RatingRow(
+                      label: '배달',
+                      rating: reviewState.deliveryRating,
+                      onRate: (r) => ref
+                          .read(reviewProvider.notifier)
+                          .setDeliveryRating(r),
+                    ),
+                    SizedBox(height: responsive.verticalSpacing() * 0.02),
+                    RatingRow(
+                      label: '맛',
+                      rating: reviewState.tasteRating,
+                      onRate: (r) =>
+                          ref.read(reviewProvider.notifier).setTasteRating(r),
+                    ),
+                    SizedBox(height: responsive.verticalSpacing() * 0.02),
+                    RatingRow(
+                      label: '양',
+                      rating: reviewState.portionRating,
+                      onRate: (r) =>
+                          ref.read(reviewProvider.notifier).setPortionRating(r),
+                    ),
+                    SizedBox(height: responsive.verticalSpacing() * 0.02),
+                    RatingRow(
+                      label: '가격',
+                      rating: reviewState.priceRating,
+                      onRate: (r) =>
+                          ref.read(reviewProvider.notifier).setPriceRating(r),
+                    ),
+                  ],
+                ),
               ),
+
               SizedBox(height: responsive.verticalSpacing() * 0.8),
               const ReviewStyleSection(),
-              SizedBox(height: responsive.verticalSpacing() * 1.5),
-              PrimaryActionButton(
-                text: '리뷰 생성하기',
-                onPressed: () => ref
-                    .read(reviewViewModelProvider.notifier)
-                    .generateReviews(context),
-                isLoading: isLoading,
-              ),
+              SizedBox(height: responsive.verticalSpacing() * 1.2),
+
+              // 개선된 생성 버튼
+              _buildGenerateButton(isLoading),
+
               SizedBox(height: MediaQuery.of(context).padding.bottom + 16.0),
             ],
           ),
@@ -274,16 +286,27 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(color: Colors.grey[300]!, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.05),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
-      child: TextField(
+      child: TextFormField(
         controller: _foodNameController,
         maxLength: AppConstants.maxFoodNameLength,
+        autocorrect: false, // 자동 수정 비활성화
+        enableSuggestions: false, // 제안 비활성화
         onChanged: (text) =>
             ref.read(reviewProvider.notifier).setFoodName(text),
         style: TextStyle(
           fontFamily: 'Do Hyeon',
           fontSize: responsive.inputFontSize(),
           color: Colors.grey[800],
+          decoration: TextDecoration.none,
         ),
         decoration: InputDecoration(
           hintText: '음식명을 입력해주세요',
@@ -293,9 +316,17 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             fontSize: responsive.inputFontSize() * 0.9,
             color: Colors.grey[400],
           ),
-          border: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          enabledBorder: InputBorder.none,
+          border: const UnderlineInputBorder(borderSide: BorderSide.none),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide.none,
+          ),
+          errorBorder: const UnderlineInputBorder(borderSide: BorderSide.none),
+          disabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide.none,
+          ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16.0,
             vertical: 16.0,
@@ -306,10 +337,58 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
+  Widget _buildGenerateButton(bool isLoading) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12.0),
+        gradient: LinearGradient(
+          colors: [Colors.blue[600]!, Colors.blue[700]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: PrimaryActionButton(
+        text: '리뷰 생성하기',
+        onPressed: isLoading
+            ? null
+            : () => ref
+                  .read(reviewViewModelProvider.notifier)
+                  .generateReviews(context),
+        isLoading: false, // 버튼 자체의 로딩 인디케이터는 비활성화
+      ),
+    );
+  }
+
   Widget _buildLoadingOverlay() {
     return Container(
-      color: Colors.black.withAlpha(128),
-      child: const Center(child: CircularProgressIndicator()),
+      color: Colors.black.withAlpha(102),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 3.0,
+            ),
+            const SizedBox(height: 20),
+            Opacity(
+              opacity: 0.0,
+              child: Text(
+                '리뷰 생성 중...',
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
