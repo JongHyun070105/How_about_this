@@ -20,7 +20,8 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
       required String category,
       required List<FoodRecommendation> foods,
       required Color color,
-    }) showDialogFn,
+    })
+    showDialogFn,
   ) async {
     if (state) return;
 
@@ -87,5 +88,5 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
 
 final todayRecommendationViewModelProvider =
     StateNotifierProvider<TodayRecommendationViewModel, bool>((ref) {
-  return TodayRecommendationViewModel(ref);
-});
+      return TodayRecommendationViewModel(ref);
+    });

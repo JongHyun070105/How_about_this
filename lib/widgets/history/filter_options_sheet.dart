@@ -41,15 +41,14 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final screenWidth = MediaQuery.of(context).size.width;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return SizedBox(
       width: double.infinity,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 핸들 바
           Container(
             width: 40,
             height: 4,
@@ -59,8 +58,6 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-
-          // 내용 영역
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -71,7 +68,7 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                     '정렬',
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Do Hyeon',
+                      fontFamily: 'SCDream',
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -85,7 +82,7 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                           getSortOptionLabel(option),
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.black,
-                            fontFamily: 'Do Hyeon',
+                            fontFamily: 'SCDream',
                           ),
                         ),
                         selected: isSelected,
@@ -106,17 +103,14 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                     '별점 필터',
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Do Hyeon',
+                      fontFamily: 'SCDream',
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // "전체" 옵션 추가
                   Wrap(
                     spacing: 8.0,
                     runSpacing: 4.0,
                     children: [
-                      // 전체 옵션
                       ChoiceChip(
                         label: Text(
                           '전체',
@@ -124,7 +118,7 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                             color: _selectedRatingFilter == null
                                 ? Colors.white
                                 : Colors.black,
-                            fontFamily: 'Do Hyeon',
+                            fontFamily: 'SCDream',
                           ),
                         ),
                         selected: _selectedRatingFilter == null,
@@ -138,8 +132,6 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                           }
                         },
                       ),
-
-                      // 별점 옵션들
                       ...List.generate(5, (index) {
                         final rating = index + 1;
                         final isSelected = _selectedRatingFilter == rating;
@@ -172,8 +164,6 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
               ),
             ),
           ),
-
-          // 적용 버튼 - 하단 고정
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
@@ -200,7 +190,7 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                 '적용',
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Do Hyeon',
+                  fontFamily: 'SCDream',
                   color: Colors.white,
                 ),
               ),

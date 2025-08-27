@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+
 import 'package:in_app_review/in_app_review.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
 

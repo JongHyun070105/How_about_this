@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/config/theme.dart';
 import 'package:review_ai/config/security_config.dart';
+import 'package:review_ai/services/app_update_service.dart';
 import 'package:clarity_flutter/clarity_flutter.dart';
 import 'dart:async';
 import 'package:review_ai/providers/food_providers.dart';
@@ -15,7 +17,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/services/gemini_service.dart';
 import 'package:review_ai/services/usage_tracking_service.dart';
-// import 'package:review_ai/widgets/dialogs/review_dialogs.dart'; // Removed as it's no longer needed
+import 'package:url_launcher/url_launcher.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -33,72 +35,44 @@ final usageTrackingServiceProvider = Provider((ref) => UsageTrackingService());
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 환경 변수 로드
   await dotenv.load(fileName: ".env");
 
   final config = ClarityConfig(
     projectId: "sy9cat27ff",
-    logLevel: LogLevel.None, // Or LogLevel.Verbose for debugging
+    logLevel: LogLevel.None,
   );
 
   try {
-    // 1. 보안 설정 초기화
-    debugPrint('앱 초기화 시작...');
     await SecurityInitializer.initialize();
-    debugPrint('보안 초기화 완료');
-
-    // 2. 광고 설정 상태 확인 및 로그 출력
     SecurityConfig.logAdConfiguration();
-
-    // 3. 광고 SDK 초기화
-    debugPrint('광고 SDK 초기화 중...');
     await MobileAds.instance.initialize();
-    debugPrint('광고 SDK 초기화 완료');
-
-    // 4. 시스템 UI 설정
     await _configureSystemUI();
-    debugPrint('시스템 UI 설정 완료');
 
-    // 5. 앱 실행
     runApp(
       ClarityWidget(
         app: const ProviderScope(child: ReviewAIApp()),
         clarityConfig: config,
       ),
     );
-
-    debugPrint('앱 시작 완료');
   } catch (e, stackTrace) {
     final sanitizedError = SecurityConfig.sanitizeErrorMessage(e.toString());
     debugPrint('앱 초기화 실패: $sanitizedError');
     debugPrint('스택 트레이스: $stackTrace');
-
-    // Clarity 초기화 실패 시 기본 앱으로 fallback
     runApp(const ProviderScope(child: ReviewAIApp()));
   }
 }
 
 Future<void> _configureSystemUI() async {
-  try {
-    // 상태바 및 네비게이션 바 스타일 설정
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-        statusBarBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
-
-    // 세로 방향으로 고정
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
-    debugPrint('시스템 UI 설정: 상태바 투명, 세로 모드 고정');
-  } catch (e) {
-    debugPrint('시스템 UI 설정 실패: ${e.toString()}');
-    // UI 설정 실패해도 앱은 계속 진행
-  }
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.white,
+      statusBarIconBrightness: Brightness.dark,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.white,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 }
 
 class ReviewAIApp extends StatelessWidget {
@@ -111,7 +85,7 @@ class ReviewAIApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       locale: const Locale('ko', 'KR'),
-      home: const AppInitializer(), // AppInitializer가 모든 로딩을 처리
+      home: const AppInitializer(),
       navigatorKey: navigatorKey,
       builder: (context, child) {
         ErrorWidget.builder = (errorDetails) {
@@ -123,7 +97,6 @@ class ReviewAIApp extends StatelessWidget {
   }
 }
 
-/// 앱 초기화, 보안 검증, 데이터 로딩을 모두 담당하는 통합 스플래시 위젯
 class AppInitializer extends ConsumerStatefulWidget {
   const AppInitializer({super.key});
 
@@ -139,33 +112,28 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
   }
 
   Future<void> _initializeApp() async {
-    // 최소 로딩 시간 보장 (사용자 경험 향상)
     const minLoadingTime = Duration(milliseconds: 2000);
     final stopwatch = Stopwatch()..start();
 
     try {
-      // 1. 런타임 보안 검증
       final securityResult =
           await SecurityInitializer.performRuntimeSecurityCheck();
-      debugPrint('보안 검증 결과: ${securityResult.isSecure ? "안전" : "위험"}');
-
+      if (!context.mounted) return;
       if (!securityResult.isSecure) {
-        await SecurityInitializer.handleSecurityThreat(securityResult);
+        await SecurityInitializer.handleSecurityThreat(context, securityResult);
       }
 
-      // 2. 네트워크 연결 확인
       await _checkConnectivityWithTimeout();
-
-      // 3. SVG 프리캐싱
       _startBackgroundCaching();
 
-      // 4. 최소 로딩 시간 보장
+      // Check for updates after main initialization but before navigating away
+      await _checkForUpdate();
+
       final elapsed = stopwatch.elapsed;
       if (elapsed < minLoadingTime) {
         await Future.delayed(minLoadingTime - elapsed);
       }
 
-      // 5. 메인 화면으로 이동
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
@@ -189,61 +157,73 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     }
   }
 
+  Future<void> _checkForUpdate() async {
+    final appUpdateService = AppUpdateService();
+    final latestVersion = await appUpdateService.isUpdateAvailable();
+
+    if (latestVersion != null && mounted) {
+      showAppDialog(
+        context,
+        title: '업데이트 알림',
+        message: '새로운 버전(v$latestVersion)이 출시되었습니다. 더 나은 경험을 위해 업데이트를 진행해주세요.',
+        confirmButtonText: '업데이트',
+        onConfirm: () {
+          _launchStoreUrl();
+        },
+      );
+    }
+  }
+
+  void _launchStoreUrl() async {
+    // TODO: Replace with actual store URLs
+    final url = Platform.isIOS
+        ? 'https://apps.apple.com/app/your-app-id'
+        : 'https://play.google.com/store/apps/details?id=com.jonghyun.reviewai_flutter';
+
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint('Could not launch store URL');
+    }
+  }
+
   Future<void> _checkConnectivityWithTimeout() async {
     try {
-      final connectivityResult = await Future.any([
-        Connectivity().checkConnectivity(),
-        Future.delayed(
-          const Duration(seconds: 3),
-          () => throw TimeoutException(
-            'Network check timeout',
-            const Duration(seconds: 3),
-          ),
-        ),
-      ]);
+      final connectivityResult = await Connectivity()
+          .checkConnectivity()
+          .timeout(const Duration(seconds: 3));
 
       if (connectivityResult.contains(ConnectivityResult.none)) {
         throw Exception('No internet connection');
       }
     } catch (e) {
-      if (e.toString().contains('timeout') ||
-          e.toString().contains('No internet')) {
-        if (!mounted) return;
+      if (mounted) {
         showAppDialog(
           context,
           title: '네트워크 연결 오류',
           message: '인터넷 연결을 확인해주세요.',
           isError: true,
         );
-        rethrow;
       }
-      // 다른 에러는 무시하고 계속 진행
-      debugPrint('Network check warning: $e');
+      rethrow;
     }
   }
 
   void _startBackgroundCaching() {
-    // 백그라운드에서 SVG 캐싱 (UI 블로킹 없음)
     Future.microtask(() async {
       try {
         final foodCategories = ref.read(foodCategoriesProvider);
-
-        // 배치 단위로 캐싱하여 메모리 사용량 제어
         const batchSize = 3;
         for (int i = 0; i < foodCategories.length; i += batchSize) {
           final batch = foodCategories.skip(i).take(batchSize).toList();
-
           await _cacheSVGBatch(batch);
-
-          // 다음 배치 전에 잠깐 대기 (CPU 부하 분산)
           if (i + batchSize < foodCategories.length) {
             await Future.delayed(const Duration(milliseconds: 50));
           }
         }
-
-        debugPrint('SVG background caching completed');
       } catch (e) {
-        debugPrint('Background caching error (non-critical): $e');
+        // Non-critical error
       }
     });
   }
@@ -252,16 +232,13 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     await Future.wait(
       categories.map((category) async {
         try {
-          // 간단한 방식: SVG 문자열만 미리 로드
-          // 실제 렌더링은 사용할 때 수행
           final assetBundle = DefaultAssetBundle.of(context);
           await assetBundle.loadString(category.imageUrl);
         } catch (e) {
-          // 개별 SVG 로딩 실패는 무시
-          debugPrint('SVG cache warning for ${category.imageUrl}: $e');
+          // Ignore individual SVG loading failure
         }
       }),
-      eagerError: false, // 하나 실패해도 계속 진행
+      eagerError: false,
     );
   }
 
@@ -292,14 +269,4 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       ),
     );
   }
-}
-
-class TimeoutException implements Exception {
-  final String message;
-  final Duration timeout;
-
-  const TimeoutException(this.message, this.timeout);
-
-  @override
-  String toString() => 'TimeoutException: $message';
 }

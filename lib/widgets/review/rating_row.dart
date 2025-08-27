@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class RatingRow extends StatelessWidget {
@@ -39,7 +38,9 @@ class RatingRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: List.generate(5, (index) {
                 return GestureDetector(
-                  onTap: onRate != null ? () => onRate!((index + 1).toDouble()) : null,
+                  onTap: onRate != null
+                      ? () => onRate!((index + 1).toDouble())
+                      : null,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: screenWidth * 0.02,

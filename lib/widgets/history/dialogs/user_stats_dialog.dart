@@ -84,10 +84,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
       return CupertinoAlertDialog(
         title: const Text(
           '오류',
-          style: TextStyle(
-            fontFamily: 'Do Hyeon',
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontFamily: 'Do Hyeon', fontWeight: FontWeight.bold),
         ),
         content: Padding(
           padding: const EdgeInsets.only(top: 12.0),
@@ -100,10 +97,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
           CupertinoDialogAction(
             isDefaultAction: true,
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              '확인',
-              style: TextStyle(fontFamily: 'Do Hyeon'),
-            ),
+            child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
           ),
         ],
       );
@@ -126,10 +120,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
           CupertinoDialogAction(
             isDefaultAction: true,
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              '확인',
-              style: TextStyle(fontFamily: 'Do Hyeon'),
-            ),
+            child: const Text('확인', style: TextStyle(fontFamily: 'Do Hyeon')),
           ),
         ],
       );
@@ -421,16 +412,16 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                           entry,
                                         ) {
                                           final cat = entry.value;
-                                          final double percent = 
+                                          final double percent =
                                               cat['percent'] ?? 0.0;
-                                          final color = 
+                                          final color =
                                               categoryColorMap[cat['name']] ??
                                               Colors.grey.shade400;
 
-                                          double adjustedProgress = 
+                                          double adjustedProgress =
                                               animationValue;
 
-                                          bool shouldShowTitle = 
+                                          bool shouldShowTitle =
                                               percent >= 8.0 &&
                                               animationValue > 0.8;
 
@@ -458,7 +449,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                         pieTouchData: PieTouchData(
                                           enabled: true,
                                           touchCallback:
-                                              ( 
+                                              (
                                                 FlTouchEvent event,
                                                 pieTouchResponse,
                                               ) {
@@ -500,10 +491,10 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                 children: categoryList.take(4).map((
                                                   cat,
                                                 ) {
-                                                  final color = 
+                                                  final color =
                                                       categoryColorMap[cat['name']] ??
                                                       Colors.grey.shade400;
-                                                  final percent = 
+                                                  final percent =
                                                       cat['percent'] ?? 0.0;
                                                   return Container(
                                                     constraints: BoxConstraints(
@@ -542,13 +533,11 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                                 style: const TextStyle(
                                                                   fontFamily:
                                                                       'Do Hyeon',
-                                                                  fontSize:
-                                                                      12,
-                                                                  color:
-                                                                      Colors
-                                                                          .black87,
+                                                                  fontSize: 12,
+                                                                  color: Colors
+                                                                      .black87,
                                                                 ),
-                                                                overflow: 
+                                                                overflow:
                                                                     TextOverflow
                                                                         .ellipsis,
                                                               ),
@@ -557,11 +546,9 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                                 style: TextStyle(
                                                                   fontFamily:
                                                                       'Do Hyeon',
-                                                                  fontSize:
-                                                                      10,
-                                                                  color:
-                                                                      Colors
-                                                                          .grey[600],
+                                                                  fontSize: 10,
+                                                                  color: Colors
+                                                                      .grey[600],
                                                                   fontWeight:
                                                                       FontWeight
                                                                           .bold,
@@ -584,16 +571,16 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                   children: categoryList.skip(4).take(3).map((
                                                     cat,
                                                   ) {
-                                                    final color = 
+                                                    final color =
                                                         categoryColorMap[cat['name']] ??
                                                         Colors.grey.shade400;
-                                                    final percent = 
+                                                    final percent =
                                                         cat['percent'] ?? 0.0;
                                                     return Container(
                                                       constraints:
                                                           BoxConstraints(
                                                             maxWidth:
-                                                                screenWidth * 
+                                                                screenWidth *
                                                                 0.25,
                                                           ),
                                                       child: Row(
@@ -631,11 +618,10 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                                         'Do Hyeon',
                                                                     fontSize:
                                                                         12,
-                                                                    color:
-                                                                        Colors
-                                                                            .black87,
+                                                                    color: Colors
+                                                                        .black87,
                                                                   ),
-                                                                  overflow: 
+                                                                  overflow:
                                                                       TextOverflow
                                                                           .ellipsis,
                                                                 ),
@@ -646,9 +632,8 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                                                                         'Do Hyeon',
                                                                     fontSize:
                                                                         10,
-                                                                    color:
-                                                                        Colors
-                                                                            .grey[600],
+                                                                    color: Colors
+                                                                        .grey[600],
                                                                     fontWeight:
                                                                         FontWeight
                                                                             .bold,
@@ -740,14 +725,13 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
   }
 
   Widget _buildUsageIndicator(
-    double screenWidth,
-    {
+    double screenWidth, {
     required String label,
     required int used,
     required int max,
     required Color color,
     required TextStyle style,
-  } ) {
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: (screenWidth * 0.02).clamp(8.0, 16.0),

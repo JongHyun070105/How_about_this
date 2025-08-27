@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -33,24 +32,84 @@ class AppTheme {
   }
 
   static TextTheme _buildTextTheme() {
-    const fontFamily = 'Do Hyeon';
+    const fontFamily = 'SCDream';
     const textColor = Colors.black;
     return const TextTheme(
-      displayLarge: TextStyle(fontFamily: fontFamily, color: textColor),
-      displayMedium: TextStyle(fontFamily: fontFamily, color: textColor),
-      displaySmall: TextStyle(fontFamily: fontFamily, color: textColor),
-      headlineLarge: TextStyle(fontFamily: fontFamily, color: textColor),
-      headlineMedium: TextStyle(fontFamily: fontFamily, color: textColor),
-      headlineSmall: TextStyle(fontFamily: fontFamily, color: textColor),
-      titleLarge: TextStyle(fontFamily: fontFamily, color: textColor),
-      titleMedium: TextStyle(fontFamily: fontFamily, color: textColor),
-      titleSmall: TextStyle(fontFamily: fontFamily, color: textColor),
-      bodyLarge: TextStyle(fontFamily: fontFamily, color: textColor),
-      bodyMedium: TextStyle(fontFamily: fontFamily, color: textColor),
-      bodySmall: TextStyle(fontFamily: fontFamily, color: textColor),
-      labelLarge: TextStyle(fontFamily: fontFamily, color: textColor),
-      labelMedium: TextStyle(fontFamily: fontFamily, color: textColor),
-      labelSmall: TextStyle(fontFamily: fontFamily, color: textColor),
+      displayLarge: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w300,
+      ),
+      displayMedium: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w400,
+      ),
+      displaySmall: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
+      headlineLarge: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
+      headlineMedium: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
+      headlineSmall: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
+      titleLarge: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
+      titleMedium: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
+      titleSmall: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w400,
+      ),
+      bodyLarge: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w400,
+      ),
+      bodyMedium: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w400,
+      ),
+      bodySmall: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w300,
+      ),
+      labelLarge: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w500,
+      ),
+      labelMedium: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w400,
+      ),
+      labelSmall: TextStyle(
+        fontFamily: fontFamily,
+        color: textColor,
+        fontWeight: FontWeight.w300,
+      ),
     );
   }
 
@@ -63,10 +122,10 @@ class AppTheme {
       surfaceTintColor: Colors.transparent,
       centerTitle: true,
       titleTextStyle: TextStyle(
-        fontFamily: 'Do Hyeon',
+        fontFamily: 'SCDream',
         color: Colors.black,
         fontSize: 20,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -82,8 +141,8 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         textStyle: const TextStyle(
           fontSize: 16,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'Do Hyeon',
+          fontWeight: FontWeight.w500,
+          fontFamily: 'SCDream',
         ),
         elevation: 2,
         shadowColor: Colors.black26,
@@ -95,9 +154,14 @@ class AppTheme {
     return InputDecorationTheme(
       labelStyle: const TextStyle(
         color: Colors.black54,
-        fontFamily: 'Do Hyeon',
+        fontFamily: 'SCDream',
+        fontWeight: FontWeight.w400,
       ),
-      hintStyle: const TextStyle(color: Colors.black38, fontFamily: 'Do Hyeon'),
+      hintStyle: const TextStyle(
+        color: Colors.black38,
+        fontFamily: 'SCDream',
+        fontWeight: FontWeight.w300,
+      ),
       filled: true,
       fillColor: const Color(0xFFF5F5F5),
       enabledBorder: OutlineInputBorder(
@@ -125,10 +189,15 @@ class AppTheme {
       backgroundColor: const Color(0xFFF5F5F5),
       selectedColor: Colors.black,
       disabledColor: Colors.grey.shade300,
-      labelStyle: const TextStyle(color: Colors.black, fontFamily: 'Do Hyeon'),
+      labelStyle: const TextStyle(
+        color: Colors.black,
+        fontFamily: 'SCDream',
+        fontWeight: FontWeight.w400,
+      ),
       secondaryLabelStyle: const TextStyle(
         color: Colors.white,
-        fontFamily: 'Do Hyeon',
+        fontFamily: 'SCDream',
+        fontWeight: FontWeight.w400,
       ),
       checkmarkColor: Colors.white,
       deleteIconColor: Colors.black54,
@@ -158,8 +227,9 @@ class AppTheme {
       backgroundColor: Colors.black87,
       contentTextStyle: const TextStyle(
         color: Colors.white,
-        fontFamily: 'Do Hyeon',
+        fontFamily: 'SCDream',
         fontSize: 14,
+        fontWeight: FontWeight.w400,
       ),
       actionTextColor: Colors.blue.shade300,
       behavior: SnackBarBehavior.floating,
@@ -174,14 +244,15 @@ class AppTheme {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       titleTextStyle: const TextStyle(
         color: Colors.black,
-        fontFamily: 'Do Hyeon',
+        fontFamily: 'SCDream',
         fontSize: 18,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w500,
       ),
       contentTextStyle: const TextStyle(
         color: Colors.black87,
-        fontFamily: 'Do Hyeon',
+        fontFamily: 'SCDream',
         fontSize: 14,
+        fontWeight: FontWeight.w400,
       ),
     );
   }

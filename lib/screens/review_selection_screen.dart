@@ -6,7 +6,7 @@ import 'package:review_ai/providers/review_provider.dart';
 import 'package:review_ai/utils/responsive.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:review_ai/widgets/review_selection/edit_review_dialog.dart';
-import 'package:review_ai/widgets/review_selection/review_card.dart';
+
 
 class ReviewSelectionScreen extends ConsumerStatefulWidget {
   const ReviewSelectionScreen({super.key});
@@ -356,14 +356,12 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected 
+        color: isSelected
             ? Theme.of(context).primaryColor.withAlpha((0.05 * 255).round())
             : Colors.white,
-        borderRadius: BorderRadius.circular(
-          responsive.isTablet ? 16.0 : 12.0,
-        ),
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 16.0 : 12.0),
         border: Border.all(
-          color: isSelected 
+          color: isSelected
               ? Theme.of(context).primaryColor.withAlpha((0.3 * 255).round())
               : Colors.grey.shade300,
           width: isSelected ? 2.0 : 1.0,
@@ -445,7 +443,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
               ],
             ),
           ),
-          
+
           // Content area - scrollable
           Expanded(
             child: Material(
@@ -453,8 +451,12 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
               child: InkWell(
                 onTap: onTap,
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
-                  bottomRight: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+                  bottomLeft: Radius.circular(
+                    responsive.isTablet ? 16.0 : 12.0,
+                  ),
+                  bottomRight: Radius.circular(
+                    responsive.isTablet ? 16.0 : 12.0,
+                  ),
                 ),
                 child: Container(
                   width: double.infinity,
@@ -477,7 +479,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                           ),
                         ),
                       ),
-                      
+
                       // Selection indicator at bottom
                       if (isSelected)
                         Container(
@@ -502,7 +504,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                                 size: responsive.iconSize() * 0.6,
                                 color: Colors.white,
                               ),
-                              SizedBox(width: responsive.horizontalPadding() * 0.2),
+                              SizedBox(
+                                width: responsive.horizontalPadding() * 0.2,
+                              ),
                               Text(
                                 '선택됨',
                                 style: textTheme.bodySmall?.copyWith(

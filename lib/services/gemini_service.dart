@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:review_ai/models/exceptions.dart';
 import 'package:review_ai/services/user_preference_service.dart';
 
 class GeminiService {
@@ -9,6 +11,7 @@ class GeminiService {
   final String _apiKey;
   final String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models';
+  static const Duration _timeout = Duration(seconds: 30);
 
   GeminiService(this._client, this._apiKey);
 
@@ -18,17 +21,30 @@ class GeminiService {
   ) async {
     final url = Uri.parse('$_baseUrl/$model:generateContent?key=$_apiKey');
 
-    final response = await _client.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(requestBody),
-    );
+    try {
+      final response = await _client
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(requestBody),
+          )
+          .timeout(_timeout);
 
-    if (response.statusCode == 200) {
-      return jsonDecode(utf8.decode(response.bodyBytes));
-    } else {
-      throw Exception(
-          'API 호출 실패 (${response.statusCode}): ${utf8.decode(response.bodyBytes)}');
+      if (response.statusCode == 200) {
+        return jsonDecode(utf8.decode(response.bodyBytes));
+      } else {
+        throw GeminiApiException(
+          utf8.decode(response.bodyBytes),
+          statusCode: response.statusCode,
+        );
+      }
+    } on TimeoutException {
+      throw NetworkException('요청 시간이 초과되었습니다.');
+    } on SocketException {
+      throw NetworkException('인터넷 연결을 확인해주세요.');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException('알 수 없는 오류가 발생했습니다: ${e.toString()}');
     }
   }
 
@@ -37,9 +53,9 @@ class GeminiService {
       'contents': [
         {
           'parts': [
-            {'text': prompt}
-          ]
-        }
+            {'text': prompt},
+          ],
+        },
       ],
       'generationConfig': {
         'temperature': 0.4,
@@ -60,14 +76,8 @@ class GeminiService {
     required String reviewStyle,
     File? foodImage,
   }) async {
-    String foodNameDescription = foodName;
-    if (foodName.contains('아시아 음식')) {
-      foodNameDescription =
-          '$foodName (예: 똠양꿍, 팟타이, 베트남 쌀국수 등 동남아시아 요리 느낌으로)';
-    }
-
     final prompt = _buildReviewPrompt(
-      foodNameDescription: foodNameDescription,
+      foodName: foodName,
       deliveryRating: deliveryRating,
       tasteRating: tasteRating,
       portionRating: portionRating,
@@ -77,10 +87,9 @@ class GeminiService {
     );
 
     try {
-      Uint8List? imageBytes;
-      if (foodImage != null) {
-        imageBytes = await foodImage.readAsBytes();
-      }
+      Uint8List? imageBytes = foodImage != null
+          ? await foodImage.readAsBytes()
+          : null;
       final parts = await _buildParts(prompt, imageBytes);
 
       final requestBody = {
@@ -95,43 +104,36 @@ class GeminiService {
         },
       };
 
-      final data = await _postContent(
-        'gemini-2.5-flash-lite',
-        requestBody,
-      );
+      final data = await _postContent('gemini-2.5-flash-lite', requestBody);
 
-      if (data['candidates'] == null || data['candidates'].isEmpty) {
-        throw Exception('API 응답에 후보가 없습니다');
-      } else {
-        final content =
-            data['candidates'][0]['content']['parts'][0]['text'] as String;
-        final cleanContent = content.trim();
-
-        final reviews = cleanContent
-            .split('\n')
-            .where((line) => line.trim().startsWith('- '))
-            .map((line) {
-              final reviewText = line.substring(line.indexOf('- ') + 2).trim();
-              return reviewText.isEmpty ? null : reviewText;
-            })
-            .where((review) => review != null)
-            .cast<String>()
-            .toList();
-
-        if (reviews.isEmpty) {
-          throw Exception('유효한 리뷰가 생성되지 않았습니다');
-        } else {
-          return reviews.length >= 3 ? reviews.take(3).toList() : reviews;
-        }
+      final candidates = data['candidates'] as List?;
+      if (candidates == null || candidates.isEmpty) {
+        throw ParsingException('API 응답에 후보가 없습니다.');
       }
-    } on FormatException catch (e) {
-      throw Exception('응답 파싱 실패: $e');
+
+      final content =
+          candidates[0]['content']?['parts']?[0]?['text'] as String?;
+      if (content == null) {
+        throw ParsingException('리뷰 텍스트를 찾을 수 없습니다.');
+      }
+
+      final reviews = content
+          .trim()
+          .split('\n')
+          .where((line) => line.trim().startsWith('- '))
+          .map((line) => line.substring(2).trim())
+          .where((review) => review.isNotEmpty)
+          .toList();
+
+      if (reviews.isEmpty) {
+        throw ParsingException('유효한 리뷰가 생성되지 않았습니다.');
+      }
+
+      return reviews.length >= 3 ? reviews.take(3).toList() : reviews;
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      if (e is Exception) {
-        rethrow;
-      } else {
-        throw Exception('알 수 없는 오류: $e');
-      }
+      throw ParsingException('리뷰 생성 중 알 수 없는 오류: ${e.toString()}');
     }
   }
 
@@ -140,7 +142,7 @@ class GeminiService {
         'Analyze the attached image. Is this a picture of prepared food suitable for a food review? Answer with only "YES" or "NO". Do not consider raw ingredients like a single raw onion or a piece of raw meat as prepared food.';
 
     try {
-      Uint8List? imageBytes = await foodImage.readAsBytes();
+      Uint8List imageBytes = await foodImage.readAsBytes();
       final parts = await _buildParts(prompt, imageBytes);
 
       final requestBody = {
@@ -150,51 +152,37 @@ class GeminiService {
         'generationConfig': {'temperature': 0.0, 'maxOutputTokens': 5},
       };
 
-      final data = await _postContent(
-        'gemini-2.5-flash-lite',
-        requestBody,
-      );
+      final data = await _postContent('gemini-2.5-flash-lite', requestBody);
 
-      if (data['candidates'] == null || data['candidates'].isEmpty) {
-        throw Exception('부적절한 이미지: 모델이 이미지를 분석할 수 없습니다.');
-      } else {
-        final content =
-            data['candidates'][0]['content']['parts'][0]['text'] as String;
-        final cleanContent = content.trim().toUpperCase();
-
-        if (cleanContent.contains('YES')) {
-          return true;
-        } else {
-          throw Exception('부적절한 이미지: 이 사진은 음식 사진이 아니거나 리뷰에 적합하지 않습니다.');
-        }
+      final candidates = data['candidates'] as List?;
+      if (candidates == null || candidates.isEmpty) {
+        throw ImageValidationException('모델이 이미지를 분석할 수 없습니다.');
       }
-    } on FormatException catch (e) {
-      throw Exception('응답 파싱 실패: $e');
+
+      final content =
+          candidates[0]['content']?['parts']?[0]?['text'] as String?;
+      if (content == null) {
+        throw ImageValidationException('모델의 응답을 파싱할 수 없습니다.');
+      }
+
+      if (content.trim().toUpperCase().contains('YES')) {
+        return true;
+      } else {
+        throw ImageValidationException('이 사진은 음식 사진이 아니거나 리뷰에 적합하지 않습니다.');
+      }
+    } on ApiException {
+      rethrow;
     } catch (e) {
-      if (e is Exception) {
-        rethrow;
-      } else {
-        throw Exception('이미지 검증 중 알 수 없는 오류: $e');
-      }
+      throw ImageValidationException('이미지 검증 중 알 수 없는 오류: ${e.toString()}');
     }
   }
 
   String _getRatingText(double rating) {
-    if (rating >= 4.5) {
-      return '매우좋음';
-    }
-    if (rating >= 4.0) {
-      return '좋음';
-    }
-    if (rating >= 3.5) {
-      return '보통';
-    }
-    if (rating >= 3.0) {
-      return '아쉬움';
-    }
-    if (rating >= 2.5) {
-      return '별로';
-    }
+    if (rating >= 4.5) return '매우좋음';
+    if (rating >= 4.0) return '좋음';
+    if (rating >= 3.5) return '보통';
+    if (rating >= 3.0) return '아쉬움';
+    if (rating >= 2.5) return '별로';
     return '나쁨';
   }
 
@@ -207,52 +195,19 @@ class GeminiService {
     ];
 
     if (imageBytes != null) {
-      try {
-        if (imageBytes.length > 4 * 1024 * 1024) {
-          throw Exception('이미지 크기가 너무 큽니다 (최대 4MB)');
-        } else {
-          final base64Image = base64Encode(imageBytes);
-
-          String mimeType = 'application/octet-stream';
-          if (imageBytes.length >= 4) {
-            final header = imageBytes.sublist(0, 4);
-            if (header[0] == 0x89 &&
-                header[1] == 0x50 &&
-                header[2] == 0x4E &&
-                header[3] == 0x47) {
-              mimeType = 'image/png';
-            } else if (header[0] == 0xFF &&
-                header[1] == 0xD8 &&
-                header[2] == 0xFF) {
-              mimeType = 'image/jpeg';
-            } else if (header[0] == 0x52 &&
-                header[1] == 0x49 &&
-                header[2] == 0x46 &&
-                header[3] == 0x46) {
-              if (imageBytes.length >= 12 &&
-                  imageBytes[8] == 0x57 &&
-                  imageBytes[9] == 0x45 &&
-                  imageBytes[10] == 0x42 &&
-                  imageBytes[11] == 0x50) {
-                mimeType = 'image/webp';
-              }
-            }
-          }
-
-          parts.add({
-            'inline_data': {'mime_type': mimeType, 'data': base64Image},
-          });
-        }
-      } catch (e) {
-        throw Exception('이미지 처리 실패: $e');
+      if (imageBytes.length > 4 * 1024 * 1024) {
+        throw ImageValidationException('이미지 크기가 너무 큽니다 (최대 4MB).');
       }
+      final base64Image = base64Encode(imageBytes);
+      parts.add({
+        'inline_data': {'mime_type': 'image/jpeg', 'data': base64Image},
+      });
     }
-
     return parts;
   }
 
   String _buildReviewPrompt({
-    required String foodNameDescription,
+    required String foodName,
     required double deliveryRating,
     required double tasteRating,
     required double portionRating,
@@ -260,6 +215,10 @@ class GeminiService {
     required String reviewStyle,
     File? foodImage,
   }) {
+    String foodNameDescription = foodName;
+    if (foodName.contains('아시아 음식')) {
+      foodNameDescription = '$foodName (예: 똠양꿍, 팟타이, 베트남 쌀국수 등 동남아시아 요리 느낌으로)';
+    }
     return '''
 당신은 음식 리뷰 작성 전문가입니다.
 
@@ -371,7 +330,7 @@ $recentFoodsText
 - 추천하는 메뉴들은 서로 다른 국가의, 다양한 종류의 음식으로 구성해주세요. 예를 들어, 쌀국수, 분짜, 나시고랭처럼 여러 국가의 대표 메뉴를 섞어주세요.
 - 개수: 8-12개.
 - 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
-- JSON 형식: [{"name":"메뉴명"}, {"name":"메뉴명"}, ...]
+- JSON 형식: [{ "name":"메뉴명"}, { "name":"메뉴명"}, ...]
 
 $examples
 이제 결과를 JSON 배열로만 출력하세요.
@@ -413,7 +372,7 @@ $examples
 - 매우 다양한 종류의 음식으로 구성해주세요.
 - 개수: 15-20개.
 - 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
-- JSON 형식: [{"name":"메뉴명"}, {"name":"메뉴명"}, ...]
+- JSON 형식: [{ "name":"메뉴명"}, { "name":"메뉴명"}, ...]
 
 $examples
 이제 결과를 JSON 배열로만 출력하세요.

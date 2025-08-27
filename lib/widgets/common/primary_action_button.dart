@@ -20,8 +20,14 @@ class PrimaryActionButton extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final isTablet = screenWidth >= 768;
 
-    final buttonFontSize = (screenWidth * (isTablet ? 0.03 : 0.04)).clamp(14.0, 22.0);
-    final buttonHeight = (screenHeight * (isTablet ? 0.07 : 0.065)).clamp(48.0, 72.0);
+    final buttonFontSize = (screenWidth * (isTablet ? 0.03 : 0.04)).clamp(
+      14.0,
+      22.0,
+    );
+    final buttonHeight = (screenHeight * (isTablet ? 0.07 : 0.065)).clamp(
+      48.0,
+      72.0,
+    );
 
     final bool isButtonEnabled = isEnabled && !isLoading && onPressed != null;
 

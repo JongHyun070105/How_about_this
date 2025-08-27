@@ -11,7 +11,6 @@ import 'package:review_ai/widgets/review/image_upload_section.dart';
 import 'package:review_ai/widgets/review/rating_row.dart';
 import 'package:review_ai/widgets/common/primary_action_button.dart';
 import 'package:review_ai/widgets/review/review_style_section.dart';
-import 'package:clarity_flutter/clarity_flutter.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final FoodRecommendation food;
@@ -69,17 +68,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       previous,
       next,
     ) {
-      debugPrint('생성된 리뷰 상태 변경: ${previous?.length} -> ${next.length}');
-
       if (previous?.isEmpty == true &&
           next.isNotEmpty &&
           !_hasNavigatedToSelection &&
           context.mounted) {
-        debugPrint('새로운 리뷰 생성됨 - 화면 전환 준비');
-
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (context.mounted && !_hasNavigatedToSelection) {
-            debugPrint('실제 화면 전환 실행');
             _navigateToReviewSelection();
           }
         });
@@ -119,19 +113,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   void _navigateToReviewSelection() {
     if (!_hasNavigatedToSelection && context.mounted) {
       _hasNavigatedToSelection = true;
-      debugPrint('ReviewSelectionScreen으로 네비게이션 시작');
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ReviewSelectionScreen()),
       ).then((_) {
-        debugPrint('ReviewSelectionScreen에서 돌아옴');
         if (mounted) {
           _hasNavigatedToSelection = false;
           ref.read(reviewProvider.notifier).setGeneratedReviews([]);
         }
       });
-    } else {
-      debugPrint('네비게이션 스킵 - 이미 이동했거나 컨텍스트가 마운트되지 않음');
     }
   }
 
@@ -149,7 +139,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         style: textTheme.headlineMedium?.copyWith(
           fontSize: responsive.appBarFontSize(),
           fontWeight: FontWeight.bold,
-          fontFamily: 'Do Hyeon',
+          fontFamily: 'SCDream',
         ),
       ),
       leading: IconButton(
@@ -187,8 +177,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: responsive.verticalSpacing() * 0.4),
-
-              // 개선된 이미지 업로드 섹션
               Container(
                 constraints: BoxConstraints(
                   maxHeight:
@@ -197,16 +185,11 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
                 child: const ImageUploadSection(),
               ),
-
               SizedBox(height: responsive.verticalSpacing() * 0.8),
-
-              // 음식명 섹션
               _buildSectionLabel(responsive, '음식명'),
               SizedBox(height: responsive.verticalSpacing() * 0.3),
               _buildFoodNameInput(responsive),
               SizedBox(height: responsive.verticalSpacing() * 0.6),
-
-              // 평점 섹션
               _buildSectionLabel(responsive, '평점'),
               SizedBox(height: responsive.verticalSpacing() * 0.4),
               Container(
@@ -249,14 +232,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   ],
                 ),
               ),
-
               SizedBox(height: responsive.verticalSpacing() * 0.8),
               const ReviewStyleSection(),
               SizedBox(height: responsive.verticalSpacing() * 1.2),
-
-              // 개선된 생성 버튼
               _buildGenerateButton(isLoading),
-
               SizedBox(height: MediaQuery.of(context).padding.bottom + 16.0),
             ],
           ),
@@ -273,7 +252,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         style: TextStyle(
           fontSize: responsive.inputFontSize() * 1.1,
           fontWeight: FontWeight.bold,
-          fontFamily: 'Do Hyeon',
+          fontFamily: 'SCDream',
           color: Colors.grey[800],
         ),
       ),
@@ -288,7 +267,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         border: Border.all(color: Colors.grey[300]!, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.05),
+            color: Colors.grey.withAlpha((255 * 0.05).round()),
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -298,12 +277,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       child: TextFormField(
         controller: _foodNameController,
         maxLength: AppConstants.maxFoodNameLength,
-        autocorrect: false, // 자동 수정 비활성화
-        enableSuggestions: false, // 제안 비활성화
+        autocorrect: false,
+        enableSuggestions: false,
         onChanged: (text) =>
             ref.read(reviewProvider.notifier).setFoodName(text),
         style: TextStyle(
-          fontFamily: 'Do Hyeon',
+          fontFamily: 'SCDream',
           fontSize: responsive.inputFontSize(),
           color: Colors.grey[800],
           decoration: TextDecoration.none,
@@ -312,7 +291,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           hintText: '음식명을 입력해주세요',
           counterText: "",
           hintStyle: TextStyle(
-            fontFamily: 'Do Hyeon',
+            fontFamily: 'SCDream',
             fontSize: responsive.inputFontSize() * 0.9,
             color: Colors.grey[400],
           ),
@@ -348,7 +327,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.blue.withAlpha((255 * 0.3).round()),
             spreadRadius: 1,
             blurRadius: 8,
             offset: const Offset(0, 4),
@@ -362,7 +341,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             : () => ref
                   .read(reviewViewModelProvider.notifier)
                   .generateReviews(context),
-        isLoading: false, // 버튼 자체의 로딩 인디케이터는 비활성화
+        isLoading: false,
       ),
     );
   }

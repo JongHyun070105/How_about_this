@@ -43,8 +43,8 @@ android {
         applicationId = "com.jonghyun.reviewai_flutter"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 4
-        versionName = "1.0.1"
+        versionCode = 5
+        versionName = "1.0.2"
         multiDexEnabled = true
     }
 

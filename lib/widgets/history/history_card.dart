@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
@@ -127,19 +126,26 @@ class HistoryCard extends ConsumerWidget {
                           context: context,
                           builder: (BuildContext ctx) {
                             return CupertinoAlertDialog(
-                              title: const Text('리뷰 삭제',
-                                  style: TextStyle(
-                                      fontFamily: 'Do Hyeon',
-                                      fontWeight: FontWeight.bold)),
-                              content: const Text('이 리뷰를 삭제하시겠습니까?',
-                                  style: TextStyle(fontFamily: 'Do Hyeon')),
+                              title: const Text(
+                                '리뷰 삭제',
+                                style: TextStyle(
+                                  fontFamily: 'Do Hyeon',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              content: const Text(
+                                '이 리뷰를 삭제하시겠습니까?',
+                                style: TextStyle(fontFamily: 'Do Hyeon'),
+                              ),
                               actions: [
                                 CupertinoDialogAction(
                                   onPressed: () {
                                     Navigator.of(ctx).pop();
                                   },
-                                  child: const Text('취소',
-                                      style: TextStyle(fontFamily: 'Do Hyeon')),
+                                  child: const Text(
+                                    '취소',
+                                    style: TextStyle(fontFamily: 'Do Hyeon'),
+                                  ),
                                 ),
                                 CupertinoDialogAction(
                                   onPressed: () {
@@ -149,8 +155,10 @@ class HistoryCard extends ConsumerWidget {
                                     Navigator.of(ctx).pop();
                                   },
                                   isDestructiveAction: true,
-                                  child: const Text('삭제',
-                                      style: TextStyle(fontFamily: 'Do Hyeon'))
+                                  child: const Text(
+                                    '삭제',
+                                    style: TextStyle(fontFamily: 'Do Hyeon'),
+                                  ),
                                 ),
                               ],
                             );
@@ -165,14 +173,15 @@ class HistoryCard extends ConsumerWidget {
                         size: screenWidth * 0.05,
                       ),
                       onPressed: () {
-                        final allReviewsText = entry.generatedReviews.join('\n\n');
-                        Clipboard.setData(
-                          ClipboardData(
-                            text: allReviewsText,
-                          ),
+                        final allReviewsText = entry.generatedReviews.join(
+                          '\n\n',
                         );
-                        showAppDialog(context,
-                            title: '알림', message: '모든 AI 생성 리뷰가 클립보드에 복사되었습니다.');
+                        Clipboard.setData(ClipboardData(text: allReviewsText));
+                        showAppDialog(
+                          context,
+                          title: '알림',
+                          message: '모든 AI 생성 리뷰가 클립보드에 복사되었습니다.',
+                        );
                       },
                     ),
                   ],
@@ -187,9 +196,7 @@ class HistoryCard extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.grey.shade200,
-                ),
+                border: Border.all(color: Colors.grey.shade200),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

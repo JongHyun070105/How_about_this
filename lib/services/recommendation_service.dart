@@ -39,7 +39,8 @@ class RecommendationService {
 
     try {
       final response = await geminiService.generateContent(prompt);
-      final jsonString = response['candidates'][0]['content']['parts'][0]['text'];
+      final jsonString =
+          response['candidates'][0]['content']['parts'][0]['text'];
 
       if (jsonString == null) {
         throw Exception('Gemini API로부터 응답을 받지 못했습니다.');
@@ -65,11 +66,16 @@ class RecommendationService {
     }
   }
 
-  static Future<void> _saveToCache(String key, List<FoodRecommendation> data) async {
+  static Future<void> _saveToCache(
+    String key,
+    List<FoodRecommendation> data,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final jsonList = data.map((e) => e.toJson()).toList();
     final encodedData = jsonEncode(jsonList);
-    final expirationTime = DateTime.now().add(_cacheExpiration).toIso8601String();
+    final expirationTime = DateTime.now()
+        .add(_cacheExpiration)
+        .toIso8601String();
 
     await prefs.setString(key, encodedData);
     await prefs.setString('${key}_expiry', expirationTime);
@@ -93,7 +99,9 @@ class RecommendationService {
 
     try {
       final decodedList = jsonDecode(encodedData) as List;
-      return decodedList.map((item) => FoodRecommendation.fromJson(item)).toList();
+      return decodedList
+          .map((item) => FoodRecommendation.fromJson(item))
+          .toList();
     } catch (e) {
       debugPrint('Error decoding cached data: $e');
       await prefs.remove(key);

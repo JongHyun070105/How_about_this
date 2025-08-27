@@ -27,7 +27,7 @@ class ImageUploadSection extends ConsumerWidget {
             border: Border.all(color: Colors.grey[300]!, width: 1.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withAlpha((255 * 0.05).round()),
                 spreadRadius: 1,
                 blurRadius: 3,
                 offset: const Offset(0, 1),
@@ -89,7 +89,7 @@ class ImageUploadSection extends ConsumerWidget {
               '이미지 처리 중...',
               style: TextStyle(
                 fontSize: 14.0,
-                fontFamily: 'Do Hyeon',
+                fontFamily: 'SCDream',
                 color: Colors.grey,
               ),
             ),
@@ -98,7 +98,7 @@ class ImageUploadSection extends ConsumerWidget {
               '잠시만 기다려주세요',
               style: TextStyle(
                 fontSize: 12.0,
-                fontFamily: 'Do Hyeon',
+                fontFamily: 'SCDream',
                 color: Colors.grey,
               ),
             ),
@@ -129,7 +129,7 @@ class ImageUploadSection extends ConsumerWidget {
               '이미지 업로드',
               style: TextStyle(
                 fontSize: 16.0,
-                fontFamily: 'Do Hyeon',
+                fontFamily: 'SCDream',
                 color: Colors.grey[600],
                 fontWeight: FontWeight.bold,
               ),
@@ -139,7 +139,7 @@ class ImageUploadSection extends ConsumerWidget {
               '탭하여 사진 선택',
               style: TextStyle(
                 fontSize: 12.0,
-                fontFamily: 'Do Hyeon',
+                fontFamily: 'SCDream',
                 color: Colors.grey[400],
               ),
             ),

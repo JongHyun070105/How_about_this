@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -59,7 +58,9 @@ void showLocationServiceDialog(BuildContext context) {
   _showStyledDialog(
     context: context,
     title: '위치 서비스 필요',
-    content: '주변 음식점 추천을 위해 위치 서비스가 필요합니다.\n' '설정에서 위치 서비스를 활성화해주세요.',
+    content:
+        '주변 음식점 추천을 위해 위치 서비스가 필요합니다.\n'
+        '설정에서 위치 서비스를 활성화해주세요.',
     isError: true,
     actions: [
       TextButton(
@@ -88,7 +89,9 @@ void showLocationPermissionDialog(
 
   if (permission == LocationPermission.denied) {
     title = '위치 권한 필요';
-    content = '주변 음식점 추천을 위해 위치 권한이 필요합니다.\n' '나중에 설정에서 변경할 수 있습니다.';
+    content =
+        '주변 음식점 추천을 위해 위치 권한이 필요합니다.\n'
+        '나중에 설정에서 변경할 수 있습니다.';
     actions = [
       TextButton(
         onPressed: () => Navigator.of(context).pop(),
@@ -97,7 +100,9 @@ void showLocationPermissionDialog(
     ];
   } else if (permission == LocationPermission.deniedForever) {
     title = '위치 권한 설정 필요';
-    content = '위치 권한이 영구적으로 거부되었습니다.\n' '앱 설정에서 위치 권한을 허용해주세요.';
+    content =
+        '위치 권한이 영구적으로 거부되었습니다.\n'
+        '앱 설정에서 위치 권한을 허용해주세요.';
     actions = [
       TextButton(
         onPressed: () => Navigator.of(context).pop(),
@@ -113,7 +118,9 @@ void showLocationPermissionDialog(
     ];
   } else {
     title = '위치 권한 확인';
-    content = '위치 권한 상태를 확인할 수 없습니다.\n' '설정에서 권한을 확인해주세요.';
+    content =
+        '위치 권한 상태를 확인할 수 없습니다.\n'
+        '설정에서 권한을 확인해주세요.';
     actions = [
       TextButton(
         onPressed: () => Navigator.of(context).pop(),

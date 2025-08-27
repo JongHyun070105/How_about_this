@@ -9,8 +9,15 @@ class LoadingOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth >= 768;
-    final inputFontSize = (screenWidth * (isTablet ? 0.028 : 0.04)).clamp(14.0, 20.0);
-    final verticalSpacing = (MediaQuery.of(context).size.height * (isTablet ? 0.025 : 0.02)).clamp(12.0, 24.0);
+    final inputFontSize = (screenWidth * (isTablet ? 0.028 : 0.04)).clamp(
+      14.0,
+      20.0,
+    );
+    final verticalSpacing =
+        (MediaQuery.of(context).size.height * (isTablet ? 0.025 : 0.02)).clamp(
+          12.0,
+          24.0,
+        );
 
     return Positioned.fill(
       child: Container(

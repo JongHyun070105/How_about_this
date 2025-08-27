@@ -53,7 +53,10 @@ class _EditReviewDialogState extends ConsumerState<EditReviewDialog> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+              borderSide: BorderSide(
+                color: Theme.of(context).primaryColor,
+                width: 2,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -61,7 +64,10 @@ class _EditReviewDialogState extends ConsumerState<EditReviewDialog> {
             ),
             filled: true,
             fillColor: Colors.grey.shade100,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
           ),
           style: const TextStyle(fontFamily: 'Do Hyeon', fontSize: 16),
         ),
@@ -81,21 +87,29 @@ class _EditReviewDialogState extends ConsumerState<EditReviewDialog> {
             final newReview = _editController.text;
             if (newReview.isNotEmpty) {
               final reviewState = ref.read(reviewProvider);
-              final updatedReviews =
-                  List<String>.from(reviewState.generatedReviews);
+              final updatedReviews = List<String>.from(
+                reviewState.generatedReviews,
+              );
               updatedReviews[widget.index] = newReview;
               ref
                   .read(reviewProvider.notifier)
                   .setGeneratedReviews(updatedReviews);
               Navigator.of(context).pop();
             } else {
-              showAppDialog(context,
-                  title: '알림', message: '리뷰 내용은 비워둘 수 없습니다.');
+              showAppDialog(
+                context,
+                title: '알림',
+                message: '리뷰 내용은 비워둘 수 없습니다.',
+              );
             }
           },
           child: Text(
             '저장',
-            style: TextStyle(fontFamily: 'Do Hyeon', fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
+            style: TextStyle(
+              fontFamily: 'Do Hyeon',
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).primaryColor,
+            ),
           ),
         ),
       ],

@@ -3,7 +3,6 @@ import 'package:review_ai/config/security_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:review_ai/config/app_constants.dart';
-import 'package:review_ai/main.dart';
 import 'package:review_ai/models/food_category.dart';
 import 'package:review_ai/models/food_recommendation.dart';
 import 'package:review_ai/providers/food_providers.dart';
@@ -16,7 +15,10 @@ import 'package:review_ai/widgets/category_card.dart';
 import 'package:review_ai/widgets/history/dialogs/food_recommendation_dialog.dart';
 import 'package:review_ai/widgets/history/dialogs/user_stats_dialog.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
-import 'package:clarity_flutter/clarity_flutter.dart';
+import 'package:review_ai/services/usage_tracking_service.dart'; // Explicitly import UsageTrackingService
+
+// Define a local provider for UsageTrackingService
+final _localUsageTrackingServiceProvider = Provider((ref) => UsageTrackingService());
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
@@ -44,35 +46,27 @@ class _TodayRecommendationScreenState
   }
 
   void _loadBannerAd() {
-    final adUnitId = _getAdUnitId();
+    final adUnitId = SecurityConfig.bannerAdUnitId;
     _bannerAd = BannerAd(
       adUnitId: adUnitId,
       request: const AdRequest(),
       size: AdSize.fullBanner,
-      listener: _createBannerAdListener(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _bannerAd = ad as BannerAd;
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('BannerAd failed to load: $error');
+          ad.dispose();
+          setState(() {
+            _isBannerAdLoaded = false;
+          });
+        },
+      ),
     )..load();
-  }
-
-  String _getAdUnitId() {
-    return SecurityConfig.bannerAdUnitId;
-  }
-
-  BannerAdListener _createBannerAdListener() {
-    return BannerAdListener(
-      onAdLoaded: (ad) {
-        setState(() {
-          _bannerAd = ad as BannerAd;
-          _isBannerAdLoaded = true;
-        });
-      },
-      onAdFailedToLoad: (ad, error) {
-        debugPrint('BannerAd failed to load: $error');
-        ad.dispose();
-        setState(() {
-          _isBannerAdLoaded = false;
-        });
-      },
-    );
   }
 
   @override
@@ -89,7 +83,7 @@ class _TodayRecommendationScreenState
           appBar: _buildAppBar(context, responsive, textTheme),
           body: _buildBody(context, responsive, foodCategories, textTheme),
           bottomNavigationBar: SafeArea(
-            child: _buildBottomBannerAd(responsive),
+            child: _buildBottomBannerAd(),
           ),
         ),
         if (isCategoryLoading) _buildLoadingOverlay(),
@@ -125,7 +119,7 @@ class _TodayRecommendationScreenState
         style: textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.bold,
           fontSize: responsive.appBarFontSize(),
-          fontFamily: 'Do Hyeon',
+          fontFamily: 'SCDream',
           color: Colors.grey[800],
         ),
       ),
@@ -210,7 +204,7 @@ class _TodayRecommendationScreenState
         style: textTheme.titleLarge?.copyWith(
           fontWeight: FontWeight.bold,
           fontSize: responsive.titleFontSize(),
-          fontFamily: 'Do Hyeon',
+          fontFamily: 'SCDream',
           color: Colors.grey[800],
         ),
       ),
@@ -229,22 +223,16 @@ class _TodayRecommendationScreenState
           bottom: responsive.verticalSpacing(),
         ),
         physics: const BouncingScrollPhysics(),
-        gridDelegate: _createGridDelegate(responsive),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: responsive.crossAxisCount(),
+          crossAxisSpacing: responsive.horizontalPadding() * 0.5,
+          mainAxisSpacing: responsive.verticalSpacing(),
+          childAspectRatio: responsive.childAspectRatio(),
+        ),
         itemCount: foodCategories.length,
         itemBuilder: (context, index) =>
             _buildCategoryItem(context, foodCategories[index], index),
       ),
-    );
-  }
-
-  SliverGridDelegateWithFixedCrossAxisCount _createGridDelegate(
-    Responsive responsive,
-  ) {
-    return SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: responsive.crossAxisCount(),
-      crossAxisSpacing: responsive.horizontalPadding() * 0.5,
-      mainAxisSpacing: responsive.verticalSpacing(),
-      childAspectRatio: responsive.childAspectRatio(),
     );
   }
 
@@ -259,10 +247,8 @@ class _TodayRecommendationScreenState
       child: CategoryCard(
         category: category,
         onTap: () async {
-          // 첫 번째 추천 전에도 제한 체크!
-          final usageTrackingService = ref.read(usageTrackingServiceProvider);
-          final hasReachedLimit = await usageTrackingService
-              .hasReachedDailyLimit();
+          final usageTrackingService = ref.read(_localUsageTrackingServiceProvider);
+          final hasReachedLimit = await usageTrackingService.hasReachedDailyLimit();
 
           if (hasReachedLimit && context.mounted) {
             showAppDialog(
@@ -273,7 +259,6 @@ class _TodayRecommendationScreenState
             return;
           }
 
-          // 제한 안 걸렸으면 카운트 증가 후 추천 실행
           await usageTrackingService.incrementRecommendationCount();
 
           if (context.mounted) {
@@ -290,7 +275,7 @@ class _TodayRecommendationScreenState
     );
   }
 
-  Widget _buildBottomBannerAd(Responsive responsive) {
+  Widget _buildBottomBannerAd() {
     if (!_isBannerAdLoaded || _bannerAd == null) {
       return const SizedBox.shrink();
     }
@@ -299,35 +284,27 @@ class _TodayRecommendationScreenState
       alignment: Alignment.center,
       width: _bannerAd!.size.width.toDouble(),
       height: _bannerAd!.size.height.toDouble(),
-      margin: EdgeInsets.only(bottom: responsive.verticalSpacing() * 0.5),
-      decoration: _getBannerAdDecoration(),
       child: AdWidget(ad: _bannerAd!),
-    );
-  }
-
-  BoxDecoration _getBannerAdDecoration() {
-    return BoxDecoration(
-      color: Colors.grey[50],
-      borderRadius: BorderRadius.circular(8.0),
-      border: Border.all(color: Colors.grey[200]!, width: 1.0),
     );
   }
 
   Widget _buildLoadingOverlay() {
     return Container(
       color: Colors.black.withAlpha(102),
-      child: Center(
+      child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircularProgressIndicator(
-                color: Colors.white, strokeWidth: 3.0),
-            const SizedBox(height: 20),
+            CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 3.0,
+            ),
+            SizedBox(height: 20),
             Opacity(
               opacity: 0.0,
               child: Text(
                 '음식 추천 불러오는 중...',
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+                style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ],
@@ -363,8 +340,9 @@ class _TodayRecommendationScreenState
             _buildAnimatedDialog(context, category, recommended, foods, color),
       );
 
-      if (!context.mounted)
-        return; // Check context.mounted after async operation
+      if (!context.mounted) {
+        return;
+      }
 
       await _handleDialogResult(context, result, openDialog);
     }
@@ -403,15 +381,11 @@ class _TodayRecommendationScreenState
   ) async {
     if (!context.mounted) return;
 
-    // '다시 추천'인 경우(result == true)
     if (result == true) {
-      final usageTrackingService = ref.read(usageTrackingServiceProvider);
-
-      // 다시 추천 전에도 제한 체크
+      final usageTrackingService = ref.read(_localUsageTrackingServiceProvider);
       final hasReachedLimit = await usageTrackingService.hasReachedDailyLimit();
 
       if (hasReachedLimit && context.mounted) {
-        // 제한에 도달한 경우 알림 표시
         showAppDialog(
           context,
           title: '일일 추천 한도 초과',
@@ -420,25 +394,21 @@ class _TodayRecommendationScreenState
         return;
       }
 
-      // 제한 안 걸렸으면 카운트 증가 후 새로운 추천
       await usageTrackingService.incrementRecommendationCount();
 
       if (context.mounted) {
         openDialog();
       }
     } else {
-      // '다시 추천'이 아닌 경우에만 팁(리뷰 유도) 표시
       await _showReviewPromptIfNeeded(context);
     }
   }
 
   Future<void> _showReviewPromptIfNeeded(BuildContext context) async {
-    final usageTrackingService = ref.read(usageTrackingServiceProvider);
-    final currentCount = await usageTrackingService
-        .getTotalRecommendationCount();
+    final usageTrackingService = ref.read(_localUsageTrackingServiceProvider);
+    final currentCount = await usageTrackingService.getTotalRecommendationCount();
 
     if (_shouldShowReviewPrompt(currentCount) && context.mounted) {
-      final responsive = Responsive(context);
       showAppDialog(
         context,
         title: '리뷰 작성 팁!',

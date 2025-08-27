@@ -44,7 +44,9 @@ class ReviewStyleSection extends ConsumerWidget {
                 selected: selectedStyle == style,
                 onSelected: (isSelected) {
                   if (isSelected) {
-                    ref.read(reviewProvider.notifier).setSelectedReviewStyle(style);
+                    ref
+                        .read(reviewProvider.notifier)
+                        .setSelectedReviewStyle(style);
                   }
                 },
                 selectedColor: Colors.black, // 선택된 상태: 검은색

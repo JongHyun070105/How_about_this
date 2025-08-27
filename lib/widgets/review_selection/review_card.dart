@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class ReviewCard extends StatelessWidget {
@@ -30,9 +29,7 @@ class ReviewCard extends StatelessWidget {
             color: isSelected ? Colors.blue : Colors.grey.shade300,
             width: isSelected ? screenWidth * 0.005 : screenWidth * 0.0025,
           ),
-          borderRadius: BorderRadius.circular(
-            screenWidth * 0.025,
-          ),
+          borderRadius: BorderRadius.circular(screenWidth * 0.025),
         ),
         margin: EdgeInsets.symmetric(
           horizontal: screenWidth * 0.02,
@@ -66,9 +63,7 @@ class ReviewCard extends StatelessWidget {
                   height: screenWidth * 0.06,
                   decoration: BoxDecoration(
                     color: Colors.blue,
-                    borderRadius: BorderRadius.circular(
-                      screenWidth * 0.03,
-                    ),
+                    borderRadius: BorderRadius.circular(screenWidth * 0.03),
                   ),
                   child: Icon(
                     Icons.check,
