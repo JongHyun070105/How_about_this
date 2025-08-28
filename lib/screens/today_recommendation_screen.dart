@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:review_ai/utils/network_utils.dart';
 import 'package:review_ai/config/security_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -18,7 +19,9 @@ import 'package:review_ai/widgets/common/app_dialogs.dart';
 import 'package:review_ai/services/usage_tracking_service.dart'; // Explicitly import UsageTrackingService
 
 // Define a local provider for UsageTrackingService
-final _localUsageTrackingServiceProvider = Provider((ref) => UsageTrackingService());
+final _localUsageTrackingServiceProvider = Provider(
+  (ref) => UsageTrackingService(),
+);
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
@@ -82,9 +85,7 @@ class _TodayRecommendationScreenState
           backgroundColor: Colors.white,
           appBar: _buildAppBar(context, responsive, textTheme),
           body: _buildBody(context, responsive, foodCategories, textTheme),
-          bottomNavigationBar: SafeArea(
-            child: _buildBottomBannerAd(),
-          ),
+          bottomNavigationBar: SafeArea(child: _buildBottomBannerAd()),
         ),
         if (isCategoryLoading) _buildLoadingOverlay(),
       ],
@@ -247,8 +248,24 @@ class _TodayRecommendationScreenState
       child: CategoryCard(
         category: category,
         onTap: () async {
-          final usageTrackingService = ref.read(_localUsageTrackingServiceProvider);
-          final hasReachedLimit = await usageTrackingService.hasReachedDailyLimit();
+          final connected = await NetworkUtils.checkInternetConnectivity();
+          if (!connected) {
+            if (context.mounted) {
+              showAppDialog(
+                context,
+                title: '네트워크 오류',
+                message: '인터넷 연결을 확인해주세요.',
+                isError: true,
+              );
+            }
+            return;
+          }
+
+          final usageTrackingService = ref.read(
+            _localUsageTrackingServiceProvider,
+          );
+          final hasReachedLimit = await usageTrackingService
+              .hasReachedDailyLimit();
 
           if (hasReachedLimit && context.mounted) {
             showAppDialog(
@@ -295,10 +312,7 @@ class _TodayRecommendationScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 3.0,
-            ),
+            CircularProgressIndicator(color: Colors.white, strokeWidth: 3.0),
             SizedBox(height: 20),
             Opacity(
               opacity: 0.0,
@@ -406,7 +420,8 @@ class _TodayRecommendationScreenState
 
   Future<void> _showReviewPromptIfNeeded(BuildContext context) async {
     final usageTrackingService = ref.read(_localUsageTrackingServiceProvider);
-    final currentCount = await usageTrackingService.getTotalRecommendationCount();
+    final currentCount = await usageTrackingService
+        .getTotalRecommendationCount();
 
     if (_shouldShowReviewPrompt(currentCount) && context.mounted) {
       showAppDialog(

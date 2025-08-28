@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 
 class AppUpdateService {
   static const String _updateUrl =
-      'https://gist.github.com/JongHyun070105/ba8200acae9b3375efe284ce43b0e519/raw/03f3342cdc62b008936cf8e7f55dcf62d785b3e8/latest_version.json';
+      'https://gist.github.com/JongHyun070105/ba8200acae9b3375efe284ce43b0e519/raw/467c41ced067c0ccd2ec32a7e0a27aa40c4ff1ae/latest_version.json';
 
   /// Check if a new version of the app is available.
   /// Returns the latest version string if an update is available, otherwise null.

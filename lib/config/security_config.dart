@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+
 import 'package:flutter/material.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
 import 'package:url_launcher/url_launcher.dart'; // Added url_launcher import
@@ -19,9 +20,32 @@ class SecurityConfig {
       'ca-app-pub-3940256099942544/5224354917';
   static const String _testBannerAdUnitId =
       'ca-app-pub-3940256099942544/6300978111';
-  static String get rewardedAdUnitId => _testRewardedAdUnitId;
-  static String get bannerAdUnitId => _testBannerAdUnitId;
-  static bool get isUsingTestAds => true;
+
+  // iOS Production Ad Unit IDs
+  // static const String _prodRewardedAdUnitIdIOS =
+  //     'ca-app-pub-6555743055922387/1329741925';
+  // static const String _prodBannerAdUnitIdIOS =
+  //     'ca-app-pub-6555743055922387/7591365110';
+
+  static String get rewardedAdUnitId {
+    if (Platform.isIOS) {
+      return _testRewardedAdUnitId; // Use test ID for iOS
+    }
+    return _testRewardedAdUnitId; // Use test ID for Android and other platforms
+  }
+
+  static String get bannerAdUnitId {
+    if (Platform.isIOS) {
+      return _testBannerAdUnitId; // Use test ID for iOS
+    }
+    return _testBannerAdUnitId; // Use test ID for Android and other platforms
+  }
+
+  static bool get isUsingTestAds {
+    // If it's iOS, and we are using production IDs, then it's not using test ads.
+    // Otherwise, it's using test ads.
+    return !Platform.isIOS;
+  }
 
   static void logAdConfiguration() {
     if (shouldLogDetailed) {

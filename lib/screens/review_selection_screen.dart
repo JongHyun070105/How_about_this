@@ -7,7 +7,6 @@ import 'package:review_ai/utils/responsive.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:review_ai/widgets/review_selection/edit_review_dialog.dart';
 
-
 class ReviewSelectionScreen extends ConsumerStatefulWidget {
   const ReviewSelectionScreen({super.key});
 
@@ -321,14 +320,19 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          selectedReviewIndex == null
-                              ? '리뷰를 선택하세요'
-                              : '선택한 리뷰 저장',
-                          style: TextStyle(
-                            fontFamily: 'Do Hyeon',
-                            fontSize: responsive.buttonFontSize(),
-                            fontWeight: FontWeight.bold,
+                        Flexible(
+                          child: Text(
+                            selectedReviewIndex == null
+                                ? '리뷰를 선택하세요'
+                                : '선택한 리뷰 저장',
+                            style: TextStyle(
+                              fontFamily: 'Do Hyeon',
+                              fontSize: responsive.buttonFontSize(),
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],

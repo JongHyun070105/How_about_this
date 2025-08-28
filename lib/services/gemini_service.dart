@@ -11,7 +11,7 @@ class GeminiService {
   final String _apiKey;
   final String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models';
-  static const Duration _timeout = Duration(seconds: 30);
+  static const Duration _timeout = Duration(seconds: 15);
 
   GeminiService(this._client, this._apiKey);
 
@@ -31,6 +31,7 @@ class GeminiService {
           .timeout(_timeout);
 
       if (response.statusCode == 200) {
+        debugPrint('Raw API Response: ${utf8.decode(response.bodyBytes)}');
         return jsonDecode(utf8.decode(response.bodyBytes));
       } else {
         throw GeminiApiException(
@@ -117,19 +118,23 @@ class GeminiService {
         throw ParsingException('리뷰 텍스트를 찾을 수 없습니다.');
       }
 
-      final reviews = content
-          .trim()
-          .split('\n')
-          .where((line) => line.trim().startsWith('- '))
-          .map((line) => line.substring(2).trim())
-          .where((review) => review.isNotEmpty)
-          .toList();
+      try {
+        // Clean the response to ensure it's valid JSON
+        final cleanedContent = content
+            .replaceAll('```json', '')
+            .replaceAll('```', '')
+            .trim();
+        final decoded = json.decode(cleanedContent) as List<dynamic>;
+        final reviews = decoded.map((e) => e.toString()).toList();
 
-      if (reviews.isEmpty) {
-        throw ParsingException('유효한 리뷰가 생성되지 않았습니다.');
+        if (reviews.isEmpty) {
+          throw ParsingException('유효한 리뷰가 생성되지 않았습니다.');
+        }
+
+        return reviews;
+      } on FormatException catch (e) {
+        throw ParsingException('API 응답을 파싱하는 데 실패했습니다: ${e.message}');
       }
-
-      return reviews.length >= 3 ? reviews.take(3).toList() : reviews;
     } on ApiException {
       rethrow;
     } catch (e) {
@@ -139,7 +144,7 @@ class GeminiService {
 
   Future<bool> validateImage(File foodImage) async {
     const prompt =
-        'Analyze the attached image. Is this a picture of prepared food suitable for a food review? Answer with only "YES" or "NO". Do not consider raw ingredients like a single raw onion or a piece of raw meat as prepared food.';
+        'Analyze the attached image. Is this a picture of prepared food suitable for a food review? Do not consider raw ingredients like a single raw onion or a piece of raw meat as prepared food. Respond with only a JSON object in the format {"is_food": boolean}.';
 
     try {
       Uint8List imageBytes = await foodImage.readAsBytes();
@@ -149,7 +154,7 @@ class GeminiService {
         'contents': [
           {'parts': parts},
         ],
-        'generationConfig': {'temperature': 0.0, 'maxOutputTokens': 5},
+        'generationConfig': {'temperature': 0.0, 'maxOutputTokens': 10},
       };
 
       final data = await _postContent('gemini-2.5-flash-lite', requestBody);
@@ -165,10 +170,25 @@ class GeminiService {
         throw ImageValidationException('모델의 응답을 파싱할 수 없습니다.');
       }
 
-      if (content.trim().toUpperCase().contains('YES')) {
-        return true;
-      } else {
-        throw ImageValidationException('이 사진은 음식 사진이 아니거나 리뷰에 적합하지 않습니다.');
+      try {
+        // Clean the response to ensure it's valid JSON
+        final cleanedContent = content
+            .replaceAll('```json', '')
+            .replaceAll('```', '')
+            .trim();
+        final decoded = json.decode(cleanedContent) as Map<String, dynamic>;
+        final isFood = decoded['is_food'] as bool?;
+
+        if (isFood == true) {
+          return true;
+        } else {
+          throw ImageValidationException('이 사진은 음식 사진이 아니거나 리뷰에 적합하지 않습니다.');
+        }
+      } on FormatException catch (e) {
+        throw ImageValidationException('API 응답을 파싱하는 데 실패했습니다: ${e.message}');
+      } catch (e) {
+        // Catch other potential errors during parsing, like type errors
+        throw ImageValidationException('이미지 검증 중 알 수 없는 오류: ${e.toString()}');
       }
     } on ApiException {
       rethrow;
@@ -237,15 +257,13 @@ ${foodImage != null ? '''
 ''' : ''}
 
 **리뷰 작성 규칙:**
-1. 각 리뷰는 "- "로 시작
-2. 자연스럽고 구체적으로 작성
-3. 별점이나 숫자 직접 언급 금지
-4. 정확히 3개만 출력
+1. 각 리뷰는 자연스럽고 구체적으로 작성
+2. 별점이나 숫자 직접 언급 금지
+3. 정확히 3개만 생성
 
 **출력 형식:**
-- [리뷰1]
-- [리뷰2]
-- [리뷰3]''';
+오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
+["리뷰1", "리뷰2", "리뷰3"]''';
   }
 
   Future<String> buildPersonalizedRecommendationPrompt({

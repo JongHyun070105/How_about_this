@@ -325,14 +325,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withAlpha((255 * 0.3).round()),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: PrimaryActionButton(
         text: '리뷰 생성하기',

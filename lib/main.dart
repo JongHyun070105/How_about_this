@@ -18,6 +18,8 @@ import 'package:http/http.dart' as http;
 import 'package:review_ai/services/gemini_service.dart';
 import 'package:review_ai/services/usage_tracking_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:review_ai/utils/network_utils.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -121,9 +123,21 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       if (!context.mounted) return;
       if (!securityResult.isSecure) {
         await SecurityInitializer.handleSecurityThreat(context, securityResult);
+        return; // Stop initialization if threat detected
       }
 
-      await _checkConnectivityWithTimeout();
+      bool isConnected = await _checkInternetConnectivity();
+      while (!isConnected) {
+        if (!mounted) return;
+        final shouldRetry = await _showConnectionErrorDialog();
+        if (shouldRetry) {
+          isConnected = await _checkInternetConnectivity();
+        } else {
+          // User chose to exit
+          exit(0);
+        }
+      }
+
       _startBackgroundCaching();
 
       // Check for updates after main initialization but before navigating away
@@ -157,6 +171,73 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
     }
   }
 
+  Future<bool> _showConnectionErrorDialog() async {
+    if (!mounted) return false;
+    return await showCupertinoDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return CupertinoAlertDialog(
+              title: const Text(
+                '네트워크 연결 오류',
+                style: TextStyle(
+                  fontFamily: 'SCDream',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: const Padding(
+                padding: EdgeInsets.only(top: 12.0),
+                child: Text(
+                  '인터넷 연결을 확인해주세요.',
+                  style: TextStyle(fontFamily: 'SCDream', fontSize: 16),
+                ),
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text('앱 종료'),
+                  onPressed: () {
+                    Navigator.of(context).pop(false); // Don't retry
+                  },
+                ),
+                CupertinoDialogAction(
+                  isDefaultAction: true,
+                  child: const Text('재시도'),
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // Retry
+                  },
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Return false if dialog is dismissed
+  }
+
+  Future<bool> _checkInternetConnectivity() async {
+    try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult.contains(ConnectivityResult.none)) {
+        return false; // No network interface
+      }
+
+      // Check for actual internet access by trying to connect to a reliable host
+      final result = await InternetAddress.lookup(
+        'google.com',
+      ).timeout(const Duration(seconds: 5));
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return true; // Internet is accessible
+      }
+      return false;
+    } on TimeoutException catch (_) { // Catch TimeoutException first
+      return false; // Lookup timed out
+    } on SocketException catch (_) { // Then SocketException
+      return false; // No internet access
+    } catch (e) { // Then all other exceptions
+      debugPrint('Error checking internet connectivity: $e');
+      return false;
+    }
+  }
+
   Future<void> _checkForUpdate() async {
     final appUpdateService = AppUpdateService();
     final latestVersion = await appUpdateService.isUpdateAvailable();
@@ -185,28 +266,6 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       debugPrint('Could not launch store URL');
-    }
-  }
-
-  Future<void> _checkConnectivityWithTimeout() async {
-    try {
-      final connectivityResult = await Connectivity()
-          .checkConnectivity()
-          .timeout(const Duration(seconds: 3));
-
-      if (connectivityResult.contains(ConnectivityResult.none)) {
-        throw Exception('No internet connection');
-      }
-    } catch (e) {
-      if (mounted) {
-        showAppDialog(
-          context,
-          title: '네트워크 연결 오류',
-          message: '인터넷 연결을 확인해주세요.',
-          isError: true,
-        );
-      }
-      rethrow;
     }
   }
 
