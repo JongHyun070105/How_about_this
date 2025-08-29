@@ -22,23 +22,23 @@ class SecurityConfig {
       'ca-app-pub-3940256099942544/6300978111';
 
   // iOS Production Ad Unit IDs
-  // static const String _prodRewardedAdUnitIdIOS =
-  //     'ca-app-pub-6555743055922387/1329741925';
-  // static const String _prodBannerAdUnitIdIOS =
-  //     'ca-app-pub-6555743055922387/7591365110';
+  static const String _prodRewardedAdUnitIdIOS =
+      'ca-app-pub-6555743055922387/1329741925';
+  static const String _prodBannerAdUnitIdIOS =
+      'ca-app-pub-6555743055922387/7591365110';
 
   static String get rewardedAdUnitId {
-    if (Platform.isIOS) {
-      return _testRewardedAdUnitId; // Use test ID for iOS
+    if (kReleaseMode && Platform.isIOS) {
+      return _prodRewardedAdUnitIdIOS;
     }
-    return _testRewardedAdUnitId; // Use test ID for Android and other platforms
+    return _testRewardedAdUnitId;
   }
 
   static String get bannerAdUnitId {
-    if (Platform.isIOS) {
-      return _testBannerAdUnitId; // Use test ID for iOS
+    if (kReleaseMode && Platform.isIOS) {
+      return _prodBannerAdUnitIdIOS;
     }
-    return _testBannerAdUnitId; // Use test ID for Android and other platforms
+    return _testBannerAdUnitId;
   }
 
   static bool get isUsingTestAds {
