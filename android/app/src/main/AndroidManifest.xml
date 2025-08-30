@@ -40,7 +40,7 @@
             android:value="2" />
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-6555743055922387~2424111994"/>
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
     </application>
     
     <!-- Required to query activities that can process text, see:
