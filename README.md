@@ -61,7 +61,7 @@ flutter run
 
 앱이 각 스토어에 출시되면 여기에 링크가 추가될 예정입니다.
 
-- **Google Play Store**: [링크 추가 예정]
+- **Google Play Store**: [[플레이스토어 링크](https://play.google.com/store/apps/details?id=com.jonghyun.reviewai_flutter&pcampaignid=web_share)]
 - **Apple App Store**: [[앱스토어 링크](https://apps.apple.com/kr/app/%EC%9D%B4%EA%B1%B0-%EC%96%B4%EB%95%8C/id6751484486)]
 
 
