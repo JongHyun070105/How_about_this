@@ -16,12 +16,7 @@ import 'package:review_ai/widgets/category_card.dart';
 import 'package:review_ai/widgets/history/dialogs/food_recommendation_dialog.dart';
 import 'package:review_ai/widgets/history/dialogs/user_stats_dialog.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
-import 'package:review_ai/services/usage_tracking_service.dart'; // Explicitly import UsageTrackingService
-
-// Define a local provider for UsageTrackingService
-final _localUsageTrackingServiceProvider = Provider(
-  (ref) => UsageTrackingService(),
-);
+import 'package:review_ai/main.dart'; // usageTrackingServiceProvider import
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
@@ -261,9 +256,7 @@ class _TodayRecommendationScreenState
             return;
           }
 
-          final usageTrackingService = ref.read(
-            _localUsageTrackingServiceProvider,
-          );
+          final usageTrackingService = ref.read(usageTrackingServiceProvider);
           final hasReachedLimit = await usageTrackingService
               .hasReachedDailyLimit();
 
@@ -396,7 +389,7 @@ class _TodayRecommendationScreenState
     if (!context.mounted) return;
 
     if (result == true) {
-      final usageTrackingService = ref.read(_localUsageTrackingServiceProvider);
+      final usageTrackingService = ref.read(usageTrackingServiceProvider);
       final hasReachedLimit = await usageTrackingService.hasReachedDailyLimit();
 
       if (hasReachedLimit && context.mounted) {
@@ -419,7 +412,7 @@ class _TodayRecommendationScreenState
   }
 
   Future<void> _showReviewPromptIfNeeded(BuildContext context) async {
-    final usageTrackingService = ref.read(_localUsageTrackingServiceProvider);
+    final usageTrackingService = ref.read(usageTrackingServiceProvider);
     final currentCount = await usageTrackingService
         .getTotalRecommendationCount();
 

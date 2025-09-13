@@ -72,7 +72,7 @@ class ReviewService {
       onProgress?.call('리뷰 생성 준비 중...');
       debugPrint('리뷰 생성 시작');
 
-      final geminiService = _ref.read(geminiServiceProvider);
+      final apiProxyService = _ref.read(geminiServiceProvider);
       final reviewState = _ref.read(reviewProvider);
 
       // 입력 검증
@@ -111,7 +111,7 @@ class ReviewService {
       });
 
       final reviews = await Future.any([
-        geminiService.generateReviews(
+        apiProxyService.generateReviews(
           foodName: reviewState.foodName,
           deliveryRating: reviewState.deliveryRating,
           tasteRating: reviewState.tasteRating,

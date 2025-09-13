@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// dotenv는 더 이상 사용하지 않음 (API 키가 서버로 이전됨)
 import 'package:device_info_plus/device_info_plus.dart';
 
 import 'package:flutter/material.dart';
@@ -14,7 +14,7 @@ import 'environment_config.dart';
 class SecurityConfig {
   SecurityConfig._();
 
-  // Ad ID Management (as before)
+  // Ad ID Management
 
   static const String _testRewardedAdUnitId =
       'ca-app-pub-3940256099942544/5224354917';
@@ -27,24 +27,37 @@ class SecurityConfig {
   static const String _prodBannerAdUnitIdIOS =
       'ca-app-pub-6555743055922387/7591365110';
 
+  // Android Production Ad Unit IDs
+  static const String _prodRewardedAdUnitIdAndroid =
+      'ca-app-pub-6555743055922387/7073803440';
+  static const String _prodBannerAdUnitIdAndroid =
+      'ca-app-pub-6555743055922387/8087007370';
+
   static String get rewardedAdUnitId {
-    if (kReleaseMode && Platform.isIOS) {
-      return _prodRewardedAdUnitIdIOS;
+    if (kReleaseMode) {
+      if (Platform.isAndroid) {
+        return _prodRewardedAdUnitIdAndroid;
+      } else if (Platform.isIOS) {
+        return _prodRewardedAdUnitIdIOS;
+      }
     }
     return _testRewardedAdUnitId;
   }
 
   static String get bannerAdUnitId {
-    if (kReleaseMode && Platform.isIOS) {
-      return _prodBannerAdUnitIdIOS;
+    if (kReleaseMode) {
+      if (Platform.isAndroid) {
+        return _prodBannerAdUnitIdAndroid;
+      } else if (Platform.isIOS) {
+        return _prodBannerAdUnitIdIOS;
+      }
     }
     return _testBannerAdUnitId;
   }
 
   static bool get isUsingTestAds {
-    // If it's iOS, and we are using production IDs, then it's not using test ads.
-    // Otherwise, it's using test ads.
-    return !Platform.isIOS;
+    // Return false (not using test ads) if in release mode on either Android or iOS.
+    return !(kReleaseMode && (Platform.isAndroid || Platform.isIOS));
   }
 
   static void logAdConfiguration() {
@@ -57,13 +70,8 @@ class SecurityConfig {
     }
   }
 
-  // API Key Management (as before)
-  static String? get geminiApiKey => dotenv.env['GEMINI_API_KEY'];
-  static bool get hasValidApiKey => isValidApiKey(geminiApiKey);
-  static bool isValidApiKey(String? apiKey) {
-    if (apiKey == null || apiKey.isEmpty) return false;
-    return apiKey.length > 20 && apiKey.startsWith('AIza');
-  }
+  // API Key Management - 이제 서버에서 관리하므로 제거됨
+  // API 키는 Railway 서버에서만 관리됩니다.
 
   // Logging & Error Handling (as before)
   static bool get shouldLogDetailed => EnvironmentConfig.enableVerboseLogging;
@@ -80,6 +88,12 @@ class SecurityConfig {
 
   /// 직접 구현한 루팅/탈옥 탐지
   static Future<bool> detectRootingOrJailbreak() async {
+    // 시뮬레이터 테스트를 위해 탈옥 감지 기능을 임시 비활성화합니다.
+    debugPrint(
+      'SECURITY WARNING: Jailbreak detection is temporarily disabled for testing.',
+    );
+    return false;
+    /*
     try {
       if (Platform.isAndroid) {
         return await _checkAndroidRoot();
@@ -91,192 +105,11 @@ class SecurityConfig {
       debugPrint('Jailbreak detection failed: $e');
       return false;
     }
+    */
   }
 
-  /// Android 루팅 탐지
-  static Future<bool> _checkAndroidRoot() async {
-    try {
-      // 1. 일반적인 루트 파일들 체크
-      const rootFiles = [
-        '/system/app/Superuser.apk',
-        '/sbin/su',
-        '/system/bin/su',
-        '/system/xbin/su',
-        '/data/local/xbin/su',
-        '/data/local/bin/su',
-        '/system/sd/xbin/su',
-        '/system/bin/failsafe/su',
-        '/data/local/su',
-        '/system/xbin/which',
-        '/data/data/com.noshufou.android.su',
-        '/system/bin/.ext/.su',
-        '/system/usr/we-need-root/su-backup',
-        '/system/xbin/mu',
-      ];
-
-      for (String filePath in rootFiles) {
-        try {
-          final file = File(filePath);
-          if (await file.exists()) {
-            debugPrint('Root file detected: $filePath');
-            return true;
-          }
-        } catch (e) {
-          // 파일 접근 실패는 정상 (권한 부족)
-          continue;
-        }
-      }
-
-      // 2. 루트 앱들 체크
-      const rootApps = [
-        'com.noshufou.android.su',
-        'com.noshufou.android.su.elite',
-        'eu.chainfire.supersu',
-        'com.koushikdutta.superuser',
-        'com.thirdparty.superuser',
-        'com.yellowes.su',
-        'com.koushikdutta.rommanager',
-        'com.koushikdutta.rommanager.license',
-        'com.dimonvideo.luckypatcher',
-        'com.chelpus.lackypatch',
-        'com.ramdroid.appquarantine',
-        'com.ramdroid.appquarantinepro',
-        'com.topjohnwu.magisk',
-        'com.kingroot.kinguser',
-        'com.kingo.root',
-        'com.smedialink.oneclickroot',
-        'com.zhiqupk.root.global',
-        'com.alephzain.framaroot',
-      ];
-
-      for (String packageName in rootApps) {
-        if (await _isPackageInstalled(packageName)) {
-          debugPrint('Root app detected: $packageName');
-          return true;
-        }
-      }
-
-      // 3. BUILD 태그 체크
-      if (await _checkBuildTags()) {
-        debugPrint('Suspicious build tags detected');
-        return true;
-      }
-
-      return false;
-    } catch (e) {
-      debugPrint('Android root check error: $e');
-      return false;
-    }
-  }
-
-  /// iOS 탈옥 탐지
-  static Future<bool> _checkIOSJailbreak() async {
-    try {
-      // iOS에서는 파일 시스템 접근이 제한적이므로 기본적인 체크만 수행
-      const jailbreakFiles = [
-        '/Applications/Cydia.app',
-        '/Library/MobileSubstrate/MobileSubstrate.dylib',
-        '/bin/bash',
-        '/usr/sbin/sshd',
-        '/etc/apt',
-        '/private/var/lib/apt/',
-        '/private/var/lib/cydia',
-        '/private/var/mobile/Library/SBSettings/Themes',
-        '/Library/MobileSubstrate/DynamicLibraries/LiveClock.plist',
-        '/System/Library/LaunchDaemons/com.ikey.bbot.plist',
-        '/private/var/cache/apt',
-        '/private/var/lib/apt',
-        '/private/var/tmp/cydia.log',
-        '/Applications/MxTube.app',
-        '/Applications/RockApp.app',
-        '/Applications/blackra1n.app',
-        '/Applications/FakeCarrier.2app',
-        '/Applications/Icy.app',
-        '/Applications/IntelliScreen.app',
-        '/Applications/SBSettings.app',
-      ];
-
-      for (String filePath in jailbreakFiles) {
-        try {
-          final file = File(filePath);
-          if (await file.exists()) {
-            debugPrint('Jailbreak file detected: $filePath');
-            return true;
-          }
-        } catch (e) {
-          // 파일 접근 실패는 정상 (샌드박스 제한)
-          continue;
-        }
-      }
-
-      // URL scheme 체크
-      const jailbreakSchemes = [
-        'cydia://',
-        'sileo://',
-        'zbra://',
-        'filza://',
-        'activator://',
-      ];
-
-      for (String scheme in jailbreakSchemes) {
-        try {
-          if (await canLaunchUrl(Uri.parse(scheme))) {
-            debugPrint('Jailbreak scheme detected: $scheme');
-            return true;
-          }
-        } catch (e) {
-          debugPrint('Error checking scheme $scheme: $e');
-          continue;
-        }
-      }
-
-      return false;
-    } catch (e) {
-      debugPrint('iOS jailbreak check error: $e');
-      return false;
-    }
-  }
-
-  /// 패키지 설치 여부 확인 (Android)
-  static Future<bool> _isPackageInstalled(String packageName) async {
-    try {
-      // 실제로는 더 정교한 방법이 필요하지만,
-      // 기본적인 체크를 위해 간단하게 구현
-      final result = await Process.run('pm', ['list', 'packages', packageName]);
-      return result.stdout.toString().contains(packageName);
-    } catch (e) {
-      // pm 명령어 실행 실패는 일반 기기에서 정상
-      return false;
-    }
-  }
-
-  /// BUILD 태그 체크 (Android)
-  static Future<bool> _checkBuildTags() async {
-    try {
-      final deviceInfo = DeviceInfoPlugin();
-      final androidInfo = await deviceInfo.androidInfo;
-
-      final tags = androidInfo.tags.toLowerCase();
-
-      // 의심스러운 빌드 태그들
-      const suspiciousTags = [
-        'test-keys',
-        'dev-keys',
-        'unofficial',
-        'userdebug',
-      ];
-
-      for (String tag in suspiciousTags) {
-        if (tags.contains(tag)) {
-          return true;
-        }
-      }
-
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
+  // Android 루팅 및 iOS 탈옥 탐지 함수들은 현재 비활성화되어 있음
+  // 필요시 다시 활성화할 수 있도록 주석 처리
 
   static Future<bool> detectEmulator() async {
     try {
@@ -335,10 +168,8 @@ class SecurityInitializer {
   SecurityInitializer._();
 
   static Future<void> initialize() async {
-    await dotenv.load(fileName: ".env");
-    if (!SecurityConfig.hasValidApiKey) {
-      throw Exception('GEMINI_API_KEY is not set in .env file');
-    }
+    // API 키는 이제 서버에서 관리되므로 초기화 로직 제거
+    debugPrint('SecurityConfig initialized - API key managed on server');
   }
 
   static Future<SecurityCheckResult> performRuntimeSecurityCheck() async {

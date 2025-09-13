@@ -1,0 +1,16 @@
+{
+  "name": "reviewai-api-proxy",
+  "version": "1.0.0",
+  "description": "API 프록시 서버 for ReviewAI Flutter 앱",
+  "main": "api/gemini-proxy.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// dotenv는 더 이상 사용하지 않음 (API 키가 서버로 이전됨)
 import 'package:review_ai/models/food_recommendation.dart';
-import 'package:review_ai/services/gemini_service.dart';
+import 'package:review_ai/services/api_proxy_service.dart';
+import 'package:review_ai/config/api_config.dart';
 import 'user_preference_service.dart';
 import 'dart:math';
 import 'package:review_ai/config/app_constants.dart';
@@ -10,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class RecommendationService {
-  static final _apiKey = dotenv.env['GEMINI_API_KEY'];
   static const String _cacheKeyPrefix = 'recommendation_cache_';
   static const Duration _cacheExpiration = Duration(hours: 24);
 
@@ -27,18 +27,14 @@ class RecommendationService {
 
     debugPrint('Cache miss for category: $category. Fetching from API.');
 
-    if (_apiKey == null) {
-      throw Exception('API 키가 없습니다. .env 파일을 확인하세요.');
-    }
+    final apiProxyService = ApiProxyService(http.Client(), ApiConfig.proxyUrl);
 
-    final geminiService = GeminiService(http.Client(), _apiKey!);
-
-    final prompt = geminiService.buildGenericRecommendationPrompt(
+    final prompt = apiProxyService.buildGenericRecommendationPrompt(
       category: category,
     );
 
     try {
-      final response = await geminiService.generateContent(prompt);
+      final response = await apiProxyService.generateContent(prompt);
       final jsonString =
           response['candidates'][0]['content']['parts'][0]['text'];
 

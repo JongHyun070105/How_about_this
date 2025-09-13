@@ -5,37 +5,48 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/models/exceptions.dart';
 import 'package:review_ai/services/user_preference_service.dart';
+import 'package:review_ai/services/auth_service.dart';
+import 'package:review_ai/config/api_config.dart';
 
-class GeminiService {
+/// Railway API 프록시 서버를 통한 Gemini API 호출 서비스
+class ApiProxyService {
   final http.Client _client;
-  final String _apiKey;
-  final String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models';
-  static const Duration _timeout = Duration(seconds: 15);
+  final String _proxyUrl;
 
-  GeminiService(this._client, this._apiKey);
+  ApiProxyService(this._client, this._proxyUrl);
 
-  Future<Map<String, dynamic>> _postContent(
-    String model,
+  /// 프록시 서버를 통한 Gemini API 호출 (JWT 인증 사용)
+  Future<Map<String, dynamic>> _callGeminiApi(
+    String endpoint,
     Map<String, dynamic> requestBody,
   ) async {
-    final url = Uri.parse('$_baseUrl/$model:generateContent?key=$_apiKey');
+    final url = Uri.parse('$_proxyUrl/api/gemini-proxy');
 
     try {
+      // JWT 토큰 가져오기
+      final accessToken = await AuthService.getValidAccessToken();
+
       final response = await _client
           .post(
             url,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(requestBody),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $accessToken',
+            },
+            body: jsonEncode({
+              'endpoint': endpoint,
+              'requestBody': requestBody,
+            }),
           )
-          .timeout(_timeout);
+          .timeout(ApiConfig.timeout);
 
       if (response.statusCode == 200) {
-        debugPrint('Raw API Response: ${utf8.decode(response.bodyBytes)}');
+        debugPrint('Proxy API Response: ${utf8.decode(response.bodyBytes)}');
         return jsonDecode(utf8.decode(response.bodyBytes));
       } else {
+        final errorData = jsonDecode(utf8.decode(response.bodyBytes));
         throw GeminiApiException(
-          utf8.decode(response.bodyBytes),
+          errorData['details'] ?? 'API 호출 실패',
           statusCode: response.statusCode,
         );
       }
@@ -49,6 +60,7 @@ class GeminiService {
     }
   }
 
+  /// 콘텐츠 생성
   Future<Map<String, dynamic>> generateContent(String prompt) async {
     final requestBody = {
       'contents': [
@@ -65,9 +77,10 @@ class GeminiService {
         'maxOutputTokens': 512,
       },
     };
-    return await _postContent('gemini-2.5-flash-lite', requestBody);
+    return await _callGeminiApi('generateContent', requestBody);
   }
 
+  /// 리뷰 생성
   Future<List<String>> generateReviews({
     required String foodName,
     required double deliveryRating,
@@ -105,7 +118,7 @@ class GeminiService {
         },
       };
 
-      final data = await _postContent('gemini-2.5-flash-lite', requestBody);
+      final data = await _callGeminiApi('generateContent', requestBody);
 
       final candidates = data['candidates'] as List?;
       if (candidates == null || candidates.isEmpty) {
@@ -142,6 +155,7 @@ class GeminiService {
     }
   }
 
+  /// 이미지 검증
   Future<bool> validateImage(File foodImage) async {
     const prompt =
         'Analyze the attached image. Is this a picture of prepared food suitable for a food review? Do not consider raw ingredients like a single raw onion or a piece of raw meat as prepared food. Respond with only a JSON object in the format {"is_food": boolean}.';
@@ -157,7 +171,7 @@ class GeminiService {
         'generationConfig': {'temperature': 0.0, 'maxOutputTokens': 10},
       };
 
-      final data = await _postContent('gemini-2.5-flash-lite', requestBody);
+      final data = await _callGeminiApi('generateContent', requestBody);
 
       final candidates = data['candidates'] as List?;
       if (candidates == null || candidates.isEmpty) {
@@ -195,6 +209,155 @@ class GeminiService {
     } catch (e) {
       throw ImageValidationException('이미지 검증 중 알 수 없는 오류: ${e.toString()}');
     }
+  }
+
+  /// 개인화된 추천 프롬프트 생성
+  Future<String> buildPersonalizedRecommendationPrompt({
+    required String category,
+    required List<String> recentFoods,
+  }) async {
+    final analysis = await UserPreferenceService.analyzeUserPreferences();
+    final dislikedFoods = await UserPreferenceService.getDislikedFoods();
+
+    final basePrompt = '''
+당신은 음식을 무엇을 먹을지 고민하는 사용자를 위한 개인화된 음식 추천 시스템입니다.
+
+사용자 취향 분석:
+''';
+
+    String preferenceInfo = '';
+
+    if (analysis.preferredFoods.isNotEmpty) {
+      preferenceInfo +=
+          '''
+- 자주 좋아요를 누른 음식들: ${analysis.preferredFoods.join(', ')}
+''';
+      preferenceInfo += '''- 이런 음식들과 비슷한 맛이나 스타일의 음식을 우선 추천해주세요.
+''';
+    }
+
+    if (dislikedFoods.isNotEmpty) {
+      preferenceInfo +=
+          '''
+- 절대 추천하지 말아야 할 음식들: ${dislikedFoods.join(', ')}
+''';
+      preferenceInfo += '''- 위 음식들과 비슷한 음식도 피해주세요.
+''';
+    }
+
+    if (analysis.preferredCategories.isNotEmpty && category == '상관없음') {
+      preferenceInfo +=
+          '''
+- 선호하는 카테고리: ${analysis.preferredCategories.join(', ')}
+''';
+      preferenceInfo += '''- 가능하면 선호 카테고리에서 더 많이 추천해주세요.
+''';
+    }
+
+    final recentFoodsText = recentFoods.isEmpty
+        ? '''최근에 먹은 음식이 없습니다.'''
+        : '''최근에 먹은 음식들: ${recentFoods.join(', ')} (이것들은 제외해주세요)''';
+
+    final isAny = category == '상관없음';
+    String categoryRule;
+
+    if (isAny) {
+      categoryRule = '카테고리 제약 없이 사용자 취향에 맞게 다양하게 추천하세요.';
+    } else if (category == '아시안') {
+      categoryRule =
+          '요청된 카테고리는 "아시안"입니다. "아시안" 카테고리는 동남아시아(베트남, 태국, 인도네시아 등)와 남아시아(인도, 파키스탄 등) 음식을 포함합니다. **절대로 한식, 중식, 일식 메뉴를 포함해서는 안 됩니다.**';
+    } else if (category == '편의점') {
+      categoryRule =
+          '요청된 카테고리는 "편의점"입니다. 편의점에서 판매하는 구체적인 제품명을 추천해주세요. (예: "신라면", "짜파게티", "삼각김밥", "도시락", "샌드위치") **"우유", "과자" 같은 추상적인 단어는 사용하지 마세요.**';
+    } else if (category == '카페') {
+      categoryRule =
+          '요청된 카테고리는 "카페"입니다. 카페에서 판매하는 구체적인 메뉴명을 추천해주세요. (예: "아메리카노", "카페라떼", "카페모카", "카푸치노", "프라푸치노") **"커피", "라떼" 같은 추상적인 단어는 사용하지 마세요.**';
+    } else {
+      categoryRule =
+          '반드시 모든 항목이 정확히 "$category" 카테고리여야 합니다. 다른 카테고리는 절대 포함하지 마세요.';
+    }
+
+    final examples = '''
+예시(출력에 포함하지 마세요):
+- 한식: 김치찌개, 된장찌개, 비빔밥, 불고기, 제육볶음, 닭갈비, 갈비탕, 냉면
+- 중식: 짜장면, 짬뽕, 탕수육, 마라탕, 마라샹궈, 꿔바로우, 마파두부, 깐풍기, 볶음밥, 딤섬, 훠궈, 우육면
+- 일식: 스시, 사시미, 라멘, 우동, 돈카츠, 규동, 오코노미야키, 텐동, 야키토리
+- 양식: 파스타, 피자, 스테이크, 리조또, 라자냐, 감바스 알 아히요
+- 분식: 떡볶이, 순대, 오뎅, 김밥, 라볶이, 쫄면
+- 아시안: 쌀국수, 팟타이, 똠얌꿍, 반미, 카오팟, 분짜, 나시고랭, 미고랭, 커리
+- 패스트푸드: 햄버거, 프라이드치킨, 감자튀김, 핫도그, 나초, 타코
+- 편의점: 신라면, 짜파게티, 삼각김밥, 도시락, 샌드위치, 컵라면, 과자, 음료, 아이스크림, 김밥, 샐러드, 떡볶이, 라면, 햄버거, 샐러드, 주먹밥, 김치찌개, 제육볶음, 불고기, 치킨
+- 카페: 아메리카노, 카페라떼, 카페모카, 카푸치노, 프라푸치노, 바닐라라떼, 아이스티, 아포가토, 케이크, 쿠키, 에스프레소, 마키아토, 모카, 아이스커피, 핫초코, 스무디, 주스, 차
+''';
+
+    return '''
+$basePrompt
+$preferenceInfo
+
+$recentFoodsText
+
+요구사항:
+- $categoryRule
+- 한국에서 흔히 접할 수 있는 메뉴명만 사용하세요.
+- 추천하는 메뉴들은 서로 다른 국가의, 다양한 종류의 음식으로 구성해주세요. 예를 들어, 쌀국수, 분짜, 나시고랭처럼 여러 국가의 대표 메뉴를 섞어주세요.
+- 개수: 8-12개.
+- 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
+- JSON 형식: [{ "name":"메뉴명"}, { "name":"메뉴명"}, ...]
+
+$examples
+이제 결과를 JSON 배열로만 출력하세요.
+''';
+  }
+
+  /// 일반 추천 프롬프트 생성
+  String buildGenericRecommendationPrompt({required String category}) {
+    final isAny = category == '상관없음';
+    String categoryRule;
+
+    if (isAny) {
+      categoryRule = '다양한 카테고리에서 인기 있는 음식들을 추천해주세요.';
+    } else if (category == '아시안') {
+      categoryRule =
+          '요청된 카테고리는 "아시안"입니다. "아시안" 카테고리는 동남아시아(베트남, 태국, 인도네시아 등)와 남아시아(인도, 파키스탄 등) 음식을 포함합니다. **절대로 한식, 중식, 일식 메뉴를 포함해서는 안 됩니다.**';
+    } else if (category == '편의점') {
+      categoryRule =
+          '요청된 카테고리는 "편의점"입니다. 편의점에서 판매하는 구체적인 제품명을 추천해주세요. (예: "신라면", "짜파게티", "삼각김밥", "도시락", "샌드위치") **"우유", "과자" 같은 추상적인 단어는 사용하지 마세요.**';
+    } else if (category == '카페') {
+      categoryRule =
+          '요청된 카테고리는 "카페"입니다. 카페에서 판매하는 구체적인 메뉴명을 추천해주세요. (예: "아메리카노", "카페라떼", "카페모카", "카푸치노", "프라푸치노") **"커피", "라떼" 같은 추상적인 단어는 사용하지 마세요.**';
+    } else {
+      categoryRule =
+          '반드시 모든 항목이 정확히 "$category" 카테고리여야 합니다. 다른 카테고리는 절대 포함하지 마세요.';
+    }
+
+    final examples = '''
+예시(출력에 포함하지 마세요):
+- 한식: 김치찌개, 된장찌개, 비빔밥, 불고기, 제육볶음, 닭갈비, 갈비탕, 냉면
+- 중식: 짜장면, 짬뽕, 탕수육, 마라탕, 마라샹궈, 꿔바로우, 마파두부, 깐풍기, 볶음밥, 딤섬, 훠궈, 우육면
+- 일식: 스시, 사시미, 라멘, 우동, 돈카츠, 규동, 오코노미야키, 텐동, 야키토리
+- 양식: 파스타, 피자, 스테이크, 리조또, 라자냐, 감바스 알 아히요
+- 분식: 떡볶이, 순대, 오뎅, 김밥, 라볶이, 쫄면
+- 아시안: 쌀국수, 팟타이, 똠얌꿍, 반미, 카오팟, 분짜, 나시고랭, 미고랭, 커리
+- 패스트푸드: 햄버거, 프라이드치킨, 감자튀김, 핫도그, 나초, 타코
+- 편의점: 신라면, 짜파게티, 삼각김밥, 도시락, 샌드위치, 컵라면, 과자, 음료, 아이스크림, 김밥, 샐러드, 떡볶이, 라면, 햄버거, 샐러드, 주먹밥, 김치찌개, 제육볶음, 불고기, 치킨
+- 카페: 아메리카노, 카페라떼, 카페모카, 카푸치노, 프라푸치노, 바닐라라떼, 아이스티, 아포가토, 케이크, 쿠키, 에스프레소, 마키아토, 모카, 아이스커피, 핫초코, 스무디, 주스, 차
+''';
+
+    return '''
+당신은 특정 카테고리의 음식 메뉴를 추천하는 시스템입니다.
+
+요구사항:
+- $categoryRule
+- 사용자 개인 취향은 고려하지 말고, 해당 카테고리에서 가장 대표적이고 인기 있는 메뉴들을 추천해주세요.
+- 한국에서 흔히 접할 수 있는 메뉴명만 사용하세요.
+- 매우 다양한 종류의 음식으로 구성해주세요.
+- 개수: 15-20개.
+- 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
+- JSON 형식: [{ "name":"메뉴명"}, { "name":"메뉴명"}, ...]
+
+$examples
+이제 결과를 JSON 배열로만 출력하세요.
+''';
   }
 
   String _getRatingText(double rating) {
@@ -264,136 +427,5 @@ ${foodImage != null ? '''
 **출력 형식:**
 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
 ["리뷰1", "리뷰2", "리뷰3"]''';
-  }
-
-  Future<String> buildPersonalizedRecommendationPrompt({
-    required String category,
-    required List<String> recentFoods,
-  }) async {
-    final analysis = await UserPreferenceService.analyzeUserPreferences();
-    final dislikedFoods = await UserPreferenceService.getDislikedFoods();
-
-    final basePrompt = '''
-당신은 음식을 무엇을 먹을지 고민하는 사용자를 위한 개인화된 음식 추천 시스템입니다.
-
-사용자 취향 분석:
-''';
-
-    String preferenceInfo = '';
-
-    if (analysis.preferredFoods.isNotEmpty) {
-      preferenceInfo +=
-          '''
-- 자주 좋아요를 누른 음식들: ${analysis.preferredFoods.join(', ')}
-''';
-      preferenceInfo += '''- 이런 음식들과 비슷한 맛이나 스타일의 음식을 우선 추천해주세요.
-''';
-    }
-
-    if (dislikedFoods.isNotEmpty) {
-      preferenceInfo +=
-          '''
-- 절대 추천하지 말아야 할 음식들: ${dislikedFoods.join(', ')}
-''';
-      preferenceInfo += '''- 위 음식들과 비슷한 음식도 피해주세요.
-''';
-    }
-
-    if (analysis.preferredCategories.isNotEmpty && category == '상관없음') {
-      preferenceInfo +=
-          '''
-- 선호하는 카테고리: ${analysis.preferredCategories.join(', ')}
-''';
-      preferenceInfo += '''- 가능하면 선호 카테고리에서 더 많이 추천해주세요.
-''';
-    }
-
-    final recentFoodsText = recentFoods.isEmpty
-        ? '''최근에 먹은 음식이 없습니다.'''
-        : '''최근에 먹은 음식들: ${recentFoods.join(', ')} (이것들은 제외해주세요)''';
-
-    final isAny = category == '상관없음';
-    String categoryRule;
-
-    if (isAny) {
-      categoryRule = '카테고리 제약 없이 사용자 취향에 맞게 다양하게 추천하세요.';
-    } else if (category == '아시안') {
-      categoryRule =
-          '요청된 카테고리는 "아시안"입니다. "아시안" 카테고리는 동남아시아(베트남, 태국, 인도네시아 등)와 남아시아(인도, 파키스탄 등) 음식을 포함합니다. **절대로 한식, 중식, 일식 메뉴를 포함해서는 안 됩니다.**';
-    } else {
-      categoryRule =
-          '반드시 모든 항목이 정확히 "$category" 카테고리여야 합니다. 다른 카테고리는 절대 포함하지 마세요.';
-    }
-
-    final examples = '''
-예시(출력에 포함하지 마세요):
-- 한식: 김치찌개, 된장찌개, 비빔밥, 불고기, 제육볶음, 닭갈비, 갈비탕, 냉면
-- 중식: 짜장면, 짬뽕, 탕수육, 마라탕, 마라샹궈, 꿔바로우, 마파두부, 깐풍기, 볶음밥, 딤섬, 훠궈, 우육면
-- 일식: 스시, 사시미, 라멘, 우동, 돈카츠, 규동, 오코노미야키, 텐동, 야키토리
-- 양식: 파스타, 피자, 스테이크, 리조또, 라자냐, 감바스 알 아히요
-- 분식: 떡볶이, 순대, 오뎅, 김밥, 라볶이, 쫄면
-- 아시안: 쌀국수, 팟타이, 똠얌꿍, 반미, 카오팟, 분짜, 나시고랭, 미고랭, 커리
-- 패스트푸드: 햄버거, 프라이드치킨, 감자튀김, 핫도그, 나초, 타코
-''';
-
-    return '''
-$basePrompt
-$preferenceInfo
-
-$recentFoodsText
-
-요구사항:
-- $categoryRule
-- 한국에서 흔히 접할 수 있는 메뉴명만 사용하세요.
-- 추천하는 메뉴들은 서로 다른 국가의, 다양한 종류의 음식으로 구성해주세요. 예를 들어, 쌀국수, 분짜, 나시고랭처럼 여러 국가의 대표 메뉴를 섞어주세요.
-- 개수: 8-12개.
-- 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
-- JSON 형식: [{ "name":"메뉴명"}, { "name":"메뉴명"}, ...]
-
-$examples
-이제 결과를 JSON 배열로만 출력하세요.
-''';
-  }
-
-  String buildGenericRecommendationPrompt({required String category}) {
-    final isAny = category == '상관없음';
-    String categoryRule;
-
-    if (isAny) {
-      categoryRule = '다양한 카테고리에서 인기 있는 음식들을 추천해주세요.';
-    } else if (category == '아시안') {
-      categoryRule =
-          '요청된 카테고리는 "아시안"입니다. "아시안" 카테고리는 동남아시아(베트남, 태국, 인도네시아 등)와 남아시아(인도, 파키스탄 등) 음식을 포함합니다. **절대로 한식, 중식, 일식 메뉴를 포함해서는 안 됩니다.**';
-    } else {
-      categoryRule =
-          '반드시 모든 항목이 정확히 "$category" 카테고리여야 합니다. 다른 카테고리는 절대 포함하지 마세요.';
-    }
-
-    final examples = '''
-예시(출력에 포함하지 마세요):
-- 한식: 김치찌개, 된장찌개, 비빔밥, 불고기, 제육볶음, 닭갈비, 갈비탕, 냉면
-- 중식: 짜장면, 짬뽕, 탕수육, 마라탕, 마라샹궈, 꿔바로우, 마파두부, 깐풍기, 볶음밥, 딤섬, 훠궈, 우육면
-- 일식: 스시, 사시미, 라멘, 우동, 돈카츠, 규동, 오코노미야키, 텐동, 야키토리
-- 양식: 파스타, 피자, 스테이크, 리조또, 라자냐, 감바스 알 아히요
-- 분식: 떡볶이, 순대, 오뎅, 김밥, 라볶이, 쫄면
-- 아시안: 쌀국수, 팟타이, 똠얌꿍, 반미, 카오팟, 분짜, 나시고랭, 미고랭, 커리
-- 패스트푸드: 햄버거, 프라이드치킨, 감자튀김, 핫도그, 나초, 타코
-''';
-
-    return '''
-당신은 특정 카테고리의 음식 메뉴를 추천하는 시스템입니다.
-
-요구사항:
-- $categoryRule
-- 사용자 개인 취향은 고려하지 말고, 해당 카테고리에서 가장 대표적이고 인기 있는 메뉴들을 추천해주세요.
-- 한국에서 흔히 접할 수 있는 메뉴명만 사용하세요.
-- 매우 다양한 종류의 음식으로 구성해주세요.
-- 개수: 15-20개.
-- 출력은 오직 순수 JSON 배열만. 설명/문장은 금지. 마크다운 금지.
-- JSON 형식: [{ "name":"메뉴명"}, { "name":"메뉴명"}, ...]
-
-$examples
-이제 결과를 JSON 배열로만 출력하세요.
-''';
   }
 }

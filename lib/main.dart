@@ -13,23 +13,21 @@ import 'package:review_ai/providers/food_providers.dart';
 import 'package:review_ai/screens/today_recommendation_screen.dart';
 import 'package:review_ai/widgets/common/error_widget.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// dotenv는 더 이상 사용하지 않음 (API 키가 서버로 이전됨)
 import 'package:http/http.dart' as http;
-import 'package:review_ai/services/gemini_service.dart';
+import 'package:review_ai/services/api_proxy_service.dart';
 import 'package:review_ai/services/usage_tracking_service.dart';
+import 'package:review_ai/services/auth_service.dart';
+import 'package:review_ai/config/api_config.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:review_ai/utils/network_utils.dart';
+// network_utils는 더 이상 사용하지 않음
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-final geminiServiceProvider = Provider<GeminiService>((ref) {
-  final apiKey = dotenv.env['GEMINI_API_KEY'];
-  if (apiKey == null) {
-    throw Exception('GEMINI_API_KEY not found in .env file');
-  }
+final geminiServiceProvider = Provider<ApiProxyService>((ref) {
   final httpClient = http.Client();
-  return GeminiService(httpClient, apiKey);
+  return ApiProxyService(httpClient, ApiConfig.proxyUrl);
 });
 
 final usageTrackingServiceProvider = Provider((ref) => UsageTrackingService());
@@ -37,7 +35,7 @@ final usageTrackingServiceProvider = Provider((ref) => UsageTrackingService());
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  // dotenv 로딩 제거됨 - API 키가 서버에서 관리됨
 
   final config = ClarityConfig(
     projectId: "sy9cat27ff",
@@ -48,6 +46,7 @@ Future<void> main() async {
     await SecurityInitializer.initialize();
     SecurityConfig.logAdConfiguration();
     await MobileAds.instance.initialize();
+    await AuthService.initialize(); // JWT 인증 서비스 초기화
     await _configureSystemUI();
 
     runApp(
@@ -228,11 +227,14 @@ class _AppInitializerState extends ConsumerState<AppInitializer> {
         return true; // Internet is accessible
       }
       return false;
-    } on TimeoutException catch (_) { // Catch TimeoutException first
+    } on TimeoutException catch (_) {
+      // Catch TimeoutException first
       return false; // Lookup timed out
-    } on SocketException catch (_) { // Then SocketException
+    } on SocketException catch (_) {
+      // Then SocketException
       return false; // No internet access
-    } catch (e) { // Then all other exceptions
+    } catch (e) {
+      // Then all other exceptions
       debugPrint('Error checking internet connectivity: $e');
       return false;
     }

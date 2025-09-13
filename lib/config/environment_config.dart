@@ -3,7 +3,7 @@
 // =============================================================================
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// dotenv는 더 이상 사용하지 않음 (API 키가 서버로 이전됨)
 
 /// 앱의 환경 설정을 관리하는 열거형
 enum AppEnvironment { development, staging, production }
@@ -19,16 +19,8 @@ class EnvironmentConfig {
   /// 현재 앱 환경 반환
   static AppEnvironment get currentEnvironment {
     if (kDebugMode) return AppEnvironment.development;
-
-    final env = dotenv.env['APP_ENVIRONMENT'];
-    switch (env) {
-      case 'staging':
-        return AppEnvironment.staging;
-      case 'production':
-        return AppEnvironment.production;
-      default:
-        return AppEnvironment.development;
-    }
+    // 환경변수 대신 기본값 사용
+    return AppEnvironment.development;
   }
 
   /// 현재 환경이 개발 환경인지 확인
@@ -46,24 +38,9 @@ class EnvironmentConfig {
   // API 엔드포인트 설정
   // =============================================================================
 
-  /// 환경별 API 기본 URL
-  static String get apiBaseUrl {
-    switch (currentEnvironment) {
-      case AppEnvironment.development:
-        return dotenv.env['DEV_API_URL'] ?? 'https://dev-api.example.com';
-      case AppEnvironment.staging:
-        return dotenv.env['STAGING_API_URL'] ??
-            'https://staging-api.example.com';
-      case AppEnvironment.production:
-        return dotenv.env['PROD_API_URL'] ?? 'https://api.example.com';
-    }
-  }
-
-  /// Gemini API URL
-  static String get geminiApiUrl {
-    return dotenv.env['GEMINI_API_URL'] ??
-        'https://generativelanguage.googleapis.com';
-  }
+  /// API URL은 이제 ApiConfig에서 관리됨
+  static String get apiBaseUrl =>
+      'https://howaboutthis-production.up.railway.app';
 
   // =============================================================================
   // 로깅 설정
@@ -78,21 +55,17 @@ class EnvironmentConfig {
   static String get logLevel {
     switch (currentEnvironment) {
       case AppEnvironment.development:
-        return dotenv.env['LOG_LEVEL'] ?? 'debug';
+        return 'debug';
       case AppEnvironment.staging:
-        return dotenv.env['LOG_LEVEL'] ?? 'info';
+        return 'info';
       case AppEnvironment.production:
-        return dotenv.env['LOG_LEVEL'] ?? 'error';
+        return 'error';
     }
   }
 
   /// 로깅 활성화 여부
   static bool get enableLogging {
-    final enableLogging = dotenv.env['ENABLE_LOGGING'];
-    if (enableLogging == null) {
-      return currentEnvironment != AppEnvironment.production;
-    }
-    return enableLogging.toLowerCase() == 'true';
+    return currentEnvironment != AppEnvironment.production;
   }
 
   // =============================================================================
@@ -101,29 +74,17 @@ class EnvironmentConfig {
 
   /// 베타 기능 활성화 여부
   static bool get enableBetaFeatures {
-    final betaFeatures = dotenv.env['ENABLE_BETA_FEATURES'];
-    if (betaFeatures == null) {
-      return currentEnvironment == AppEnvironment.development;
-    }
-    return betaFeatures.toLowerCase() == 'true';
+    return currentEnvironment == AppEnvironment.development;
   }
 
   /// 분석 및 크래시 리포팅 활성화 여부
   static bool get enableAnalytics {
-    final analytics = dotenv.env['ENABLE_ANALYTICS'];
-    if (analytics == null) {
-      return currentEnvironment == AppEnvironment.production;
-    }
-    return analytics.toLowerCase() == 'true';
+    return currentEnvironment == AppEnvironment.production;
   }
 
   /// 퍼포먼스 모니터링 활성화 여부
   static bool get enablePerformanceMonitoring {
-    final performance = dotenv.env['ENABLE_PERFORMANCE_MONITORING'];
-    if (performance == null) {
-      return currentEnvironment == AppEnvironment.production;
-    }
-    return performance.toLowerCase() == 'true';
+    return currentEnvironment == AppEnvironment.production;
   }
 
   // =============================================================================
@@ -132,8 +93,7 @@ class EnvironmentConfig {
 
   /// HTTP 요청 타임아웃 (초)
   static int get httpTimeout {
-    final timeout = dotenv.env['HTTP_TIMEOUT'];
-    return timeout != null ? int.tryParse(timeout) ?? 30 : 30;
+    return 30; // 기본값
   }
 
   /// 연결 풀 크기
