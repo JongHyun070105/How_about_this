@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "728734846473",
+    "project_id": "reviewai-flutter",
+    "storage_bucket": "reviewai-flutter.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:728734846473:android:b8758b19fdde6d70c872d8",
+        "android_client_info": {
+          "package_name": "com.jonghyun.reviewai_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfNotry0ovUtyRgFhbkTGAu2KH8-RV4lU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

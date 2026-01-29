@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show PlatformDispatcher;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,11 @@ import 'package:review_ai/config/api_config.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_performance/firebase_performance.dart';
+import 'package:review_ai/firebase_options.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -36,6 +42,26 @@ final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase 초기화
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Crashlytics 설정 - Flutter 에러 자동 캡처
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+
+  // 비동기 에러도 Crashlytics로 전송
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  // Firebase Performance 활성화
+  FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
+
+  // Firebase Analytics 인스턴스 (자동 이벤트 수집 활성화됨)
+  FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
 
   final config = ClarityConfig(
     projectId: "sy9cat27ff",
@@ -63,6 +89,9 @@ Future<void> main() async {
       ),
     );
   } catch (e, stackTrace) {
+    // Crashlytics에 초기화 에러 기록
+    FirebaseCrashlytics.instance.recordError(e, stackTrace, reason: '앱 초기화 실패');
+
     final sanitizedError = SecurityConfig.sanitizeErrorMessage(e.toString());
     debugPrint('앱 초기화 실패: $sanitizedError');
     debugPrint('스택 트레이스: $stackTrace');
