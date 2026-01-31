@@ -23,6 +23,7 @@ import 'package:review_ai/services/weather_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:review_ai/widgets/common/skeleton_loader.dart';
+import 'package:review_ai/widgets/notification_settings_sheet.dart';
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
@@ -251,9 +252,27 @@ class _TodayRecommendationScreenState
     Responsive responsive,
   ) {
     return [
+      _buildNotificationIconButton(context, responsive),
       _buildStatsIconButton(context, responsive),
       _buildReviewIconButton(context, responsive),
     ];
+  }
+
+  Widget _buildNotificationIconButton(
+    BuildContext context,
+    Responsive responsive,
+  ) {
+    return IconButton(
+      icon: Icon(
+        Icons.notifications_outlined,
+        size: responsive.iconSize(),
+        color: Colors.black,
+      ),
+      onPressed: () => NotificationSettingsSheet.show(context),
+      tooltip: '알림 설정',
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+    );
   }
 
   Widget _buildStatsIconButton(BuildContext context, Responsive responsive) {

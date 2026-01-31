@@ -28,6 +28,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:review_ai/firebase_options.dart';
+import 'package:review_ai/services/notification_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -75,6 +76,7 @@ Future<void> main() async {
       AuthService.initialize(),
       ConfigService.initialize(),
       ServerTimeService.initialize(),
+      NotificationService().initialize(),
       _configureSystemUI(),
       _requestLocationPermission(),
       _requestAccessibilityPermission(),
