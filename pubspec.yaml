@@ -10,7 +10,6 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   http: ^1.2.2
-  # flutter_dotenv: ^5.1.0 # API 키가 서버로 이전되어 더 이상 사용하지 않음
   image_picker: ^1.1.2
   clarity_flutter: ^1.0.0
 
@@ -22,8 +21,8 @@ dependencies:
   flutter_svg: ^2.2.0
   google_mobile_ads: ^6.0.0
   confetti: ^0.7.0
-  device_info_plus: ^9.1.0 # 디바이스 정보 확인용
-  package_info_plus: ^4.2.0 # 패키지 정보 확인용
+  device_info_plus: ^9.1.0 
+  package_info_plus: ^4.2.0
   path_provider: ^2.1.3
   fl_chart: ^0.68.0
   connectivity_plus: ^6.0.0
@@ -38,8 +37,8 @@ dependencies:
   in_app_review: ^2.0.11
   image: ^4.1.0
   equatable: ^2.0.5
-  flutter_local_notifications: ^19.0.0  # 로컬 푸시 알림
-  timezone: ^0.10.0                     # 시간대 처리
+  flutter_local_notifications: ^19.0.0 
+  timezone: ^0.10.0                    
   firebase_core: ^4.4.0
   firebase_crashlytics: ^5.0.7
   firebase_analytics: ^12.1.1
@@ -57,7 +56,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    # - .env # API 키가 서버로 이전되어 더 이상 사용하지 않음
     - assets/images/
     - assets/images/categories/
     - icon/
