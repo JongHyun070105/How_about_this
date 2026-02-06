@@ -47,7 +47,6 @@ Future<void> main() async {
   // Firebase 초기화
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Crashlytics 설정 - Flutter 에러 자동 캡처
   FlutterError.onError = (errorDetails) {
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
   };
@@ -61,7 +60,7 @@ Future<void> main() async {
   // Firebase Performance 활성화
   FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
 
-  // Firebase Analytics 인스턴스 (자동 이벤트 수집 활성화됨)
+  // Firebase Analytics 인스턴스
   FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
 
   final config = ClarityConfig(
@@ -369,10 +368,8 @@ class _AppInitializerState extends ConsumerState<AppInitializer>
       }
       return false;
     } on TimeoutException catch (_) {
-      // Catch TimeoutException first
-      return false; // Lookup timed out
+      return false;
     } on SocketException catch (_) {
-      // Then SocketException
       return false; // No internet access
     } catch (e) {
       // Then all other exceptions
