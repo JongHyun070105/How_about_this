@@ -24,6 +24,6 @@ class ImageLabelingService {
   }
 
   void dispose() {
-    // No resources to dispose for HTTP client in this simple service
+    // 이 간단한 서비스에서는 HTTP 클라이언트에 대해 해제할 리소스가 없음
   }
 }

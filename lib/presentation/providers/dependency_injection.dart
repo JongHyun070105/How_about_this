@@ -11,7 +11,7 @@ import '../../domain/usecases/get_recommendation_usecase.dart';
 import '../../services/api_proxy_service.dart';
 import '../../config/api_config.dart';
 
-// Data Sources
+// 데이터 소스
 final httpClientProvider = Provider((ref) => http.Client());
 
 final apiProxyServiceProvider = Provider((ref) {
@@ -33,7 +33,7 @@ final recommendationRemoteDataSourceProvider =
       );
     });
 
-// Repositories
+// 리포지토리
 final reviewRepositoryProvider = Provider<ReviewRepository>((ref) {
   return ReviewRepositoryImpl(ref.read(geminiRemoteDataSourceProvider));
 });
@@ -46,7 +46,7 @@ final recommendationRepositoryProvider = Provider<RecommendationRepository>((
   );
 });
 
-// Use Cases
+// 유스 케이스
 final generateReviewUseCaseProvider = Provider<GenerateReviewUseCase>((ref) {
   return GenerateReviewUseCase(ref.read(reviewRepositoryProvider));
 });

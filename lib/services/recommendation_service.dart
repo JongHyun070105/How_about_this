@@ -66,7 +66,7 @@ class RecommendationService {
 
       var cleanedJson = jsonString.trim();
 
-      // Remove markdown code blocks if present
+      // 마크다운 코드 블록이 있으면 제거
       if (cleanedJson.startsWith('```json')) {
         cleanedJson = cleanedJson
             .replaceAll('```json', '')
@@ -317,7 +317,7 @@ class RecommendationService {
     for (var entry in weightedFoods.entries) {
       final food = entry.key;
       final name = food.name;
-      // final tags = food.tags; // Assuming FoodRecommendation has tags, or we use name/category
+      // final tags = food.tags; // FoodRecommendation에 tags가 있다고 가정하거나, name/category 사용
 
       // 비/눈/흐림/천둥번개 -> 국물, 전, 따뜻한 음식
       if (weather == WeatherCondition.rain ||

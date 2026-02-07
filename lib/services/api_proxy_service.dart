@@ -166,10 +166,10 @@ class ApiProxyService {
       }
 
       try {
-        // Clean the response to ensure it's valid JSON
+        // 응답을 정리하여 유효한 JSON인지 확인
         var cleanedContent = content.trim();
 
-        // Remove markdown code blocks if present
+        // 마크다운 코드 블록이 있으면 제거
         if (cleanedContent.startsWith('```json')) {
           cleanedContent = cleanedContent
               .replaceAll('```json', '')

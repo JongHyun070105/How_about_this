@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
 
-// Replaced showValidationDialog
+// 입력 유효성 검사 다이얼로그 표시
 void showValidationDialog(BuildContext context, Size screenSize) {
   showAppDialog(
     context,
@@ -13,7 +13,7 @@ void showValidationDialog(BuildContext context, Size screenSize) {
   );
 }
 
-// Replaced showImageErrorDialog
+// 이미지 오류 다이얼로그 표시
 void showImageErrorDialog(
   BuildContext context,
   String message,

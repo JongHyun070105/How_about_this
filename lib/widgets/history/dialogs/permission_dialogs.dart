@@ -59,7 +59,7 @@ void showPhotoPermissionDialog(BuildContext context) {
     context: context,
     title: '사진 접근 권한 필요',
     content:
-        '리뷰에 사진을 첨부하기 위해 사진 접근 권한이 필요합니다.\n' // Corrected newline escape sequence
+        '리뷰에 사진을 첨부하기 위해 사진 접근 권한이 필요합니다.\n' // 줄바꿈 이스케이프 시퀀스 수정됨
         '앱 설정에서 사진 권한을 허용해주세요.',
     isError: true,
     actions: [

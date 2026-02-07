@@ -177,7 +177,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SizedBox(width: 48), // Balance for close button
+          const SizedBox(width: 48), // 닫기 버튼과의 균형을 위한 공간
           Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

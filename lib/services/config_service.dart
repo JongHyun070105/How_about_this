@@ -80,8 +80,8 @@ class ConfigService {
 
   /// AdMob Ad Unit ID 가져오기
   static Future<String> getAdUnitId({
-    required String platform, // 'ios' or 'android'
-    required String adType, // 'rewarded' or 'banner'
+    required String platform, // 'ios' 또는 'android'
+    required String adType, // 'rewarded' 또는 'banner'
   }) async {
     try {
       final config = await getAdMobConfig();

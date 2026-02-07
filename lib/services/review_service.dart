@@ -8,7 +8,7 @@ import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 
-// Provider for the new ReviewService
+// 새로운 ReviewService의 Provider
 final reviewServiceProvider = Provider((ref) => ReviewService(ref));
 
 class ReviewService {
@@ -140,15 +140,15 @@ class ReviewService {
     }
   }
 
-  /// Handles post-generation tasks like incrementing usage counts.
+  /// 사용량 카운트 증가 등 생성 후 작업을 처리합니다.
   Future<void> handleSuccessfulGeneration() async {
     final usageTrackingService = _ref.read(usageTrackingServiceProvider);
     await usageTrackingService.incrementReviewCount();
 
-    // Get the current review state
+    // 현재 리뷰 상태 가져오기
     final reviewState = _ref.read(reviewProvider);
 
-    // Create a ReviewHistoryEntry
+    // ReviewHistoryEntry 생성
     final newEntry = ReviewHistoryEntry(
       foodName: reviewState.foodName,
       restaurantName: reviewState.restaurantName,
@@ -163,10 +163,10 @@ class ReviewService {
       generatedReviews: reviewState.generatedReviews,
     );
 
-    // Add to history
+    // 히스토리에 추가
     await _ref.read(reviewHistoryProvider.notifier).addReview(newEntry);
 
-    // Reset the review state after successful generation and saving
+    // 생성 및 저장 성공 후 리뷰 상태 초기화
     _ref.read(reviewProvider.notifier).reset();
   }
 }

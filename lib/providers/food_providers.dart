@@ -76,52 +76,52 @@ final foodCategoriesProvider = Provider<List<FoodCategory>>((ref) {
     FoodCategory(
       name: '한식',
       imageUrl: 'assets/images/categories/korean.svg',
-      color: Color(0xFFFFCDD2), // Red.shade100
+      color: Color(0xFFFFCDD2), // 빨강.shade100
     ),
     FoodCategory(
       name: '중식',
       imageUrl: 'assets/images/categories/china.svg',
-      color: Color(0xFFFFE0B2), // Orange.shade100
+      color: Color(0xFFFFE0B2), // 오렌지.shade100
     ),
     FoodCategory(
       name: '일식',
       imageUrl: 'assets/images/categories/japan.svg',
-      color: Color(0xFFBBDEFB), // Blue.shade100
+      color: Color(0xFFBBDEFB), // 파랑.shade100
     ),
     FoodCategory(
       name: '양식',
       imageUrl: 'assets/images/categories/yangsick.svg',
-      color: Color(0xFFC8E6C9), // Green.shade100
+      color: Color(0xFFC8E6C9), // 초록.shade100
     ),
     FoodCategory(
       name: '분식',
       imageUrl: 'assets/images/categories/boonsick.svg',
-      color: Color(0xFFE1BEE7), // Purple.shade100
+      color: Color(0xFFE1BEE7), // 보라.shade100
     ),
     FoodCategory(
       name: '아시안',
       imageUrl: 'assets/images/categories/asiafood.svg',
-      color: Color(0xFFB2DFDB), // Teal.shade100
+      color: Color(0xFFB2DFDB), // 청록.shade100
     ),
     FoodCategory(
       name: '패스트푸드',
       imageUrl: 'assets/images/categories/fastfood.svg',
-      color: Color(0xFFFFF9C4), // Yellow.shade100
+      color: Color(0xFFFFF9C4), // 노랑.shade100
     ),
     FoodCategory(
       name: '편의점',
       imageUrl: 'assets/images/categories/CVS.svg',
-      color: Color(0xFFFFCCBC), // Deep Orange.shade100
+      color: Color(0xFFFFCCBC), // 진한 오렌지.shade100
     ),
     FoodCategory(
       name: '카페',
       imageUrl: 'assets/images/categories/cafe.svg',
-      color: Color(0xFFD7CCC8), // Brown.shade100
+      color: Color(0xFFD7CCC8), // 갈색.shade100
     ),
     FoodCategory(
       name: '상관없음',
       imageUrl: 'assets/images/categories/good.svg',
-      color: Color(0xFFF5F5F5), // Grey.shade100
+      color: Color(0xFFF5F5F5), // 회색.shade100
     ),
   ];
 });

@@ -137,7 +137,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
             children: [
               SizedBox(height: responsive.verticalSpacing() * 2),
 
-              // Title section with enhanced styling
+              // 향상된 스타일의 타이틀 섹션
               Container(
                 alignment: Alignment.center,
                 child: Column(
@@ -168,7 +168,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
 
               SizedBox(height: responsive.verticalSpacing() * 2),
 
-              // Review cards with improved layout to prevent button overlap
+              // 버튼 겹침 방지를 위한 개선된 레이아웃의 리뷰 카드
               Expanded(
                 flex: responsive.isTablet ? 6 : 5,
                 child: Container(
@@ -181,7 +181,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                     controller: _pageController,
                     itemCount: reviews.length,
                     onPageChanged: (index) {
-                      // Do not auto-deselect when swiping to new page
+                      // 새 페이지로 스와이프할 때 자동 선택 해제하지 않음
                     },
                     itemBuilder: (context, index) {
                       final review = reviews[index];
@@ -225,7 +225,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
 
               SizedBox(height: responsive.verticalSpacing()),
 
-              // Page indicator with responsive styling
+              // 반응형 스타일의 페이지 인디케이터
               if (reviews.isNotEmpty)
                 Container(
                   padding: EdgeInsets.all(responsive.horizontalPadding() * 0.2),
@@ -251,7 +251,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
 
               SizedBox(height: responsive.verticalSpacing() * 2.5),
 
-              // Action button with enhanced styling and added horizontal padding
+              // 향상된 스타일과 수평 패딩이 추가된 액션 버튼
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: responsive.horizontalPadding() * 0.8,
@@ -325,7 +325,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     );
   }
 
-  // Improved ReviewCard with better layout to prevent button overlap
+  // 버튼 겹침 방지를 위한 개선된 레이아웃의 ReviewCard
   Widget _buildImprovedReviewCard({
     required String review,
     required bool isSelected,
@@ -358,7 +358,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       ),
       child: Column(
         children: [
-          // Header with edit button - fixed at top
+          // 편집 버튼이 있는 헤더 - 상단 고정
           Container(
             padding: EdgeInsets.symmetric(
               horizontal: responsive.horizontalPadding() * 0.6,
@@ -492,14 +492,14 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
         reviewStyle: reviewState.selectedReviewStyle,
         emphasis: reviewState.emphasis.isEmpty ? null : reviewState.emphasis,
         category: reviewState.category,
-        generatedReviews: [selectedReviewText], // Save only the selected review
+        generatedReviews: [selectedReviewText], // 선택한 리뷰만 저장
       );
 
       await ref.read(reviewHistoryProvider.notifier).addReview(newEntry);
 
       await Clipboard.setData(ClipboardData(text: selectedReviewText));
 
-      // Haptic feedback for successful save
+      // 저장 성공 시 햅틱 피드백
       HapticFeedback.mediumImpact();
 
       if (!context.mounted) return;

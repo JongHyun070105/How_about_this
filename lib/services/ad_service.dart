@@ -5,7 +5,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/config/security_config.dart';
 
-// 1. Define the state for the ad service
+// 1. 광고 서비스 상태 정의
 class AdState {
   final RewardedAd? rewardedAd;
   final bool isAdLoaded;
@@ -19,14 +19,14 @@ class AdState {
     bool? isAdShowing,
   }) {
     return AdState(
-      rewardedAd: rewardedAd, // No null check, allow setting to null
+      rewardedAd: rewardedAd, // null 검사 없음, null 설정 허용
       isAdLoaded: isAdLoaded ?? this.isAdLoaded,
       isAdShowing: isAdShowing ?? this.isAdShowing,
     );
   }
 }
 
-// 2. Create the StateNotifier
+// 2. StateNotifier 생성
 class AdService extends StateNotifier<AdState> {
   Completer<bool>? _adCompleter;
   bool _rewardReceived = false; // 보상 수령 상태 추가
@@ -231,7 +231,7 @@ class AdService extends StateNotifier<AdState> {
   }
 }
 
-// 3. Create the provider
+// 3. Provider 생성
 final adServiceProvider = StateNotifierProvider<AdService, AdState>((ref) {
   return AdService();
 });

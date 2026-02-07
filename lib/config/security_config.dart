@@ -56,7 +56,7 @@ class SecurityConfig {
   }
 
   static bool get isUsingTestAds {
-    // Return false (not using test ads) if in release mode on either Android or iOS.
+    // Android 또는 iOS에서 릴리즈 모드이면 false 반환 (테스트 광고 사용 안 함).
     return !(kReleaseMode && (Platform.isAndroid || Platform.isIOS));
   }
 
@@ -83,7 +83,7 @@ class SecurityConfig {
   }
 
   // App Integrity & Security Checks (as before)
-  static Future<bool> verifyAppIntegrity() async => true; // Simplified for now
+  static Future<bool> verifyAppIntegrity() async => true; // 현재는 단순화됨
   static bool detectDebugger() => kDebugMode || kProfileMode;
 
   /// 직접 구현한 루팅/탈옥 탐지
@@ -231,7 +231,7 @@ class SecurityInitializer {
         message: message,
         isError: true,
         cancelButtonText: '앱 종료',
-        onConfirm: () => SystemNavigator.pop(), // This will close the app
+        onConfirm: () => SystemNavigator.pop(), // 앱을 종료합니다
       );
     }
   }

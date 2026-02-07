@@ -7,15 +7,15 @@ class AppUpdateService {
   static const String _updateUrl =
       'https://gist.github.com/JongHyun070105/ba8200acae9b3375efe284ce43b0e519/raw/467c41ced067c0ccd2ec32a7e0a27aa40c4ff1ae/latest_version.json';
 
-  /// Check if a new version of the app is available.
-  /// Returns the latest version string if an update is available, otherwise null.
+  /// 새 버전의 앱이 사용 가능한지 확인합니다.
+  /// 업데이트가 사용 가능하면 최신 버전 문자열을 반환하고, 그렇지 않으면 null을 반환합니다.
   Future<String?> isUpdateAvailable() async {
     try {
-      // 1. Get current app version
+      // 1. 현재 앱 버전 가져오기
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
 
-      // 2. Fetch latest version from the server (with timeout)
+      // 2. 서버에서 최신 버전 가져오기 (타임아웃 설정됨)
       final response = await http
           .get(Uri.parse(_updateUrl))
           .timeout(const Duration(seconds: 5));
@@ -25,7 +25,7 @@ class AppUpdateService {
         final latestVersion = jsonResponse['latest_version'] as String?;
 
         if (latestVersion == null) {
-          return null; // Could not parse latest version
+          return null; // 최신 버전을 파싱할 수 없음
         }
 
         // 3. Compare versions
@@ -33,7 +33,7 @@ class AppUpdateService {
           return latestVersion;
         }
       } else {
-        // Failed to fetch update info
+        // 업데이트 정보 가져오기 실패
         debugPrint('Failed to fetch update info: ${response.statusCode}');
       }
     } catch (e) {
@@ -42,8 +42,8 @@ class AppUpdateService {
     return null;
   }
 
-  /// Compares two version strings (e.g., "1.0.2" > "1.0.1").
-  /// Returns true if version1 is greater than version2.
+  /// 두 버전 문자열을 비교합니다 (예: "1.0.2" > "1.0.1").
+  /// version1이 version2보다 크면 true를 반환합니다.
   bool _isVersionGreater(String version1, String version2) {
     final v1 = version1.split('.').map(int.parse).toList();
     final v2 = version2.split('.').map(int.parse).toList();
@@ -58,6 +58,6 @@ class AppUpdateService {
       if (num1 < num2) return false;
     }
 
-    return false; // Versions are equal
+    return false; // 버전이 동일함
   }
 }

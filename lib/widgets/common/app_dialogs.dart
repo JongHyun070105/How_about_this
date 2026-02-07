@@ -13,10 +13,9 @@ void showAppDialog(
   if (!context.mounted) return;
 
   final actions = <Widget>[
-    // Cancel/Default Button
+    // 취소/기본 버튼
     CupertinoDialogAction(
-      isDefaultAction:
-          onConfirm == null, // It's the default if there's no confirm action
+      isDefaultAction: onConfirm == null, // 확인 액션이 없으면 이것이 기본 버튼
       onPressed: () => Navigator.of(context).pop(),
       child: Text(
         onConfirm != null ? '나중에' : cancelButtonText,
@@ -25,7 +24,7 @@ void showAppDialog(
     ),
   ];
 
-  // Confirm Button (e.g., for updates)
+  // 확인 버튼 (예: 업데이트용)
   if (onConfirm != null && confirmButtonText != null) {
     actions.add(
       CupertinoDialogAction(

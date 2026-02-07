@@ -155,7 +155,7 @@ class _FoodRecommendationDialogState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Roulette display
+                  // 룰렛 디스플레이
                   Container(
                     width: double.infinity,
                     height: screenHeight * 0.1875,

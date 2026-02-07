@@ -43,7 +43,7 @@ class _AnimatedLoadingIndicatorState extends State<AnimatedLoadingIndicator> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withAlpha(102), // Semi-transparent black overlay
+      color: Colors.black.withAlpha(102), // 반투명 검정 오버레이
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

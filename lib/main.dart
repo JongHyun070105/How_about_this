@@ -47,6 +47,7 @@ Future<void> main() async {
   // Firebase 초기화
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Crashlytics 설정 - Flutter 에러 자동 캡처
   FlutterError.onError = (errorDetails) {
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
   };
@@ -60,7 +61,7 @@ Future<void> main() async {
   // Firebase Performance 활성화
   FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
 
-  // Firebase Analytics 인스턴스
+  // Firebase Analytics 인스턴스 (자동 이벤트 수집 활성화됨)
   FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
 
   final config = ClarityConfig(
@@ -349,7 +350,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer>
             );
           },
         ) ??
-        false; // Return false if dialog is dismissed
+        false; // 다이얼로그가 닫히면 false 반환
   }
 
   Future<bool> _checkInternetConnectivity() async {
@@ -359,17 +360,19 @@ class _AppInitializerState extends ConsumerState<AppInitializer>
         return false; // No network interface
       }
 
-      // Check for actual internet access by trying to connect to a reliable host
+      // 신뢰할 수 있는 호스트에 연결을 시도하여 실제 인터넷 접근을 확인
       final result = await InternetAddress.lookup(
         'google.com',
       ).timeout(const Duration(seconds: 5));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        return true; // Internet is accessible
+        return true; // 인터넷 접근 가능
       }
       return false;
     } on TimeoutException catch (_) {
-      return false;
+      // Catch TimeoutException first
+      return false; // Lookup timed out
     } on SocketException catch (_) {
+      // Then SocketException
       return false; // No internet access
     } catch (e) {
       // Then all other exceptions

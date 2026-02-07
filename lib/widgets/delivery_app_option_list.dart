@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// A widget that displays a list of delivery app options.
+/// 배달 앱 옵션 목록을 표시하는 위젯.
 ///
-/// The [onSelect] callback is invoked with the selected app identifier
-/// (e.g., 'baemin', 'yogiyo', 'coupang_eats', 'kakao_map').
+/// [onSelect] 콜백은 선택된 앱 식별자와 함께 호출됩니다.
+/// (예: 'baemin', 'yogiyo', 'coupang_eats', 'kakao_map').
 class DeliveryAppOptionList extends StatelessWidget {
   final void Function(String) onSelect;
 

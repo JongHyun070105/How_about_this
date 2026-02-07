@@ -46,7 +46,7 @@ class RecommendationRemoteDataSourceImpl
       // JSON 정리
       var cleanedJson = jsonString.trim();
 
-      // Remove markdown code blocks if present
+      // 마크다운 코드 블록이 있으면 제거
       if (cleanedJson.startsWith('```json')) {
         cleanedJson = cleanedJson
             .replaceAll('```json', '')
