@@ -8,7 +8,7 @@ import '../models/exceptions.dart'; // NetworkException
 import '../providers/review_provider.dart';
 import '../presentation/providers/dependency_injection.dart';
 import '../widgets/common/app_dialogs.dart';
-import '../main.dart'; // usageTrackingServiceProvider
+import '../providers/app_providers.dart'; // usageTrackingServiceProvider
 
 class ReviewViewModel extends StateNotifier<ReviewState> {
   final Ref _ref;

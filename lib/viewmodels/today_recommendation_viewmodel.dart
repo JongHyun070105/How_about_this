@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:review_ai/main.dart';
+import 'package:review_ai/providers/app_providers.dart';
 import 'package:review_ai/models/exceptions.dart';
 import 'package:review_ai/models/food_category.dart';
 import 'package:review_ai/models/food_recommendation.dart';

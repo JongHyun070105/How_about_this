@@ -13,13 +13,11 @@ import 'dart:async';
 import 'package:review_ai/providers/food_providers.dart';
 import 'package:review_ai/screens/today_recommendation_screen.dart';
 import 'package:review_ai/widgets/common/app_dialogs.dart';
-import 'package:http/http.dart' as http;
-import 'package:review_ai/services/api_proxy_service.dart';
-import 'package:review_ai/services/usage_tracking_service.dart';
+
 import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/services/config_service.dart';
 import 'package:review_ai/services/server_time_service.dart';
-import 'package:review_ai/config/api_config.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:geolocator/geolocator.dart';
@@ -30,16 +28,8 @@ import 'package:firebase_performance/firebase_performance.dart';
 import 'package:review_ai/firebase_options.dart';
 import 'package:review_ai/services/notification_service.dart';
 
+// navigatorKey를 분리하는 것은 이 앱에서 필수적으로 사용되므로 유지
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-final geminiServiceProvider = Provider<ApiProxyService>((ref) {
-  final httpClient = http.Client();
-  return ApiProxyService(httpClient, ApiConfig.proxyUrl);
-});
-
-final usageTrackingServiceProvider = Provider((ref) => UsageTrackingService());
-
-final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

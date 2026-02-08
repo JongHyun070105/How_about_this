@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:review_ai/main.dart';
+import 'package:review_ai/providers/app_providers.dart';
 import 'package:review_ai/providers/food_providers.dart';
 import 'package:review_ai/services/recommendation_service.dart';
 

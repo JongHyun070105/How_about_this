@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:review_ai/main.dart';
+import 'package:review_ai/providers/app_providers.dart';
 import 'package:review_ai/providers/review_provider.dart';
 
 import 'dart:io';
