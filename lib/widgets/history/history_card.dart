@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:review_ai/providers/review_provider.dart';
 import 'package:review_ai/widgets/review/rating_row.dart';
+import 'package:review_ai/services/food_insight_service.dart';
 
 class HistoryCard extends ConsumerWidget {
   final ReviewHistoryEntry entry;
@@ -39,6 +40,29 @@ class HistoryCard extends ConsumerWidget {
                   fontFamily: 'Do Hyeon',
                   fontSize: screenWidth * 0.05,
                 ),
+              ),
+              SizedBox(height: screenHeight * 0.008),
+              // 음식 태그
+              Wrap(
+                spacing: screenWidth * 0.015,
+                runSpacing: screenHeight * 0.005,
+                children: [
+                  if (entry.category.isNotEmpty)
+                    _buildTagChip(
+                      '${FoodInsightService.categoryEmojis[entry.category] ?? '🍽️'} ${entry.category}',
+                      Colors.orange.shade50,
+                      Colors.orange.shade700,
+                      screenWidth,
+                    ),
+                  if (entry.foodName.isNotEmpty &&
+                      entry.foodName != entry.category)
+                    _buildTagChip(
+                      entry.foodName,
+                      Colors.green.shade50,
+                      Colors.green.shade700,
+                      screenWidth,
+                    ),
+                ],
               ),
               SizedBox(height: screenHeight * 0.015),
               // 별점 정보
@@ -223,6 +247,32 @@ class HistoryCard extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTagChip(
+    String label,
+    Color backgroundColor,
+    Color textColor,
+    double screenWidth,
+  ) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.02,
+        vertical: screenWidth * 0.008,
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(screenWidth * 0.03),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Do Hyeon',
+          fontSize: screenWidth * 0.028,
+          color: textColor,
         ),
       ),
     );

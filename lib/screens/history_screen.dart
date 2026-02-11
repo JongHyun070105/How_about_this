@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/widgets/history/empty_history.dart';
+import 'package:review_ai/widgets/history/food_insight_card.dart';
 import 'package:review_ai/widgets/history/history_card.dart';
 import 'package:review_ai/providers/review_provider.dart';
-import 'package:review_ai/widgets/history/filter_options_sheet.dart'; // Added import
+import 'package:review_ai/widgets/history/filter_options_sheet.dart';
 
 enum HistorySortOption { latest, oldest, ratingHigh, ratingLow }
 
@@ -330,9 +331,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         color: Theme.of(context).primaryColor,
                         backgroundColor: Colors.white,
                         strokeWidth: isTablet ? 3.0 : 2.5,
-                        child: ListView.separated(
+                        child: ListView.builder(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: sortedHistory.length,
+                          // 인사이트 카드(1) + 히스토리 항목
+                          itemCount: sortedHistory.length + 1,
                           // 하단에 충분한 패딩 추가 - 키보드와 시스템 UI 고려
                           padding: EdgeInsets.only(
                             bottom: keyboardHeight > 0
@@ -340,18 +342,25 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                 : (screenHeight * 0.02).clamp(12.0, 20.0) +
                                       bottomPadding,
                           ),
-                          separatorBuilder: (context, index) => SizedBox(
-                            height: (screenHeight * (isTablet ? 0.015 : 0.01))
-                                .clamp(8.0, 16.0),
-                          ),
                           itemBuilder: (context, index) {
-                            final entry = sortedHistory[index];
-                            return AnimatedContainer(
-                              duration: Duration(
-                                milliseconds: 300 + (index * 50),
+                            // 첫 번째 아이템: 인사이트 카드
+                            if (index == 0) {
+                              return FoodInsightCard(history: history);
+                            }
+                            final entry = sortedHistory[index - 1];
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    (screenHeight * (isTablet ? 0.015 : 0.01))
+                                        .clamp(8.0, 16.0),
                               ),
-                              curve: Curves.easeOutCubic,
-                              child: HistoryCard(entry: entry),
+                              child: AnimatedContainer(
+                                duration: Duration(
+                                  milliseconds: 300 + ((index - 1) * 50),
+                                ),
+                                curve: Curves.easeOutCubic,
+                                child: HistoryCard(entry: entry),
+                              ),
                             );
                           },
                         ),

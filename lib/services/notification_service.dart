@@ -5,6 +5,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/services/food_insight_service.dart';
 
 /// 로컬 푸시 알림 서비스
 ///
@@ -17,6 +19,9 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
+
+  /// 개인화 메시지용 히스토리 데이터
+  List<ReviewHistoryEntry> _history = [];
 
   // 알림 ID
   static const int _lunchNotificationId = 1001;
@@ -131,25 +136,42 @@ class NotificationService {
     }
   }
 
+  /// 개인화 알림 메시지 업데이트
+  ///
+  /// 히스토리 데이터를 받아 개인화된 알림 메시지로 알림을 재예약합니다.
+  Future<void> updatePersonalizedMessages(
+    List<ReviewHistoryEntry> history,
+  ) async {
+    _history = history;
+    // 활성화된 알림이 있으면 개인화 메시지로 재예약
+    await _restoreNotifications();
+  }
+
   /// 점심 알림 예약
   Future<void> _scheduleLunchNotification() async {
+    final message = _history.isNotEmpty
+        ? FoodInsightService.generateInsightMessage(_history)
+        : '오늘의 추천 메뉴를 확인해보세요!';
     await _scheduleDailyNotification(
       id: _lunchNotificationId,
       hour: _lunchHour,
       minute: _lunchMinute,
-      title: '🍽️ 점심 뭐 먹지?',
-      body: '오늘의 추천 메뉴를 확인해보세요!',
+      title: '🍽️ 점심 뛰 먹지?',
+      body: message,
     );
   }
 
   /// 저녁 알림 예약
   Future<void> _scheduleDinnerNotification() async {
+    final message = _history.isNotEmpty
+        ? FoodInsightService.generateInsightMessage(_history)
+        : '오늘 저녁은 뛰 먹을까요?';
     await _scheduleDailyNotification(
       id: _dinnerNotificationId,
       hour: _dinnerHour,
       minute: _dinnerMinute,
       title: '🌙 저녁 식사 시간!',
-      body: '오늘 저녁은 뭘 먹을까요?',
+      body: message,
     );
   }
 

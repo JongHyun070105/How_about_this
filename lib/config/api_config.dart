@@ -14,5 +14,6 @@ class ApiConfig {
     'validateImage',
     'buildPersonalizedRecommendationPrompt',
     'buildGenericRecommendationPrompt',
+    'generateFoodInsight',
   ];
 }

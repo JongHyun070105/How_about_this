@@ -45,6 +45,7 @@ app.*.map.json
 /android/app/release
 .env
 .vercel
+.kiro/
 
 # CI/CD Secrets
 android/service_account.json

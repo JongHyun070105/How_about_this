@@ -212,6 +212,11 @@ export default {
         return handleWeatherProxy(request, env);
       }
 
+      // AI 식습관 인사이트 API
+      if (path === "/api/food-insight" && request.method === "POST") {
+        return handleFoodInsight(request, env);
+      }
+
       return jsonResponse({ error: "Not Found" }, 404, CORS_HEADERS);
     } catch (error) {
       console.error("Worker error:", error);
@@ -664,6 +669,153 @@ async function handleServerTime(request, env) {
   }
 }
 
+// AI 식습관 인사이트 핸들러 (KV 캐싱 + Gemini API)
+async function handleFoodInsight(request, env) {
+  // JWT 검증
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return jsonResponse(
+      { error: "No valid token provided" },
+      401,
+      CORS_HEADERS
+    );
+  }
+
+  const token = authHeader.substring(7);
+  let user;
+  try {
+    user = await verifyJWT(token, env.JWT_SECRET);
+  } catch (error) {
+    if (error.message === "Token expired") {
+      return jsonResponse(
+        { error: "Token expired", message: "Please refresh your token" },
+        401,
+        CORS_HEADERS
+      );
+    }
+    return jsonResponse(
+      { error: "Invalid token" },
+      401,
+      CORS_HEADERS
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const { categoryFrequency, topFoods, totalReviews, weeklyCount, streak } = body;
+
+    if (!categoryFrequency || !topFoods) {
+      return jsonResponse(
+        { error: "Missing required fields: categoryFrequency, topFoods" },
+        400,
+        CORS_HEADERS
+      );
+    }
+
+    // KV 캐시 키: deviceHash + 날짜 기반 (하루 단위)
+    const today = new Date().toISOString().split("T")[0];
+    const cacheKey = `insight:${user.deviceHash}:${today}`;
+
+    // 캐시 확인
+    const cached = await env.FOOD_INSIGHT.get(cacheKey, { type: "json" });
+    if (cached) {
+      console.log(`Food insight cache hit: ${cacheKey}`);
+      return jsonResponse(
+        { ...cached, cached: true },
+        200,
+        CORS_HEADERS
+      );
+    }
+
+    // Gemini API로 인사이트 생성
+    const prompt = buildInsightPrompt({ categoryFrequency, topFoods, totalReviews, weeklyCount, streak });
+
+    const id = env.GEMINI_PROXY.idFromName("US_PROXY");
+    const stub = env.GEMINI_PROXY.get(id, { locationHint: "wnam" });
+
+    const geminiRequest = new Request(request.url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        endpoint: "generateContent",
+        requestBody: {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 300,
+          },
+        },
+      }),
+    });
+
+    const geminiResponse = await stub.fetch(geminiRequest);
+
+    if (!geminiResponse.ok) {
+      console.error("Gemini insight error:", geminiResponse.status);
+      return jsonResponse(
+        { error: "AI insight generation failed" },
+        502,
+        CORS_HEADERS
+      );
+    }
+
+    const geminiData = await geminiResponse.json();
+    const insightText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+
+    if (!insightText) {
+      return jsonResponse(
+        { error: "Empty AI response" },
+        502,
+        CORS_HEADERS
+      );
+    }
+
+    const result = {
+      insight: insightText.trim(),
+      generatedAt: new Date().toISOString(),
+    };
+
+    // KV에 캐싱 (12시간 TTL)
+    await env.FOOD_INSIGHT.put(cacheKey, JSON.stringify(result), {
+      expirationTtl: 43200,
+    });
+
+    return jsonResponse(
+      { ...result, cached: false },
+      200,
+      CORS_HEADERS
+    );
+  } catch (error) {
+    console.error("Food insight error:", error);
+    return jsonResponse(
+      { error: "Internal server error", details: error.message },
+      500,
+      CORS_HEADERS
+    );
+  }
+}
+
+// 인사이트 생성용 프롬프트 빌더
+function buildInsightPrompt({ categoryFrequency, topFoods, totalReviews, weeklyCount, streak }) {
+  let context = `사용자의 식습관 데이터:\n`;
+  context += `- 총 리뷰 수: ${totalReviews || 0}개\n`;
+  context += `- 이번 주 리뷰: ${weeklyCount || 0}개\n`;
+
+  if (categoryFrequency && Object.keys(categoryFrequency).length > 0) {
+    context += `- 카테고리별 빈도: ${Object.entries(categoryFrequency).map(([k, v]) => `${k}(${v}회)`).join(", ")}\n`;
+  }
+
+  if (topFoods && topFoods.length > 0) {
+    context += `- 자주 먹는 음식: ${topFoods.map(f => `${f.foodName}(${f.count}회)`).join(", ")}\n`;
+  }
+
+  if (streak) {
+    context += `- 최근 연속: ${streak.category}를 ${streak.count}번 연속\n`;
+  }
+
+  return `${context}\n위 데이터를 분석해서 친근하고 재치있는 한국어 식습관 인사이트 메시지를 1개만 생성해주세요.\n규칙:\n- 2~3문장, 이모지 1~2개 포함\n- 건강/다양성/재미 관점에서 자연스러운 제안\n- 반말(~해요체) 사용\n- 음식 추천은 구체적으로 (예: "닭가슴살 샐러드" 말고 그냥 "샐러드")\n- 메시지만 출력, 다른 설명 없음`;
+}
+
 // JSON 응답 헬퍼
 function jsonResponse(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -694,6 +846,7 @@ export class GeminiProxy {
         "validateImage",
         "buildPersonalizedRecommendationPrompt",
         "buildGenericRecommendationPrompt",
+        "generateFoodInsight",
       ];
 
       if (!endpoint || !allowedEndpoints.includes(endpoint)) {

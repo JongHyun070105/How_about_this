@@ -14,6 +14,11 @@ mode = "smart"
 binding = "RATE_LIMIT"
 id = "00cc2b1530ca499fbaef968ef9c7ca95"
 
+# KV Namespace for AI food insight caching
+[[kv_namespaces]]
+binding = "FOOD_INSIGHT"
+id = "REPLACE_WITH_ACTUAL_ID"
+
 # Durable Object for Region Proxy
 [[durable_objects.bindings]]
 name = "GEMINI_PROXY"
