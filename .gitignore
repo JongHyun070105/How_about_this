@@ -46,6 +46,7 @@ app.*.map.json
 .env
 .vercel
 .kiro/
+node_modules/
 
 # CI/CD Secrets
 android/service_account.json
