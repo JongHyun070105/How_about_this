@@ -46,6 +46,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
       _foodNameController.text = foodNameToSet;
       ref.read(reviewProvider.notifier).setFoodName(foodNameToSet);
+      ref.read(reviewProvider.notifier).setCategory(widget.category);
 
       _hasNavigatedToSelection = false;
     });
@@ -368,22 +369,10 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           hintStyle: TextStyle(
             fontFamily: 'SCDream',
             fontSize: responsive.inputFontSize() * 0.9,
-            color: _isGeneratingFoodName ? Colors.blue[400] : Colors.grey[400],
+            color: _isGeneratingFoodName ? Colors.grey[500] : Colors.grey[400],
           ),
           suffixIcon: _isGeneratingFoodName
-              ? Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.blue[600]!,
-                      ),
-                    ),
-                  ),
-                )
+              ? null
               : IconButton(
                   icon: Container(
                     padding: const EdgeInsets.symmetric(
@@ -392,7 +381,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                     ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.blue[600]!, Colors.blue[700]!],
+                        colors: [Colors.grey[800]!, Colors.black],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),

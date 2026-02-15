@@ -32,10 +32,10 @@ class NotificationService {
   static const String _dinnerEnabledKey = 'notification_dinner_enabled';
 
   // 알림 시간
-  static const int _lunchHour = 22; // TODO: 테스트 후 12로 복원
-  static const int _lunchMinute = 40;
-  static const int _dinnerHour = 22; // TODO: 테스트 후 19로 복원
-  static const int _dinnerMinute = 41;
+  static const int _lunchHour = 12;
+  static const int _lunchMinute = 0;
+  static const int _dinnerHour = 19;
+  static const int _dinnerMinute = 0;
 
   /// 알림 서비스 초기화
   Future<void> initialize() async {

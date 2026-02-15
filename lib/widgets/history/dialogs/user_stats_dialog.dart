@@ -8,13 +8,11 @@ import 'package:review_ai/providers/review_provider.dart';
 import 'package:review_ai/services/recommendation_service.dart';
 import 'package:review_ai/widgets/history/dialogs/user_stats_pages/stats_page.dart';
 import 'package:review_ai/widgets/history/dialogs/user_stats_pages/category_page.dart';
-import 'package:review_ai/widgets/history/dialogs/user_stats_pages/day_of_week_page.dart';
 
 /// 사용자 통계 다이얼로그
 ///
 /// 3개의 페이지로 구성:
 /// - 통계 페이지 (선택 횟수, TOP 5, 사용량)
-/// - 요일별 선호도 페이지
 /// - 카테고리별 선호도 페이지 (파이 차트)
 class UserStatsDialog extends ConsumerStatefulWidget {
   const UserStatsDialog({super.key});
@@ -34,7 +32,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
 
   static const int maxRecommendations = 40;
   static const int maxReviews = 5;
-  static const int maxPages = 3;
+  static const int maxPages = 2;
 
   @override
   void initState() {
@@ -128,10 +126,6 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                     maxReviews: maxReviews,
                     history: ref.watch(reviewHistoryProvider),
                   ),
-                  DayOfWeekPageWidget(
-                    stats: _stats!,
-                    categoryColorMap: categoryColorMap,
-                  ),
                   CategoryPageWidget(
                     stats: _stats!,
                     categoryColorMap: categoryColorMap,
@@ -210,11 +204,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                 ),
                 Expanded(
                   child: Text(
-                    _currentPage == 0
-                        ? "통계"
-                        : _currentPage == 1
-                        ? "요일별 선호 카테고리"
-                        : "카테고리별 선호도",
+                    _currentPage == 0 ? "통계" : "카테고리별 선호도",
                     style: TextStyle(
                       fontFamily: 'Do Hyeon',
                       fontSize: 12,

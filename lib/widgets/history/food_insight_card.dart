@@ -130,9 +130,10 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
     final totalReviews = summary['totalReviews'] as int;
     final weeklyCount = summary['weeklyCount'] as int;
 
-    // 로컬 폴백 메시지 (AI 로딩 전에 표시)
-    final insightMessage =
-        _aiInsight?.message ?? summary['insightMessage'] as String;
+    // 로컬 폴백 메시지 (AI 로딩 전 또는 실패 시 사용)
+    final insightMessage = _isLoadingAi
+        ? '식습관을 분석하고 있어요...'
+        : (_aiInsight?.message ?? summary['insightMessage'] as String);
     final isAi = _aiInsight?.isAi ?? false;
 
     return Padding(
@@ -245,31 +246,6 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
             ],
           ),
 
-          // 카테고리 분포 바
-          if (categoryFrequency.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              '카테고리 분포',
-              style: TextStyle(
-                fontFamily: 'Do Hyeon',
-                fontSize: 11,
-                color: Colors.grey[500],
-              ),
-            ),
-            const SizedBox(height: 4),
-            _buildCategoryBar(categoryFrequency, totalReviews),
-            const SizedBox(height: 4),
-            // 범례
-            Wrap(
-              spacing: 10,
-              runSpacing: 4,
-              children: categoryFrequency.entries
-                  .take(4)
-                  .map((e) => _buildLegendItem(e.key, e.value, totalReviews))
-                  .toList(),
-            ),
-          ],
-
           // Top 음식
           if (topFoods.isNotEmpty && topFoods.first['count'] as int >= 2) ...[
             const SizedBox(height: 10),
@@ -347,74 +323,6 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildCategoryBar(Map<String, int> frequency, int total) {
-    final colors = [
-      Colors.grey[800]!,
-      Colors.grey[700]!,
-      Colors.grey[500]!,
-      Colors.grey[400]!,
-      Colors.grey[300]!,
-      Colors.grey[200]!,
-      Colors.grey[100]!,
-    ];
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(4),
-      child: SizedBox(
-        height: 8,
-        child: Row(
-          children: frequency.entries.toList().asMap().entries.map((entry) {
-            final colorIndex = entry.key % colors.length;
-            final flex = entry.value.value;
-            return Expanded(
-              flex: flex,
-              child: Container(color: colors[colorIndex]),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLegendItem(String category, int count, int total) {
-    final colors = [
-      Colors.grey[800]!,
-      Colors.grey[600]!,
-      Colors.grey[400]!,
-      Colors.grey[300]!,
-      Colors.grey[200]!,
-    ];
-
-    // 카테고리 색상 index 계산 (순서 기반)
-    final categories = FoodInsightService.categoryEmojis.keys.toList();
-    final index = categories.indexOf(category) % colors.length;
-
-    final percentage = (count / total * 100).round();
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: colors[index.clamp(0, colors.length - 1)],
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '$category $percentage%',
-          style: TextStyle(
-            fontFamily: 'Do Hyeon',
-            fontSize: 10,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
     );
   }
 }

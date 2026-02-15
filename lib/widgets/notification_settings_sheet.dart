@@ -122,12 +122,12 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
+                      color: Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.notifications_active,
-                      color: Colors.orange,
+                      color: Colors.grey[800],
                       size: 24,
                     ),
                   ),
@@ -157,8 +157,6 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
               ),
             ),
 
-            const Divider(height: 1),
-
             // 알림 설정 목록
             if (_isLoading)
               const Padding(
@@ -168,7 +166,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
             else ...[
               _buildNotificationTile(
                 icon: Icons.wb_sunny_outlined,
-                iconColor: Colors.orange,
+                iconColor: Colors.grey[800]!,
                 title: '점심 알림',
                 subtitle: '매일 오후 12:00',
                 value: _lunchEnabled,
@@ -176,7 +174,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
               ),
               _buildNotificationTile(
                 icon: Icons.nightlight_outlined,
-                iconColor: Colors.indigo,
+                iconColor: Colors.grey[800]!,
                 title: '저녁 알림',
                 subtitle: '매일 오후 7:00',
                 value: _dinnerEnabled,
@@ -237,7 +235,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
           ),
           CupertinoSwitch(
             value: value,
-            activeTrackColor: Colors.orange,
+            activeTrackColor: Colors.black,
             onChanged: onChanged,
           ),
         ],

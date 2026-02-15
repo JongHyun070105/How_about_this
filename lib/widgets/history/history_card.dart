@@ -42,7 +42,7 @@ class HistoryCard extends ConsumerWidget {
                 ),
               ),
               SizedBox(height: screenHeight * 0.008),
-              // 음식 태그
+              // 카테고리 태그
               Wrap(
                 spacing: screenWidth * 0.015,
                 runSpacing: screenHeight * 0.005,
@@ -50,16 +50,9 @@ class HistoryCard extends ConsumerWidget {
                   if (entry.category.isNotEmpty)
                     _buildTagChip(
                       '${FoodInsightService.categoryEmojis[entry.category] ?? '🍽️'} ${entry.category}',
-                      Colors.orange.shade50,
-                      Colors.orange.shade700,
-                      screenWidth,
-                    ),
-                  if (entry.foodName.isNotEmpty &&
-                      entry.foodName != entry.category)
-                    _buildTagChip(
-                      entry.foodName,
-                      Colors.green.shade50,
-                      Colors.green.shade700,
+                      FoodInsightService.categoryColors[entry.category] ??
+                          Colors.grey.shade100,
+                      Colors.black87,
                       screenWidth,
                     ),
                 ],

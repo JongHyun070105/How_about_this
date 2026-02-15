@@ -366,8 +366,6 @@ class RecommendationService {
   static Future<Map<String, dynamic>> getUserStats() async {
     final history = await UserPreferenceService.getFoodSelectionHistory();
     final analysis = await UserPreferenceService.analyzeUserPreferences();
-    final dayOfWeekPrefs =
-        await UserPreferenceService.analyzeDayOfWeekPreferences();
 
     final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
     final recentSelections = history
@@ -406,7 +404,6 @@ class RecommendationService {
           .toList(),
       'preferredCategories': analysis.preferredCategories,
       'dislikedFoodsCount': analysis.dislikedFoods.length,
-      'dayOfWeekPreferences': dayOfWeekPrefs, // 요일별 데이터 추가
     };
   }
 }

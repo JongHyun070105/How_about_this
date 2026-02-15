@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/services/food_insight_service.dart';
 import 'package:review_ai/utils/responsive.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:review_ai/widgets/review_selection/edit_review_dialog.dart';
@@ -49,10 +50,13 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       _cachedReviews = List<String>.from(reviewState.generatedReviews);
     }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(context, responsive, textTheme),
-      body: _buildBody(context, responsive, _cachedReviews, textTheme),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(context, responsive, textTheme),
+        body: _buildBody(context, responsive, _cachedReviews, textTheme),
+      ),
     );
   }
 
@@ -65,6 +69,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       centerTitle: true,
+      automaticallyImplyLeading: false,
       title: Text(
         '리뷰 AI',
         style: textTheme.headlineMedium?.copyWith(
@@ -72,16 +77,6 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
           fontSize: responsive.appBarFontSize(),
           fontFamily: 'Do Hyeon',
         ),
-      ),
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back, size: responsive.iconSize()),
-        onPressed: () {
-          // 뒤로 가기 시 리뷰 상태를 리셋하여 무한 루프 방지
-          ref.read(reviewProvider.notifier).setGeneratedReviews([]);
-          Navigator.of(context).pop();
-        },
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
       ),
       actions: [
         // 선택됨 뱃지 제거
@@ -482,8 +477,17 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       final reviewState = ref.read(reviewProvider);
       final selectedReviewText = _cachedReviews[selectedReviewIndex!];
 
+      // 카테고리가 비어있거나 '기타'이면 AI로 자동 추론
+      final foodName = reviewState.foodName.isEmpty
+          ? '이름 없음'
+          : reviewState.foodName;
+      String category = reviewState.category;
+      if (category.isEmpty || category == '기타') {
+        category = await FoodInsightService.inferCategory(foodName);
+      }
+
       final newEntry = ReviewHistoryEntry(
-        foodName: reviewState.foodName.isEmpty ? '이름 없음' : reviewState.foodName,
+        foodName: foodName,
         imagePath: reviewState.image?.path,
         deliveryRating: reviewState.deliveryRating,
         tasteRating: reviewState.tasteRating,
@@ -491,8 +495,8 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
         priceRating: reviewState.priceRating,
         reviewStyle: reviewState.selectedReviewStyle,
         emphasis: reviewState.emphasis.isEmpty ? null : reviewState.emphasis,
-        category: reviewState.category,
-        generatedReviews: [selectedReviewText], // 선택한 리뷰만 저장
+        category: category,
+        generatedReviews: [selectedReviewText],
       );
 
       await ref.read(reviewHistoryProvider.notifier).addReview(newEntry);
