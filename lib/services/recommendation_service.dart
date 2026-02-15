@@ -22,15 +22,20 @@ class RecommendationService {
   static Future<List<FoodRecommendation>> getFoodRecommendations({
     required String category,
   }) async {
-    final cacheKey = '$_cacheKeyPrefix$category';
+    final normalizedCategory = category.trim();
+    final cacheKey = '$_cacheKeyPrefix$normalizedCategory';
 
     final cachedData = await _getFromCache(cacheKey);
     if (cachedData != null) {
-      debugPrint('Serving recommendation from cache for category: $category');
+      debugPrint(
+        'Serving recommendation from cache for category: [$normalizedCategory]',
+      );
       return cachedData;
     }
 
-    debugPrint('Cache miss for category: $category. Fetching from API.');
+    debugPrint(
+      'Cache miss for category: [$normalizedCategory]. Fetching from API.',
+    );
 
     final apiProxyService = ApiProxyService(_httpClient, ApiConfig.proxyUrl);
 

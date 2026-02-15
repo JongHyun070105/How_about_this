@@ -198,19 +198,22 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
               border: Border.all(color: Colors.grey[200]!),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_isLoadingAi)
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.grey[400],
+                if (_isLoadingAi) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.grey[400],
+                      ),
                     ),
-                  )
-                else
-                  Text(isAi ? '✨' : '💡', style: const TextStyle(fontSize: 18)),
-                const SizedBox(width: 8),
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: Text(
                     insightMessage,

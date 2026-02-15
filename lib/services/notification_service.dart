@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -73,6 +74,24 @@ class NotificationService {
   void _onNotificationTapped(NotificationResponse response) {
     debugPrint('알림 탭됨: ${response.payload}');
     // 앱이 열리면 자동으로 메인 화면으로 이동
+  }
+
+  /// 알림 권한 상태 확인
+  Future<bool> hasPermission() async {
+    if (Platform.isAndroid) {
+      // Android 13 이상에서는 별도의 알림 권한이 필요함
+      final status = await Permission.notification.status;
+      return status.isGranted;
+    } else if (Platform.isIOS) {
+      // iOS에서는 알림 플러그인의 권한 체크 사용
+      final settings = await _notifications
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.checkPermissions();
+      return settings?.isEnabled ?? false;
+    }
+    return false;
   }
 
   /// 알림 권한 요청

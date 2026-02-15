@@ -39,42 +39,51 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
   Future<void> _loadSettings() async {
     final lunch = await _notificationService.isLunchNotificationEnabled();
     final dinner = await _notificationService.isDinnerNotificationEnabled();
+    // 실제 OS 권한 상태 확인
+    final hasPermission = await _notificationService.hasPermission();
 
     if (mounted) {
       setState(() {
         _lunchEnabled = lunch;
         _dinnerEnabled = dinner;
-        _permissionGranted = lunch || dinner;
+        _permissionGranted = hasPermission;
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _requestPermissionIfNeeded() async {
-    if (!_permissionGranted) {
-      final granted = await _notificationService.requestPermissions();
-      if (mounted) {
-        setState(() {
-          _permissionGranted = granted;
-        });
+  Future<bool> _ensurePermission() async {
+    // 이미 권한이 있으면 true 반환
+    if (await _notificationService.hasPermission()) {
+      if (!_permissionGranted && mounted) {
+        setState(() => _permissionGranted = true);
       }
-      if (!granted) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('알림 권한이 필요합니다. 설정에서 알림을 허용해주세요.'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-        return;
-      }
+      return true;
     }
+
+    // 권한 요청
+    final granted = await _notificationService.requestPermissions();
+    if (mounted) {
+      setState(() => _permissionGranted = granted);
+    }
+
+    if (!granted && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('알림 권한이 필요합니다. 설정에서 알림을 허용해주세요.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+    return granted;
   }
 
   Future<void> _toggleLunch(bool value) async {
-    if (value) await _requestPermissionIfNeeded();
-    if (!_permissionGranted && value) return;
+    // 알림을 켤 때만 권한 체크
+    if (value) {
+      final hasPermission = await _ensurePermission();
+      if (!hasPermission) return;
+    }
 
     await _notificationService.toggleLunchNotification(value);
     if (mounted) {
@@ -83,8 +92,11 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
   }
 
   Future<void> _toggleDinner(bool value) async {
-    if (value) await _requestPermissionIfNeeded();
-    if (!_permissionGranted && value) return;
+    // 알림을 켤 때만 권한 체크
+    if (value) {
+      final hasPermission = await _ensurePermission();
+      if (!hasPermission) return;
+    }
 
     await _notificationService.toggleDinnerNotification(value);
     if (mounted) {
