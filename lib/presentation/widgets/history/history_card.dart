@@ -42,7 +42,7 @@ class HistoryCard extends ConsumerWidget {
                 ),
               ),
               SizedBox(height: screenHeight * 0.008),
-              // 카테고리 태그
+              // 태그 영역 (카테고리 + 리뷰 스타일 통합)
               Wrap(
                 spacing: screenWidth * 0.015,
                 runSpacing: screenHeight * 0.005,
@@ -53,6 +53,13 @@ class HistoryCard extends ConsumerWidget {
                       FoodInsightService.categoryColors[entry.category] ??
                           Colors.grey.shade100,
                       Colors.black87,
+                      screenWidth,
+                    ),
+                  if (entry.reviewStyle.isNotEmpty)
+                    _buildTagChip(
+                      entry.reviewStyle,
+                      Colors.blue.shade50,
+                      Colors.blue.shade700,
                       screenWidth,
                     ),
                 ],
@@ -93,31 +100,6 @@ class HistoryCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              SizedBox(height: screenHeight * 0.015),
-              // 리뷰 스타일
-              if (entry.reviewStyle.isNotEmpty)
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: screenWidth * 0.02,
-                        vertical: screenHeight * 0.005,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(screenWidth * 0.03),
-                      ),
-                      child: Text(
-                        entry.reviewStyle,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: Colors.blue.shade700,
-                          fontFamily: 'Do Hyeon',
-                          fontSize: screenWidth * 0.03,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               SizedBox(height: screenHeight * 0.02),
               // AI 생성 리뷰 섹션 헤더
               Row(

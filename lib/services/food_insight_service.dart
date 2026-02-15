@@ -451,8 +451,8 @@ class FoodInsightService {
       final emoji = categoryEmojis[category] ?? '🍽️';
       final suggestions = _getSuggestionForCategory(category);
       messages.add(
-        '최근 $category을(를) $count번 연속으로 선택하셨네요! $emoji '
-        '오늘은 $suggestions은(는) 어떠세요?',
+        '최근 $category 음식을 $count번이나 연속으로 드셨네요! $emoji '
+        '오늘은 $suggestions 카테고리에 도전해 보시는 건 어떨까요?',
       );
     }
 
@@ -463,7 +463,9 @@ class FoodInsightService {
       final name = food['foodName'] as String;
       final count = food['count'] as int;
       if (count >= 3) {
-        messages.add('$name을(를) 벌써 $count번이나 드셨어요! 새로운 메뉴에 도전해보시는 건 어떨까요? 🌟');
+        messages.add(
+          '$name 메뉴를 벌써 $count번이나 즐기셨네요! 혹시 오늘은 새로운 맛의 발견에 도전해 보시겠어요? 🌟',
+        );
       }
     }
 
@@ -475,11 +477,11 @@ class FoodInsightService {
         final onlyCategory = weeklyCategories.keys.first;
         final suggestion = _getSuggestionForCategory(onlyCategory);
         messages.add(
-          '이번 주는 $onlyCategory만 드셨네요! 오늘은 $suggestion에 도전해보시는 건 어떨까요? 💪',
+          '이번 주에는 오직 $onlyCategory 카테고리만 즐기셨네요! 건강을 위해 오늘은 $suggestion 메뉴를 드셔보시는 건 어떨까요? 💪',
         );
       } else if (weeklyCategories.length >= 3) {
         messages.add(
-          '이번 주 ${weeklyCategories.length}가지 카테고리를 고르게 드셨어요! 다양한 식사를 즐기고 계시네요 👏',
+          '이번 주에는 ${weeklyCategories.length}가지 카테고리의 음식을 골고루 드셨네요! 정말 건강하고 다양한 식사를 즐기고 계시네요. 👏',
         );
       }
     }
@@ -488,15 +490,15 @@ class FoodInsightService {
     final ratings = getAverageRatings(history);
     final tasteAvg = ratings['taste'] ?? 0;
     if (tasteAvg >= 4.0) {
-      messages.add('평균 맛 점수가 $tasteAvg점이에요! 맛집을 잘 고르시는 편이시네요 👨‍🍳');
+      messages.add('평균 맛 점수가 $tasteAvg점이에요! 역시 맛집을 고르는 안목이 대단하시네요. 👨‍🍳');
     }
 
     // 5. 기본 메시지
     if (messages.isEmpty) {
       messages.addAll([
-        '오늘은 어떤 맛있는 음식을 드실 예정이신가요? 🍽️',
-        '맛있는 한 끼의 시작, 메뉴를 추천받아 보세요! 😋',
-        '오늘도 맛있는 식사 하시길 바랍니다! 🌈',
+        '오늘은 어떤 맛있는 음식을 드실 계획이신가요? 🍽️',
+        '맛있는 한 끼의 시작, 오늘 메뉴를 AI에게 추천받아 보세요! 😋',
+        '오늘도 행복하고 맛있는 식사 시간이 되시길 바랍니다! 🌈',
       ]);
     }
 

@@ -156,7 +156,7 @@ class NotificationService {
       id: _lunchNotificationId,
       hour: _lunchHour,
       minute: _lunchMinute,
-      title: '🍽️ 점심 뭐 먹지?',
+      title: '🍽️ 점심 메뉴 추천',
       body: message,
     );
   }

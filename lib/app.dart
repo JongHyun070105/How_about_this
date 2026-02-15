@@ -17,7 +17,7 @@ class ReviewAIApp extends StatelessWidget {
 
     return ClarityWidget(
       app: MaterialApp(
-        title: '이거 어때',
+        title: '이거 먹자!',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         locale: const Locale('ko', 'KR'),

@@ -152,7 +152,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: Text(
-          '리뷰 AI',
+          '히스토리',
           style: textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: appBarFontSize,
@@ -189,17 +189,51 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            decoration: InputDecoration(
-                              hintText: '음식 이름으로 검색',
-                              prefixIcon: const Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12.0),
+                              border: Border.all(
+                                color: Colors.grey[300]!,
+                                width: 1.0,
                               ),
-                              filled: true,
-                              fillColor: Colors.grey[200],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withAlpha(
+                                    (255 * 0.05).round(),
+                                  ),
+                                  spreadRadius: 1,
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: '음식 이름으로 검색',
+                                prefixIcon: const Icon(Icons.search),
+                                hintStyle: TextStyle(
+                                  color: Colors.grey[400],
+                                  fontFamily: 'Do Hyeon',
+                                  fontSize: (screenWidth * 0.035).clamp(
+                                    12.0,
+                                    16.0,
+                                  ),
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                  vertical: 16.0,
+                                ),
+                              ),
+                              style: TextStyle(
+                                fontFamily: 'Do Hyeon',
+                                fontSize: (screenWidth * 0.04).clamp(
+                                  14.0,
+                                  18.0,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -231,11 +265,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         children: [
                           if (_searchQuery.isNotEmpty)
                             Chip(
-                              backgroundColor: Colors.blue.shade50,
+                              backgroundColor: Colors.grey[200],
                               label: Text(
                                 '검색: $_searchQuery',
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: Colors.blue.shade700,
+                                  color: Colors.black87,
                                   fontFamily: 'Do Hyeon',
                                 ),
                               ),
@@ -253,15 +287,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                   _searchQuery = '';
                                 });
                               },
-                              deleteIconColor: Colors.blue.shade700,
+                              deleteIconColor: Colors.black54,
                             ),
                           if (_sortOption != HistorySortOption.latest)
                             Chip(
-                              backgroundColor: Colors.blue.shade50,
+                              backgroundColor: Colors.grey[200],
                               label: Text(
                                 '정렬: ${getSortOptionLabel(_sortOption)}',
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: Colors.blue.shade700,
+                                  color: Colors.black87,
                                   fontFamily: 'Do Hyeon',
                                 ),
                               ),
@@ -278,11 +312,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                   _sortOption = HistorySortOption.latest;
                                 });
                               },
-                              deleteIconColor: Colors.blue.shade700,
+                              deleteIconColor: Colors.black54,
                             ),
                           if (_ratingFilter != null)
                             Chip(
-                              backgroundColor: Colors.blue.shade50,
+                              backgroundColor: Colors.grey[200],
                               label: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: List.generate(
@@ -307,7 +341,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                   _ratingFilter = null;
                                 });
                               },
-                              deleteIconColor: Colors.blue.shade700,
+                              deleteIconColor: Colors.black54,
                             ),
                         ],
                       ),
@@ -322,7 +356,19 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: sortedHistory.isEmpty
-                    ? const EmptyHistory()
+                    ? EmptyHistory(
+                        title:
+                            (_searchQuery.isNotEmpty || _ratingFilter != null)
+                            ? '검색 결과가 없습니다.'
+                            : '아직 생성된 리뷰가 없습니다.',
+                        message:
+                            (_searchQuery.isNotEmpty || _ratingFilter != null)
+                            ? '다른 검색어 혹은 필터 설정을 시도해보세요!'
+                            : '메인 화면에서 첫 리뷰를 작성해보세요!',
+                        icon: (_searchQuery.isNotEmpty || _ratingFilter != null)
+                            ? Icons.search_off
+                            : Icons.history_toggle_off,
+                      )
                     : RefreshIndicator(
                         onRefresh: () async {
                           return ref.refresh(reviewHistoryProvider);

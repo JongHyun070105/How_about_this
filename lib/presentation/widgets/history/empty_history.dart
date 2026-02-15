@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 class EmptyHistory extends StatelessWidget {
-  const EmptyHistory({super.key});
+  final String title;
+  final String message;
+  final IconData icon;
+
+  const EmptyHistory({
+    super.key,
+    this.title = '아직 생성된 리뷰가 없습니다.',
+    this.message = '메인 화면에서 첫 리뷰를 작성해보세요!',
+    this.icon = Icons.history_toggle_off,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,14 +23,10 @@ class EmptyHistory extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.history_toggle_off,
-              size: screenWidth * 0.2,
-              color: Colors.grey,
-            ),
+            Icon(icon, size: screenWidth * 0.2, color: Colors.grey),
             SizedBox(height: screenHeight * 0.03),
             Text(
-              '아직 생성된 리뷰가 없습니다.',
+              title,
               style: textTheme.bodyLarge?.copyWith(
                 fontFamily: 'Do Hyeon',
                 fontSize: screenWidth * 0.045,
@@ -29,7 +34,7 @@ class EmptyHistory extends StatelessWidget {
             ),
             SizedBox(height: screenHeight * 0.015),
             Text(
-              '메인 화면에서 첫 리뷰를 작성해보세요!',
+              message,
               style: textTheme.bodyMedium?.copyWith(
                 color: Colors.grey.shade600,
                 fontFamily: 'Do Hyeon',

@@ -236,7 +236,7 @@ class _TodayRecommendationScreenState
     return Container(
       alignment: Alignment.centerLeft,
       child: Text(
-        '오늘 뭐 먹지?',
+        '이거 먹자!',
         style: textTheme.headlineMedium?.copyWith(
           fontWeight: FontWeight.bold,
           fontSize: responsive.appBarFontSize(),
