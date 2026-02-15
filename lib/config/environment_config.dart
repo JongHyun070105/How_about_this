@@ -19,8 +19,8 @@ class EnvironmentConfig {
   /// 현재 앱 환경 반환
   static AppEnvironment get currentEnvironment {
     if (kDebugMode) return AppEnvironment.development;
-    // 환경변수 대신 기본값 사용
-    return AppEnvironment.development;
+    if (kProfileMode) return AppEnvironment.staging;
+    return AppEnvironment.production;
   }
 
   /// 현재 환경이 개발 환경인지 확인

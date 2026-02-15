@@ -2,7 +2,8 @@
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show debugPrint, defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:review_ai/services/config_service.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -15,6 +16,23 @@ import 'package:flutter/foundation.dart'
 /// );
 /// ```
 class DefaultFirebaseOptions {
+  // 서버에서 가져온 API 키 (null이면 폴백 사용)
+  static String? _serverAndroidApiKey;
+  static String? _serverIosApiKey;
+
+  /// 서버에서 Firebase API 키 로드 (앱 초기화 후 호출)
+  static Future<void> loadServerKeys() async {
+    try {
+      _serverAndroidApiKey = await ConfigService.getFirebaseApiKey(
+        platform: 'android',
+      );
+      _serverIosApiKey = await ConfigService.getFirebaseApiKey(platform: 'ios');
+    } catch (e) {
+      // 실패 시 폴백 기본값 사용
+      debugPrint('Failed to load Firebase server keys: $e');
+    }
+  }
+
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       throw UnsupportedError(
@@ -49,16 +67,16 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBfNotry0ovUtyRgFhbkTGAu2KH8-RV4lU',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: _serverAndroidApiKey ?? 'AIzaSyBfNotry0ovUtyRgFhbkTGAu2KH8-RV4lU',
     appId: '1:728734846473:android:b8758b19fdde6d70c872d8',
     messagingSenderId: '728734846473',
     projectId: 'reviewai-flutter',
     storageBucket: 'reviewai-flutter.firebasestorage.app',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD0aITQ9v6TQLgxheTIGQhFP79FOa-UZDg',
+  static FirebaseOptions get ios => FirebaseOptions(
+    apiKey: _serverIosApiKey ?? 'AIzaSyD0aITQ9v6TQLgxheTIGQhFP79FOa-UZDg',
     appId: '1:728734846473:ios:5788de31bc676837c872d8',
     messagingSenderId: '728734846473',
     projectId: 'reviewai-flutter',

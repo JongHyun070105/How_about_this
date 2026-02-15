@@ -21,7 +21,7 @@ class WeatherService {
       final backendUrl = EnvironmentConfig.apiBaseUrl;
       final url = Uri.parse('$backendUrl/weather?lat=$lat&lon=$lng');
 
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

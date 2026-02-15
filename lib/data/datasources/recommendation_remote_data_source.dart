@@ -1,7 +1,7 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/services/api_proxy_service.dart';
+import 'package:review_ai/utils/gemini_response_parser.dart';
 
 abstract class RecommendationRemoteDataSource {
   Future<List<FoodRecommendation>> getFoodRecommendations({
@@ -31,57 +31,9 @@ class RecommendationRemoteDataSourceImpl
 
       // Gemini API 호출
       final response = await _apiProxyService.generateContent(prompt);
-      final jsonString =
-          response['candidates'][0]['content']['parts'][0]['text'];
 
-      if (jsonString == null) {
-        debugPrint('ERROR: No text in Gemini response');
-        throw Exception('Gemini API로부터 응답을 받지 못했습니다.');
-      }
-
-      debugPrint(
-        'Raw Gemini response (first 200 chars): ${jsonString.substring(0, jsonString.length > 200 ? 200 : jsonString.length)}',
-      );
-
-      // JSON 정리
-      var cleanedJson = jsonString.trim();
-
-      // 마크다운 코드 블록이 있으면 제거
-      if (cleanedJson.startsWith('```json')) {
-        cleanedJson = cleanedJson
-            .replaceAll('```json', '')
-            .replaceAll('```', '');
-      } else if (cleanedJson.startsWith('```')) {
-        cleanedJson = cleanedJson.replaceAll('```', '');
-      }
-
-      cleanedJson = cleanedJson.trim();
-
-      debugPrint(
-        'Cleaned JSON for parsing (first 200 chars): ${cleanedJson.substring(0, cleanedJson.length > 200 ? 200 : cleanedJson.length)}',
-      );
-
-      // JSON 파싱
-      final List<dynamic> decodedList = jsonDecode(cleanedJson);
-
-      debugPrint('AI가 생성한 음식 개수: ${decodedList.length}개');
-
-      // FoodRecommendation 객체로 변환
-      final recommendations = decodedList.map((item) {
-        if (item is Map<String, dynamic> && item['name'] != null) {
-          // 숫자 접두사 제거 (예: "1. 치킨" -> "치킨")
-          final cleanedName = (item['name'] as String).replaceFirst(
-            RegExp(r'^\d+\.\s*'),
-            '',
-          );
-          item['name'] = cleanedName;
-        }
-        return FoodRecommendation.fromJson(item);
-      }).toList();
-
-      debugPrint('파싱 완료: ${recommendations.length}개 음식 추천');
-
-      return recommendations;
+      // 공통 파서를 사용하여 응답 파싱
+      return GeminiResponseParser.parseRecommendations(response);
     } catch (e, stackTrace) {
       debugPrint('Gemini API 호출 또는 파싱 오류: $e');
       debugPrint('Stack trace: $stackTrace');

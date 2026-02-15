@@ -112,12 +112,75 @@ class SecurityConfig {
 
   /// Android 루팅 감지
   static Future<bool> _checkAndroidRoot() async {
-    return false;
+    try {
+      // su 바이너리 및 루팅 관련 경로 확인
+      const rootIndicators = [
+        '/system/app/Superuser.apk',
+        '/system/xbin/su',
+        '/system/bin/su',
+        '/sbin/su',
+        '/data/local/xbin/su',
+        '/data/local/bin/su',
+        '/data/local/su',
+        '/system/sd/xbin/su',
+        '/system/bin/failsafe/su',
+        '/su/bin/su',
+      ];
+
+      for (final path in rootIndicators) {
+        if (await File(path).exists()) {
+          debugPrint('Root indicator found: $path');
+          return true;
+        }
+      }
+
+      // Magisk 또는 루팅 앱 패키지 확인
+      const rootPackages = [
+        '/data/data/com.topjohnwu.magisk',
+        '/data/data/eu.chainfire.supersu',
+        '/data/data/com.koushikdutta.superuser',
+      ];
+
+      for (final pkg in rootPackages) {
+        if (await Directory(pkg).exists()) {
+          debugPrint('Root package found: $pkg');
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('Android root check error: $e');
+      return false;
+    }
   }
 
   /// iOS 탈옥 감지
   static Future<bool> _checkIOSJailbreak() async {
-    return false;
+    try {
+      const jailbreakPaths = [
+        '/Applications/Cydia.app',
+        '/Library/MobileSubstrate/MobileSubstrate.dylib',
+        '/bin/bash',
+        '/usr/sbin/sshd',
+        '/etc/apt',
+        '/private/var/lib/apt/',
+        '/usr/bin/ssh',
+        '/private/var/stash',
+      ];
+
+      for (final path in jailbreakPaths) {
+        if (await File(path).exists() || await Directory(path).exists()) {
+          debugPrint('Jailbreak indicator found: $path');
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('iOS jailbreak check error: $e');
+      return false;
+    }
   }
 
   static Future<bool> detectEmulator() async {

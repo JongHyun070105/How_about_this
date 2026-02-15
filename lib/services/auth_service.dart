@@ -1,14 +1,21 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:review_ai/config/api_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
+
+void _debugLog(String message) {
+  if (kDebugMode) {
+    debugPrint(message);
+  }
+}
 
 /// JWT 기반 동적 토큰 인증 서비스
 class AuthService {
@@ -29,7 +36,7 @@ class AuthService {
       if (_cachedAccessToken != null &&
           _tokenExpiry != null &&
           DateTime.now().isBefore(_tokenExpiry!)) {
-        debugPrint('Using cached access token');
+        _debugLog('Using cached access token');
         return _cachedAccessToken!;
       }
 
@@ -38,19 +45,19 @@ class AuthService {
         try {
           final newToken = await _refreshAccessToken(_cachedRefreshToken!);
           if (newToken != null) {
-            debugPrint('Access token refreshed successfully');
+            _debugLog('Access token refreshed successfully');
             return newToken;
           }
         } catch (e) {
-          debugPrint('Token refresh failed: $e');
+          _debugLog('Token refresh failed: $e');
         }
       }
 
       // 새 토큰 발급
-      debugPrint('Requesting new access token');
+      _debugLog('Requesting new access token');
       return await _requestNewToken();
     } catch (e) {
-      debugPrint('AuthService error: $e');
+      _debugLog('AuthService error: $e');
       throw AuthException('인증 토큰을 가져올 수 없습니다.');
     }
   }
@@ -63,8 +70,7 @@ class AuthService {
       final deviceInfo = await _getDeviceInfo();
 
       final requestUrl = '${ApiConfig.proxyUrl}/api/auth/token';
-      debugPrint('Requesting token from: $requestUrl');
-      debugPrint('DeviceId: $deviceId, AppVersion: $appVersion');
+      _debugLog('Requesting token from: $requestUrl');
 
       final response = await http
           .post(
@@ -81,10 +87,7 @@ class AuthService {
           )
           .timeout(const Duration(seconds: 10));
 
-      debugPrint('Token response status: ${response.statusCode}');
-      if (kDebugMode) {
-        debugPrint('Token response received (length: ${response.body.length})');
-      }
+      _debugLog('Token response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -103,30 +106,30 @@ class AuthService {
       } else {
         try {
           final errorData = jsonDecode(response.body);
-          debugPrint(
+          _debugLog(
             'Token request failed: ${errorData['message']} (Status: ${response.statusCode})',
           );
           throw AuthException('인증 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
         } catch (e) {
-          debugPrint(
-            'Token request failed with status ${response.statusCode}. Response: ${response.body.substring(0, min(100, response.body.length))}',
-          );
+          _debugLog('Token request failed with status ${response.statusCode}');
           throw AuthException('인증 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
         }
       }
     } catch (e) {
-      debugPrint('AuthService _requestNewToken error: $e');
+      _debugLog('AuthService _requestNewToken error: $e');
       rethrow;
     }
   }
 
   /// 리프레시 토큰으로 액세스 토큰 갱신
   static Future<String?> _refreshAccessToken(String refreshToken) async {
-    final response = await http.post(
-      Uri.parse('${ApiConfig.proxyUrl}/api/auth/refresh'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'refreshToken': refreshToken}),
-    );
+    final response = await http
+        .post(
+          Uri.parse('${ApiConfig.proxyUrl}/api/auth/refresh'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': refreshToken}),
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -141,7 +144,7 @@ class AuthService {
 
       return accessToken;
     } else {
-      // 리프레시 실패시 캐시 클리어
+      // 리프레시 실패시 토큰만 클리어 (deviceId 보존)
       await _clearTokens();
       return null;
     }
@@ -178,9 +181,11 @@ class AuthService {
     _tokenExpiry = expiry;
   }
 
-  /// 토큰 캐시 클리어
+  /// 토큰 캐시 클리어 (deviceId는 보존)
   static Future<void> _clearTokens() async {
-    await _storage.deleteAll();
+    await _storage.delete(key: _tokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _tokenExpiryKey);
 
     _cachedAccessToken = null;
     _cachedRefreshToken = null;
@@ -196,7 +201,7 @@ class AuthService {
     if (_deviceId == null) {
       _deviceId = const Uuid().v4();
       await _storage.write(key: _deviceIdKey, value: _deviceId!);
-      debugPrint('New device ID generated and stored securely');
+      _debugLog('New device ID generated and stored securely');
     }
 
     return _deviceId!;
@@ -208,7 +213,7 @@ class AuthService {
       final packageInfo = await PackageInfo.fromPlatform();
       return packageInfo.version;
     } catch (e) {
-      debugPrint('Failed to get app version: $e');
+      _debugLog('Failed to get app version: $e');
       return '1.0.0';
     }
   }
@@ -228,7 +233,7 @@ class AuthService {
 
       return 'Unknown-Platform';
     } catch (e) {
-      debugPrint('Failed to get device info: $e');
+      _debugLog('Failed to get device info: $e');
       return 'Unknown-Device';
     }
   }
@@ -244,19 +249,18 @@ class AuthService {
         _tokenExpiry = DateTime.parse(expiryString);
       }
 
-      final prefs = await SharedPreferences.getInstance();
-      _deviceId = prefs.getString(_deviceIdKey);
+      _deviceId = await _storage.read(key: _deviceIdKey);
 
-      debugPrint('AuthService initialized (Secure Storage)');
+      _debugLog('AuthService initialized (Secure Storage)');
     } catch (e) {
-      debugPrint('AuthService initialization failed: $e');
+      _debugLog('AuthService initialization failed: $e');
     }
   }
 
   /// 로그아웃 (토큰 삭제)
   static Future<void> logout() async {
     await _clearTokens();
-    debugPrint('User logged out');
+    _debugLog('User logged out');
   }
 }
 

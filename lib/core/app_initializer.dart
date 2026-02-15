@@ -44,6 +44,7 @@ class AppInitializer {
       ConfigService.initialize(),
       ServerTimeService.initialize(),
       NotificationService().initialize(),
+      DefaultFirebaseOptions.loadServerKeys(),
       _configureSystemUI(),
       _requestLocationPermission(),
       _requestAccessibilityPermission(),

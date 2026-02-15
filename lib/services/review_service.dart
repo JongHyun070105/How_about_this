@@ -100,27 +100,25 @@ class ReviewService {
       onProgress?.call('AI 분석 중... (최대 45초 소요)');
       debugPrint('Gemini API 호출 시작');
 
-      // 타임아웃 설정된 API 호출
+      // 타임아웃 설정된 API 호출 (.timeout() 사용으로 미완료 Future 방지)
       const timeoutDuration = Duration(seconds: 45);
-      final timeoutFuture = Future.delayed(timeoutDuration, () {
-        throw TimeoutException(
-          '처리 시간이 너무 오래 걸립니다.\n• 다른 이미지를 선택해보세요\n• 음식 전체가 보이는 사진을 사용해보세요\n• 잠시 후 다시 시도해주세요',
-          timeoutDuration,
-        );
-      });
-
-      final reviews = await Future.any([
-        apiProxyService.generateReviews(
-          foodName: reviewState.foodName,
-          deliveryRating: reviewState.deliveryRating,
-          tasteRating: reviewState.tasteRating,
-          portionRating: reviewState.portionRating,
-          priceRating: reviewState.priceRating,
-          reviewStyle: reviewState.selectedReviewStyle,
-          foodImage: optimizedImage,
-        ),
-        timeoutFuture,
-      ]);
+      final reviews = await apiProxyService
+          .generateReviews(
+            foodName: reviewState.foodName,
+            deliveryRating: reviewState.deliveryRating,
+            tasteRating: reviewState.tasteRating,
+            portionRating: reviewState.portionRating,
+            priceRating: reviewState.priceRating,
+            reviewStyle: reviewState.selectedReviewStyle,
+            foodImage: optimizedImage,
+          )
+          .timeout(
+            timeoutDuration,
+            onTimeout: () => throw TimeoutException(
+              '처리 시간이 너무 오래 걸립니다.\n• 다른 이미지를 선택해보세요\n• 음식 전체가 보이는 사진을 사용해보세요\n• 잠시 후 다시 시도해주세요',
+              timeoutDuration,
+            ),
+          );
 
       if (optimizedImage != null && optimizedImage != reviewState.image) {
         try {

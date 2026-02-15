@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:review_ai/utils/gemini_response_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/core/exceptions.dart';
@@ -52,51 +53,11 @@ class RecommendationService {
 
     try {
       final response = await apiProxyService.generateContent(prompt);
-      final jsonString =
-          response['candidates'][0]['content']['parts'][0]['text'];
 
-      if (jsonString == null) {
-        debugPrint('ERROR: No text in Gemini response');
-        throw Exception('Gemini API로부터 응답을 받지 못했습니다.');
-      }
-
-      debugPrint(
-        'Raw Gemini response (first 200 chars): ${jsonString.substring(0, jsonString.length > 200 ? 200 : jsonString.length)}',
+      // 공통 파서를 사용하여 응답 파싱
+      final recommendations = GeminiResponseParser.parseRecommendations(
+        response,
       );
-
-      var cleanedJson = jsonString.trim();
-
-      // 마크다운 코드 블록이 있으면 제거
-      if (cleanedJson.startsWith('```json')) {
-        cleanedJson = cleanedJson
-            .replaceAll('```json', '')
-            .replaceAll('```', '');
-      } else if (cleanedJson.startsWith('```')) {
-        cleanedJson = cleanedJson.replaceAll('```', '');
-      }
-
-      cleanedJson = cleanedJson.trim();
-
-      debugPrint(
-        'Cleaned JSON for parsing (first 200 chars): ${cleanedJson.substring(0, cleanedJson.length > 200 ? 200 : cleanedJson.length)}',
-      );
-
-      final List<dynamic> decodedList = jsonDecode(cleanedJson);
-
-      debugPrint('AI가 생성한 음식 개수: ${decodedList.length}개');
-
-      final recommendations = decodedList.map((item) {
-        if (item is Map<String, dynamic> && item['name'] != null) {
-          final cleanedName = (item['name'] as String).replaceFirst(
-            RegExp(r'^\d+\.\s*'),
-            '',
-          );
-          item['name'] = cleanedName;
-        }
-        return FoodRecommendation.fromJson(item);
-      }).toList();
-
-      debugPrint('파싱 완료: ${recommendations.length}개 음식 추천');
 
       await _saveToCache(cacheKey, recommendations);
 

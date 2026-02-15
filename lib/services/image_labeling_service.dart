@@ -7,8 +7,11 @@ import 'package:review_ai/config/api_config.dart';
 class ImageLabelingService {
   final ApiProxyService _apiProxyService;
 
-  ImageLabelingService()
-    : _apiProxyService = ApiProxyService(http.Client(), ApiConfig.proxyUrl);
+  ImageLabelingService({http.Client? httpClient})
+    : _apiProxyService = ApiProxyService(
+        httpClient ?? http.Client(),
+        ApiConfig.proxyUrl,
+      );
 
   Future<List<String>> getLabels(File imageFile) async {
     try {

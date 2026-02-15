@@ -2,16 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:clarity_flutter/clarity_flutter.dart';
 import 'package:review_ai/config/theme.dart';
 import 'package:review_ai/presentation/screens/splash_screen.dart';
+import 'package:review_ai/services/config_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-class ReviewAIApp extends StatelessWidget {
+class ReviewAIApp extends StatefulWidget {
   const ReviewAIApp({super.key});
+
+  @override
+  State<ReviewAIApp> createState() => _ReviewAIAppState();
+}
+
+class _ReviewAIAppState extends State<ReviewAIApp> {
+  String _clarityProjectId = 'sy9cat27ff'; // 폴백 기본값
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClarityConfig();
+  }
+
+  Future<void> _loadClarityConfig() async {
+    final clarityId = await ConfigService.getClarityProjectId();
+    if (mounted && clarityId != _clarityProjectId) {
+      setState(() {
+        _clarityProjectId = clarityId;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final config = ClarityConfig(
-      projectId: "sy9cat27ff",
+      projectId: _clarityProjectId,
       logLevel: LogLevel.None,
     );
 
@@ -23,38 +46,8 @@ class ReviewAIApp extends StatelessWidget {
         locale: const Locale('ko', 'KR'),
         home: const SplashScreen(),
         navigatorKey: navigatorKey,
-        builder: (context, child) {
-          ErrorWidget.builder = (errorDetails) {
-            return _buildErrorWidget(context, errorDetails);
-          };
-          return child ?? const SizedBox.shrink();
-        },
       ),
       clarityConfig: config,
-    );
-  }
-
-  Widget _buildErrorWidget(
-    BuildContext context,
-    FlutterErrorDetails errorDetails,
-  ) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            const Text('오류가 발생했습니다'),
-            const SizedBox(height: 8),
-            Text(
-              errorDetails.exception.toString(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
