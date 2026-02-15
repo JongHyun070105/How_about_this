@@ -17,6 +17,8 @@ import 'package:review_ai/widgets/common/app_dialogs.dart';
 import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/services/config_service.dart';
 import 'package:review_ai/services/server_time_service.dart';
+import 'package:review_ai/services/notification_service.dart';
+import 'package:review_ai/providers/review_provider.dart';
 
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/cupertino.dart';
@@ -26,7 +28,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:review_ai/firebase_options.dart';
-import 'package:review_ai/services/notification_service.dart';
 
 // navigatorKey를 분리하는 것은 이 앱에서 필수적으로 사용되므로 유지
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -272,6 +273,7 @@ class _AppInitializerState extends ConsumerState<AppInitializer>
       _startBackgroundCaching();
       _performSecurityCheckInBackground();
       _checkForUpdateInBackground();
+      _updateNotificationMessages();
 
       final elapsed = stopwatch.elapsed;
       if (elapsed < minLoadingTime) {
@@ -385,6 +387,21 @@ class _AppInitializerState extends ConsumerState<AppInitializer>
         }
       } catch (e) {
         debugPrint('Background security check error: $e');
+      }
+    });
+  }
+
+  /// 알림 메시지를 개인화 데이터로 업데이트
+  void _updateNotificationMessages() {
+    Future.microtask(() async {
+      try {
+        final history = ref.read(reviewHistoryProvider);
+        if (history.isNotEmpty) {
+          await NotificationService().updatePersonalizedMessages(history);
+          debugPrint('알림 개인화 메시지 업데이트 완료 (${history.length}개 히스토리)');
+        }
+      } catch (e) {
+        debugPrint('알림 개인화 업데이트 실패: $e');
       }
     });
   }

@@ -32,10 +32,10 @@ class NotificationService {
   static const String _dinnerEnabledKey = 'notification_dinner_enabled';
 
   // 알림 시간
-  static const int _lunchHour = 12;
-  static const int _lunchMinute = 0;
-  static const int _dinnerHour = 19;
-  static const int _dinnerMinute = 0;
+  static const int _lunchHour = 22; // TODO: 테스트 후 12로 복원
+  static const int _lunchMinute = 40;
+  static const int _dinnerHour = 22; // TODO: 테스트 후 19로 복원
+  static const int _dinnerMinute = 41;
 
   /// 알림 서비스 초기화
   Future<void> initialize() async {
@@ -156,7 +156,7 @@ class NotificationService {
       id: _lunchNotificationId,
       hour: _lunchHour,
       minute: _lunchMinute,
-      title: '🍽️ 점심 뛰 먹지?',
+      title: '🍽️ 점심 뭐 먹지?',
       body: message,
     );
   }
@@ -165,7 +165,7 @@ class NotificationService {
   Future<void> _scheduleDinnerNotification() async {
     final message = _history.isNotEmpty
         ? FoodInsightService.generateInsightMessage(_history)
-        : '오늘 저녁은 뛰 먹을까요?';
+        : '오늘 저녁은 뭐 먹을까요?';
     await _scheduleDailyNotification(
       id: _dinnerNotificationId,
       hour: _dinnerHour,
@@ -189,7 +189,8 @@ class NotificationService {
       channelDescription: '점심/저녁 식사 시간 알림',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: '@drawable/ic_stat_notification',
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       styleInformation: BigTextStyleInformation(body),
     );
 

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/providers/app_providers.dart';
 import 'package:review_ai/providers/food_providers.dart';
+import 'package:review_ai/providers/review_provider.dart';
+
 import 'package:review_ai/services/recommendation_service.dart';
 import 'package:review_ai/widgets/history/dialogs/user_stats_pages/stats_page.dart';
 import 'package:review_ai/widgets/history/dialogs/user_stats_pages/category_page.dart';
@@ -124,6 +126,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                     remainingReviews: _remainingReviews,
                     maxRecommendations: maxRecommendations,
                     maxReviews: maxReviews,
+                    history: ref.watch(reviewHistoryProvider),
                   ),
                   DayOfWeekPageWidget(
                     stats: _stats!,

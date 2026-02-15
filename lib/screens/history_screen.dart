@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/widgets/history/empty_history.dart';
-import 'package:review_ai/widgets/history/food_insight_card.dart';
 import 'package:review_ai/widgets/history/history_card.dart';
 import 'package:review_ai/providers/review_provider.dart';
 import 'package:review_ai/widgets/history/filter_options_sheet.dart';
@@ -333,8 +332,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         strokeWidth: isTablet ? 3.0 : 2.5,
                         child: ListView.builder(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          // 인사이트 카드(1) + 히스토리 항목
-                          itemCount: sortedHistory.length + 1,
+                          // 히스토리 항목
+                          itemCount: sortedHistory.length,
                           // 하단에 충분한 패딩 추가 - 키보드와 시스템 UI 고려
                           padding: EdgeInsets.only(
                             bottom: keyboardHeight > 0
@@ -343,11 +342,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                       bottomPadding,
                           ),
                           itemBuilder: (context, index) {
-                            // 첫 번째 아이템: 인사이트 카드
-                            if (index == 0) {
-                              return FoodInsightCard(history: history);
-                            }
-                            final entry = sortedHistory[index - 1];
+                            final entry = sortedHistory[index];
                             return Padding(
                               padding: EdgeInsets.only(
                                 bottom:
@@ -356,7 +351,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                               ),
                               child: AnimatedContainer(
                                 duration: Duration(
-                                  milliseconds: 300 + ((index - 1) * 50),
+                                  milliseconds: 300 + (index * 50),
                                 ),
                                 curve: Curves.easeOutCubic,
                                 child: HistoryCard(entry: entry),
