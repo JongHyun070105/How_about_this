@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:review_ai/models/exceptions.dart';
+import 'package:review_ai/core/exceptions.dart';
 import 'package:review_ai/services/prompt_builder.dart';
 import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/config/api_config.dart';
-import '../utils/error_handler.dart';
+import 'package:review_ai/utils/error_handler.dart';
 
 /// Cloudflare Workers API 프록시 서버를 통한 Gemini API 호출 서비스
 class ApiProxyService {

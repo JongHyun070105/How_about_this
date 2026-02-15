@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 import 'package:flutter/material.dart';
-import 'package:review_ai/widgets/common/app_dialogs.dart';
+import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 // Added url_launcher import
 import 'app_constants.dart';
 import 'environment_config.dart';

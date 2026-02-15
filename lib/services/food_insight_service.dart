@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/config/api_config.dart';
-import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/services/api_proxy_service.dart';
 
 /// 식습관 분석 서비스

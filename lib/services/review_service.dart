@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:review_ai/providers/app_providers.dart';
-import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/presentation/providers/app_providers.dart';
+import 'package:review_ai/presentation/providers/review_provider.dart';
 
 import 'dart:io';
 import 'package:image/image.dart' as img;

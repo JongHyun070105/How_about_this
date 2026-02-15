@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import '../../models/food_recommendation.dart';
-import '../../services/api_proxy_service.dart';
+import 'package:review_ai/data/models/food_recommendation.dart';
+import 'package:review_ai/services/api_proxy_service.dart';
 
 abstract class RecommendationRemoteDataSource {
   Future<List<FoodRecommendation>> getFoodRecommendations({

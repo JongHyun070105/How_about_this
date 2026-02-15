@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../config/ui_constants.dart';
+import 'package:review_ai/config/ui_constants.dart';
 
 /// 반응형 UI 헬퍼
 class ResponsiveHelper {

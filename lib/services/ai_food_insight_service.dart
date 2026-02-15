@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/config/api_config.dart';
-import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/services/food_insight_service.dart';
 

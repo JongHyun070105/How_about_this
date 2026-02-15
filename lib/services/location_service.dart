@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
-import '../models/location_models.dart';
-import '../utils/error_handler.dart';
+import 'package:review_ai/data/models/location_models.dart';
+import 'package:review_ai/utils/error_handler.dart';
 
 /// 위치 서비스 클래스
 /// 사용자의 현재 위치를 가져오고 권한을 관리합니다.

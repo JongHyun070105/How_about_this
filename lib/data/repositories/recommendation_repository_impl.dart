@@ -1,5 +1,5 @@
-import '../../domain/entities/food_recommendation.dart' as domain;
-import '../../domain/repositories/recommendation_repository.dart';
+import 'package:review_ai/domain/entities/food_recommendation.dart' as domain;
+import 'package:review_ai/domain/repositories/recommendation_repository.dart';
 import '../datasources/recommendation_remote_data_source.dart';
 
 class RecommendationRepositoryImpl implements RecommendationRepository {

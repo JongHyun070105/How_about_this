@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../config/api_config.dart';
-import '../models/location_models.dart';
+import 'package:review_ai/config/api_config.dart';
+import 'package:review_ai/data/models/location_models.dart';
 import 'auth_service.dart';
-import '../utils/error_handler.dart';
-import '../utils/network_utils.dart';
+import 'package:review_ai/utils/error_handler.dart';
+import 'package:review_ai/utils/network_utils.dart';
 
 /// 카카오 로컬 API 서비스
 /// 맛집 검색을 위한 카카오 로컬 API를 호출합니다.

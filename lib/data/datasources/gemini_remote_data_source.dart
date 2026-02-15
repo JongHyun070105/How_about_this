@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import '../../services/api_proxy_service.dart';
+import 'package:review_ai/services/api_proxy_service.dart';
 
 abstract class GeminiRemoteDataSource {
   Future<List<String>> generateReviews({

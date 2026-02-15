@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:review_ai/services/food_insight_service.dart';
 import 'package:review_ai/services/ai_food_insight_service.dart';
-import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/presentation/providers/review_provider.dart';
 
 /// 테스트용 ReviewHistoryEntry 생성 헬퍼
 ReviewHistoryEntry _createEntry({

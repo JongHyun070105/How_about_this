@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import '../config/environment_config.dart';
+import 'package:review_ai/config/environment_config.dart';
 
 enum WeatherCondition {
   clear,

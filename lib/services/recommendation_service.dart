@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:review_ai/models/food_recommendation.dart';
-import 'package:review_ai/models/exceptions.dart';
+import 'package:review_ai/data/models/food_recommendation.dart';
+import 'package:review_ai/core/exceptions.dart';
 import 'package:review_ai/services/api_proxy_service.dart';
 import 'package:review_ai/config/api_config.dart';
 import 'user_preference_service.dart';

@@ -1,5 +1,5 @@
 import 'dart:io';
-import '../../domain/repositories/review_repository.dart';
+import 'package:review_ai/domain/repositories/review_repository.dart';
 import '../datasources/gemini_remote_data_source.dart';
 
 class ReviewRepositoryImpl implements ReviewRepository {

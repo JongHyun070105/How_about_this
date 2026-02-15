@@ -4,11 +4,11 @@ import '../../data/datasources/gemini_remote_data_source.dart';
 import '../../data/datasources/recommendation_remote_data_source.dart';
 import '../../data/repositories/review_repository_impl.dart';
 import '../../data/repositories/recommendation_repository_impl.dart';
-import '../../domain/repositories/review_repository.dart';
-import '../../domain/repositories/recommendation_repository.dart';
-import '../../domain/usecases/generate_review_usecase.dart';
-import '../../domain/usecases/get_recommendation_usecase.dart';
-import '../../services/api_proxy_service.dart';
+import 'package:review_ai/domain/repositories/review_repository.dart';
+import 'package:review_ai/domain/repositories/recommendation_repository.dart';
+import 'package:review_ai/domain/usecases/generate_review_usecase.dart';
+import 'package:review_ai/domain/usecases/get_recommendation_usecase.dart';
+import 'package:review_ai/services/api_proxy_service.dart';
 import '../../config/api_config.dart';
 
 // 데이터 소스

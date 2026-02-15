@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:review_ai/services/food_insight_service.dart';
-import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/presentation/providers/review_provider.dart';
 
 /// FoodInsightService 테스트
 ///

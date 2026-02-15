@@ -5,7 +5,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
-import 'package:review_ai/providers/review_provider.dart';
+import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/services/food_insight_service.dart';
 
 /// 로컬 푸시 알림 서비스

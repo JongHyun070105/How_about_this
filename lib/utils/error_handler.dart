@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import '../services/kakao_api_service.dart';
+import 'package:review_ai/services/kakao_api_service.dart';
 
 class ErrorHandler {
   static String sanitizeMessage(dynamic error) {
