@@ -65,5 +65,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'reviewai-flutter.firebasestorage.app',
     iosBundleId: 'com.jonghyun.reviewapp',
   );
-
 }
