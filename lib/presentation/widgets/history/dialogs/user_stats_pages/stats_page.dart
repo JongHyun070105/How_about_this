@@ -41,7 +41,9 @@ class StatsPageWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 식습관 인사이트 카드
@@ -126,7 +128,7 @@ class StatsPageWidget extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.star, color: Colors.amber, size: 24),
+          // const Icon(Icons.star, color: Colors.amber, size: 24), // 사용자의 요청으로 제거
         ],
       ),
     );

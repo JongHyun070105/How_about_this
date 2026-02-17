@@ -48,9 +48,22 @@ class AppInitializer {
       _configureSystemUI(),
       _requestLocationPermission(),
       _requestAccessibilityPermission(),
+      _requestNotificationPermission(),
     ]);
 
     SecurityConfig.logAdConfiguration();
+  }
+
+  static Future<void> _requestNotificationPermission() async {
+    try {
+      final service = NotificationService();
+      // 앱 시작 시 권한이 없으면 요청하도록 함
+      if (!await service.hasPermission()) {
+        await service.requestPermissions();
+      }
+    } catch (e) {
+      debugPrint('알림 권한 요청 실패: $e');
+    }
   }
 
   static Future<void> _configureSystemUI() async {

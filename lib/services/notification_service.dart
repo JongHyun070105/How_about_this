@@ -24,6 +24,9 @@ class NotificationService {
   /// 개인화 메시지용 히스토리 데이터
   List<ReviewHistoryEntry> _history = [];
 
+  /// 권한 요청 중복 방지 플래그
+  bool _isRequestingPermission = false;
+
   // 알림 ID
   static const int _lunchNotificationId = 1001;
   static const int _dinnerNotificationId = 1002;
@@ -96,24 +99,31 @@ class NotificationService {
 
   /// 알림 권한 요청
   Future<bool> requestPermissions() async {
-    if (Platform.isIOS) {
-      final result = await _notifications
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
-      return result ?? false;
-    } else if (Platform.isAndroid) {
-      final androidPlugin = _notifications
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
+    if (_isRequestingPermission) return false;
+    _isRequestingPermission = true;
 
-      // Android 13+ 알림 권한 요청
-      final result = await androidPlugin?.requestNotificationsPermission();
-      return result ?? false;
+    try {
+      if (Platform.isIOS) {
+        final result = await _notifications
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >()
+            ?.requestPermissions(alert: true, badge: true, sound: true);
+        return result ?? false;
+      } else if (Platform.isAndroid) {
+        final androidPlugin = _notifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+
+        // Android 13+ 알림 권한 요청
+        final result = await androidPlugin?.requestNotificationsPermission();
+        return result ?? false;
+      }
+      return false;
+    } finally {
+      _isRequestingPermission = false;
     }
-    return false;
   }
 
   /// 저장된 설정에 따라 알림 복원
@@ -208,7 +218,7 @@ class NotificationService {
       channelDescription: '점심/저녁 식사 시간 알림',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@drawable/ic_stat_notification',
+      icon: 'ic_stat_notification',
       largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       styleInformation: BigTextStyleInformation(body),
     );

@@ -131,10 +131,12 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
     final weeklyCount = summary['weeklyCount'] as int;
 
     // 로컬 폴백 메시지 (AI 로딩 전 또는 실패 시 사용)
-    final insightMessage = _isLoadingAi
+    final String insightMessage = _isLoadingAi
         ? '식습관을 분석하고 있어요...'
-        : (_aiInsight?.message ?? summary['insightMessage'] as String);
-    final isAi = _aiInsight?.isAi ?? false;
+        : (_aiInsight?.message ??
+              (summary['insightMessage'] as String?) ??
+              '식기록을 분석 중입니다.');
+    final bool isAi = _aiInsight?.isAi ?? false;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

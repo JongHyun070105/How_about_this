@@ -82,26 +82,32 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
     // 알림을 켤 때만 권한 체크
     if (value) {
       final hasPermission = await _ensurePermission();
-      if (!hasPermission) return;
+      if (!hasPermission) {
+        // 권한이 없으면 다시 꺼진 상태로 유지
+        if (mounted) setState(() => _lunchEnabled = false);
+        return;
+      }
     }
 
     await _notificationService.toggleLunchNotification(value);
-    if (mounted) {
-      setState(() => _lunchEnabled = value);
-    }
+    // 설정 변경 후 전체 상태 다시 로드하여 확실하게 UI 반영
+    await _loadSettings();
   }
 
   Future<void> _toggleDinner(bool value) async {
     // 알림을 켤 때만 권한 체크
     if (value) {
       final hasPermission = await _ensurePermission();
-      if (!hasPermission) return;
+      if (!hasPermission) {
+        // 권한이 없으면 다시 꺼진 상태로 유지
+        if (mounted) setState(() => _dinnerEnabled = false);
+        return;
+      }
     }
 
     await _notificationService.toggleDinnerNotification(value);
-    if (mounted) {
-      setState(() => _dinnerEnabled = value);
-    }
+    // 설정 변경 후 전체 상태 다시 로드하여 확실하게 UI 반영
+    await _loadSettings();
   }
 
   @override
