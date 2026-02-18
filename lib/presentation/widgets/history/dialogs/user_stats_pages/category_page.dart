@@ -27,8 +27,8 @@ class CategoryPageWidget extends StatelessWidget {
         top: 8.0,
       ),
       child: categoryList.isEmpty
-          ? _buildEmptyCategoryState()
-          : _buildCategoryChart(screenSize, categoryList),
+          ? _buildEmptyCategoryState(context)
+          : _buildCategoryChart(context, screenSize, categoryList),
     );
   }
 
@@ -58,21 +58,22 @@ class CategoryPageWidget extends StatelessWidget {
     }).toList();
   }
 
-  Widget _buildEmptyCategoryState() {
-    return const Center(
+  Widget _buildEmptyCategoryState(BuildContext context) {
+    return Center(
       child: Text(
         "추천 메뉴에 '좋아요'를 눌러보세요.\n취향을 분석하여 선호도를 알려드릴게요!",
         textAlign: TextAlign.center,
         style: TextStyle(
           fontFamily: 'Do Hyeon',
           fontSize: 16,
-          color: Colors.grey,
+          color: Theme.of(context).disabledColor,
         ),
       ),
     );
   }
 
   Widget _buildCategoryChart(
+    BuildContext context,
     Size screenSize,
     List<Map<String, dynamic>> categoryList,
   ) {
@@ -80,18 +81,19 @@ class CategoryPageWidget extends StatelessWidget {
       children: [
         Expanded(
           flex: 5,
-          child: _buildAnimatedPieChart(screenSize, categoryList),
+          child: _buildAnimatedPieChart(context, screenSize, categoryList),
         ),
         const SizedBox(height: 16),
         Expanded(
           flex: 2,
-          child: _buildCategoryLegend(screenSize, categoryList),
+          child: _buildCategoryLegend(context, screenSize, categoryList),
         ),
       ],
     );
   }
 
   Widget _buildAnimatedPieChart(
+    BuildContext context,
     Size screenSize,
     List<Map<String, dynamic>> categoryList,
   ) {
@@ -116,7 +118,7 @@ class CategoryPageWidget extends StatelessWidget {
                 titleStyle: TextStyle(
                   fontSize: shouldShowTitle ? (percent >= 15 ? 16 : 14) : 0,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: Theme.of(context).colorScheme.onTertiary,
                   fontFamily: 'Do Hyeon',
                 ),
                 titlePositionPercentageOffset: percent >= 15
@@ -136,6 +138,7 @@ class CategoryPageWidget extends StatelessWidget {
   }
 
   Widget _buildCategoryLegend(
+    BuildContext context,
     Size screenSize,
     List<Map<String, dynamic>> categoryList,
   ) {
@@ -148,7 +151,7 @@ class CategoryPageWidget extends StatelessWidget {
           opacity: animationValue.clamp(0.0, 1.0),
           child: Transform.scale(
             scale: 0.7 + (animationValue.clamp(0.0, 1.0) * 0.3),
-            child: _buildLegendContent(screenSize, categoryList),
+            child: _buildLegendContent(context, screenSize, categoryList),
           ),
         );
       },
@@ -156,6 +159,7 @@ class CategoryPageWidget extends StatelessWidget {
   }
 
   Widget _buildLegendContent(
+    BuildContext context,
     Size screenSize,
     List<Map<String, dynamic>> categoryList,
   ) {
@@ -168,7 +172,7 @@ class CategoryPageWidget extends StatelessWidget {
             alignment: WrapAlignment.center,
             children: categoryList
                 .take(4)
-                .map((cat) => _buildLegendItem(screenSize, cat))
+                .map((cat) => _buildLegendItem(context, screenSize, cat))
                 .toList(),
           ),
           if (categoryList.length > 4)
@@ -179,7 +183,7 @@ class CategoryPageWidget extends StatelessWidget {
               children: categoryList
                   .skip(4)
                   .take(3)
-                  .map((cat) => _buildLegendItem(screenSize, cat))
+                  .map((cat) => _buildLegendItem(context, screenSize, cat))
                   .toList(),
             ),
         ],
@@ -187,7 +191,11 @@ class CategoryPageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendItem(Size screenSize, Map<String, dynamic> cat) {
+  Widget _buildLegendItem(
+    BuildContext context,
+    Size screenSize,
+    Map<String, dynamic> cat,
+  ) {
     final color = categoryColorMap[cat['name']] ?? Colors.grey.shade400;
     final percent = cat['percent'] ?? 0.0;
 
@@ -212,10 +220,10 @@ class CategoryPageWidget extends StatelessWidget {
               children: [
                 Text(
                   cat['name'],
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Do Hyeon',
                     fontSize: 12,
-                    color: Colors.black87,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -224,7 +232,7 @@ class CategoryPageWidget extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Do Hyeon',
                     fontSize: 10,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).disabledColor,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

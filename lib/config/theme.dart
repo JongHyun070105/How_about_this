@@ -5,6 +5,10 @@ class AppTheme {
     return _buildLightTheme();
   }
 
+  static ThemeData dark() {
+    return _buildDarkTheme();
+  }
+
   static ThemeData _buildLightTheme() {
     return ThemeData(
       brightness: Brightness.light,
@@ -20,14 +24,14 @@ class AppTheme {
         onSurface: Colors.black,
         onError: Colors.white,
       ),
-      textTheme: _buildTextTheme(),
-      appBarTheme: _buildAppBarTheme(),
-      elevatedButtonTheme: _buildElevatedButtonTheme(),
-      inputDecorationTheme: _buildInputDecorationTheme(),
-      chipTheme: _buildChipTheme(),
-      cardTheme: _buildCardTheme(),
-      snackBarTheme: _buildSnackBarTheme(),
-      dialogTheme: _buildDialogTheme(),
+      textTheme: _buildTextTheme(Brightness.light),
+      appBarTheme: _buildAppBarTheme(Brightness.light),
+      elevatedButtonTheme: _buildElevatedButtonTheme(Brightness.light),
+      inputDecorationTheme: _buildInputDecorationTheme(Brightness.light),
+      chipTheme: _buildChipTheme(Brightness.light),
+      cardTheme: _buildCardTheme(Brightness.light),
+      snackBarTheme: _buildSnackBarTheme(Brightness.light),
+      dialogTheme: _buildDialogTheme(Brightness.light),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: CupertinoPageTransitionsBuilder(),
@@ -37,10 +41,45 @@ class AppTheme {
     );
   }
 
-  static TextTheme _buildTextTheme() {
+  static ThemeData _buildDarkTheme() {
+    final darkSurface = Colors.grey[900]!;
+    return ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: Colors.black,
+      primaryColor: Colors.white,
+      colorScheme: ColorScheme.dark(
+        primary: Colors.white,
+        secondary: Colors.blue.shade300,
+        surface: darkSurface,
+        error: Colors.red.shade400,
+        onPrimary: Colors.black,
+        onSecondary: Colors.black,
+        onSurface: Colors.white,
+        onError: Colors.white,
+      ),
+      textTheme: _buildTextTheme(Brightness.dark),
+      appBarTheme: _buildAppBarTheme(Brightness.dark),
+      elevatedButtonTheme: _buildElevatedButtonTheme(Brightness.dark),
+      inputDecorationTheme: _buildInputDecorationTheme(Brightness.dark),
+      chipTheme: _buildChipTheme(Brightness.dark),
+      cardTheme: _buildCardTheme(Brightness.dark),
+      snackBarTheme: _buildSnackBarTheme(Brightness.dark),
+      dialogTheme: _buildDialogTheme(Brightness.dark),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+    );
+  }
+
+  static TextTheme _buildTextTheme(Brightness brightness) {
     const fontFamily = 'SCDream';
-    const textColor = Colors.black;
-    return const TextTheme(
+    final textColor = brightness == Brightness.light
+        ? Colors.black
+        : Colors.white;
+    return TextTheme(
       displayLarge: TextStyle(
         fontFamily: fontFamily,
         color: textColor,
@@ -119,30 +158,34 @@ class AppTheme {
     );
   }
 
-  static AppBarTheme _buildAppBarTheme() {
-    return const AppBarTheme(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
+  static AppBarTheme _buildAppBarTheme(Brightness brightness) {
+    final isLight = brightness == Brightness.light;
+    return AppBarTheme(
+      backgroundColor: isLight ? Colors.white : Colors.black,
+      foregroundColor: isLight ? Colors.black : Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
       centerTitle: true,
       titleTextStyle: TextStyle(
         fontFamily: 'SCDream',
-        color: Colors.black,
+        color: isLight ? Colors.black : Colors.white,
         fontSize: 20,
         fontWeight: FontWeight.w500,
       ),
     );
   }
 
-  static ElevatedButtonThemeData _buildElevatedButtonTheme() {
+  static ElevatedButtonThemeData _buildElevatedButtonTheme(
+    Brightness brightness,
+  ) {
+    final isLight = brightness == Brightness.light;
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: Colors.grey,
-        disabledForegroundColor: Colors.white,
+        backgroundColor: isLight ? Colors.black : Colors.white,
+        foregroundColor: isLight ? Colors.white : Colors.black,
+        disabledBackgroundColor: isLight ? Colors.grey : Colors.grey.shade800,
+        disabledForegroundColor: isLight ? Colors.white : Colors.white60,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         textStyle: const TextStyle(
@@ -151,31 +194,39 @@ class AppTheme {
           fontFamily: 'SCDream',
         ),
         elevation: 2,
-        shadowColor: Colors.black26,
+        shadowColor: isLight ? Colors.black26 : Colors.black87,
       ),
     );
   }
 
-  static InputDecorationTheme _buildInputDecorationTheme() {
+  static InputDecorationTheme _buildInputDecorationTheme(
+    Brightness brightness,
+  ) {
+    final isLight = brightness == Brightness.light;
     return InputDecorationTheme(
-      labelStyle: const TextStyle(
-        color: Colors.black54,
+      labelStyle: TextStyle(
+        color: isLight ? Colors.black54 : Colors.white70,
         fontFamily: 'SCDream',
         fontWeight: FontWeight.w400,
       ),
-      hintStyle: const TextStyle(
-        color: Colors.black38,
+      hintStyle: TextStyle(
+        color: isLight ? Colors.black38 : Colors.white38,
         fontFamily: 'SCDream',
         fontWeight: FontWeight.w300,
       ),
       filled: true,
-      fillColor: const Color(0xFFF5F5F5),
+      fillColor: isLight ? const Color(0xFFF5F5F5) : Colors.grey[850],
       enabledBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderSide: BorderSide(
+          color: isLight ? const Color(0xFFE0E0E0) : Colors.grey[800]!,
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.black, width: 2),
+        borderSide: BorderSide(
+          color: isLight ? Colors.black : Colors.white,
+          width: 2,
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       errorBorder: OutlineInputBorder(
@@ -190,72 +241,80 @@ class AppTheme {
     );
   }
 
-  static ChipThemeData _buildChipTheme() {
+  static ChipThemeData _buildChipTheme(Brightness brightness) {
+    final isLight = brightness == Brightness.light;
     return ChipThemeData(
-      backgroundColor: const Color(0xFFF5F5F5),
-      selectedColor: Colors.black,
-      disabledColor: Colors.grey.shade300,
-      labelStyle: const TextStyle(
-        color: Colors.black,
+      backgroundColor: isLight ? const Color(0xFFF5F5F5) : Colors.grey[850],
+      selectedColor: isLight ? Colors.black : Colors.white,
+      disabledColor: isLight ? Colors.grey.shade300 : Colors.grey.shade800,
+      labelStyle: TextStyle(
+        color: isLight ? Colors.black : Colors.white,
         fontFamily: 'SCDream',
         fontWeight: FontWeight.w400,
       ),
-      secondaryLabelStyle: const TextStyle(
-        color: Colors.white,
+      secondaryLabelStyle: TextStyle(
+        color: isLight ? Colors.white : Colors.black,
         fontFamily: 'SCDream',
         fontWeight: FontWeight.w400,
       ),
-      checkmarkColor: Colors.white,
-      deleteIconColor: Colors.black54,
-      brightness: Brightness.light,
+      checkmarkColor: isLight ? Colors.white : Colors.black,
+      deleteIconColor: isLight ? Colors.black54 : Colors.white70,
+      brightness: brightness,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFFE0E0E0)),
+        side: BorderSide(
+          color: isLight ? const Color(0xFFE0E0E0) : Colors.grey[800]!,
+        ),
       ),
     );
   }
 
-  static CardThemeData _buildCardTheme() {
+  static CardThemeData _buildCardTheme(Brightness brightness) {
+    final isLight = brightness == Brightness.light;
     return CardThemeData(
-      color: Colors.white,
-      shadowColor: Colors.black12,
+      color: isLight ? Colors.white : Colors.grey[900],
+      shadowColor: isLight ? Colors.black12 : Colors.black38,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Color(0xFFF0F0F0)),
+        side: BorderSide(
+          color: isLight ? const Color(0xFFF0F0F0) : Colors.grey[800]!,
+        ),
       ),
     );
   }
 
-  static SnackBarThemeData _buildSnackBarTheme() {
+  static SnackBarThemeData _buildSnackBarTheme(Brightness brightness) {
+    final isLight = brightness == Brightness.light;
     return SnackBarThemeData(
-      backgroundColor: Colors.black87,
-      contentTextStyle: const TextStyle(
-        color: Colors.white,
+      backgroundColor: isLight ? Colors.black87 : Colors.grey[850],
+      contentTextStyle: TextStyle(
+        color: isLight ? Colors.white : Colors.white,
         fontFamily: 'SCDream',
         fontSize: 14,
         fontWeight: FontWeight.w400,
       ),
-      actionTextColor: Colors.blue.shade300,
+      actionTextColor: isLight ? Colors.blue.shade300 : Colors.blue.shade200,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 
-  static DialogThemeData _buildDialogTheme() {
+  static DialogThemeData _buildDialogTheme(Brightness brightness) {
+    final isLight = brightness == Brightness.light;
     return DialogThemeData(
-      backgroundColor: Colors.white,
+      backgroundColor: isLight ? Colors.white : Colors.grey[900],
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      titleTextStyle: const TextStyle(
-        color: Colors.black,
+      titleTextStyle: TextStyle(
+        color: isLight ? Colors.black : Colors.white,
         fontFamily: 'SCDream',
         fontSize: 18,
         fontWeight: FontWeight.w500,
       ),
-      contentTextStyle: const TextStyle(
-        color: Colors.black87,
+      contentTextStyle: TextStyle(
+        color: isLight ? Colors.black87 : Colors.white70,
         fontFamily: 'SCDream',
         fontSize: 14,
         fontWeight: FontWeight.w400,

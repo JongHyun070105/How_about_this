@@ -34,7 +34,7 @@ class StatsPageWidget extends StatelessWidget {
     final usageTextStyle = TextStyle(
       fontFamily: 'Do Hyeon',
       fontSize: (screenSize.width * 0.035).clamp(12.0, 16.0),
-      color: Colors.grey[700],
+      color: Theme.of(context).textTheme.bodyMedium?.color,
       fontWeight: FontWeight.w500,
     );
 
@@ -51,11 +51,13 @@ class StatsPageWidget extends StatelessWidget {
             const SizedBox(height: 16),
 
             // 단골 메뉴 하이라이트
-            if (history.isNotEmpty) _buildFavoriteMenuHighlight(history),
+            if (history.isNotEmpty)
+              _buildFavoriteMenuHighlight(context, history),
             const SizedBox(height: 24),
 
             // 사용량 현황 (컴팩트하게 개선)
             _buildUsageSection(
+              context,
               screenSize,
               usageTextStyle,
               usedRecommendations,
@@ -69,7 +71,10 @@ class StatsPageWidget extends StatelessWidget {
   }
 
   /// 단골 메뉴 하이라이트 위젯
-  Widget _buildFavoriteMenuHighlight(List<ReviewHistoryEntry> history) {
+  Widget _buildFavoriteMenuHighlight(
+    BuildContext context,
+    List<ReviewHistoryEntry> history,
+  ) {
     final topFoods = FoodInsightService.getTopFoods(history);
     if (topFoods.isEmpty) return const SizedBox.shrink();
 
@@ -80,9 +85,9 @@ class StatsPageWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
           BoxShadow(
             color: const Color(0x05000000), // black.withOpacity(0.02)
@@ -104,17 +109,17 @@ class StatsPageWidget extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Do Hyeon',
                     fontSize: 13,
-                    color: Colors.grey[500],
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   foodName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'Do Hyeon',
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   ),
                 ),
                 Text(
@@ -122,7 +127,9 @@ class StatsPageWidget extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Do Hyeon',
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -135,6 +142,7 @@ class StatsPageWidget extends StatelessWidget {
   }
 
   Widget _buildUsageSection(
+    BuildContext context,
     Size screenSize,
     TextStyle usageTextStyle,
     int usedRecommendations,
@@ -143,29 +151,31 @@ class StatsPageWidget extends StatelessWidget {
     return Column(
       children: [
         _buildUsageIndicator(
+          context,
           screenSize,
           label: "음식 추천 사용량",
           used: usedRecommendations,
           max: maxRecommendations,
-          color: Colors.black87,
+          color: Theme.of(context).colorScheme.primary,
           style: usageTextStyle,
         ),
         const SizedBox(height: 8),
         _buildUsageIndicator(
+          context,
           screenSize,
           label: "리뷰 작성 사용량",
           used: usedReviews,
           max: maxReviews,
-          color: Colors.grey[600]!,
+          color: Theme.of(context).disabledColor,
           style: usageTextStyle,
         ),
         const SizedBox(height: 8),
-        _buildTimeInfo(screenSize),
+        _buildTimeInfo(context, screenSize),
       ],
     );
   }
 
-  Widget _buildTimeInfo(Size screenSize) {
+  Widget _buildTimeInfo(BuildContext context, Size screenSize) {
     final now = DateTime.now();
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -179,7 +189,7 @@ class StatsPageWidget extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Do Hyeon',
               fontSize: 10,
-              color: Colors.grey[400],
+              color: Theme.of(context).disabledColor,
             ),
           ),
           Text(
@@ -187,7 +197,7 @@ class StatsPageWidget extends StatelessWidget {
             style: TextStyle(
               fontFamily: 'Do Hyeon',
               fontSize: 10,
-              color: Colors.grey[400],
+              color: Theme.of(context).disabledColor,
             ),
           ),
         ],
@@ -196,6 +206,7 @@ class StatsPageWidget extends StatelessWidget {
   }
 
   Widget _buildUsageIndicator(
+    BuildContext context,
     Size screenSize, {
     required String label,
     required int used,
@@ -216,7 +227,10 @@ class StatsPageWidget extends StatelessWidget {
               Text(label, style: style),
               Text(
                 "$used / $max",
-                style: style.copyWith(color: Colors.grey[400], fontSize: 10),
+                style: style.copyWith(
+                  color: Theme.of(context).disabledColor,
+                  fontSize: 10,
+                ),
               ),
             ],
           ),
@@ -226,7 +240,7 @@ class StatsPageWidget extends StatelessWidget {
             child: LinearProgressIndicator(
               value: max > 0 ? used / max : 0,
               minHeight: 6,
-              backgroundColor: Colors.grey[100],
+              backgroundColor: Theme.of(context).chipTheme.backgroundColor,
               valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),

@@ -70,7 +70,11 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
           children: [
             Row(
               children: [
-                Icon(Icons.insights_rounded, color: Colors.grey[800], size: 18),
+                Icon(
+                  Icons.insights_rounded,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  size: 18,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '나의 식습관 인사이트',
@@ -78,7 +82,7 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Do Hyeon',
                     fontSize: 15,
-                    color: Colors.grey[800],
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ],
@@ -88,9 +92,9 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: Theme.of(context).chipTheme.backgroundColor,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey[200]!),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
               child: Column(
                 children: [
@@ -102,7 +106,9 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
                       fontFamily: 'Do Hyeon',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                      color: Theme.of(
+                        context,
+                      ).textTheme.titleSmall?.color?.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -112,7 +118,9 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
                     style: TextStyle(
                       fontFamily: 'Do Hyeon',
                       fontSize: 12,
-                      color: Colors.grey[500],
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                       height: 1.4,
                     ),
                   ),
@@ -146,7 +154,11 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
           // 헤더
           Row(
             children: [
-              Icon(Icons.insights_rounded, color: Colors.grey[800], size: 18),
+              Icon(
+                Icons.insights_rounded,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                size: 18,
+              ),
               const SizedBox(width: 6),
               Text(
                 '나의 식습관 인사이트',
@@ -154,7 +166,7 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Do Hyeon',
                   fontSize: 15,
-                  color: Colors.grey[800],
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
                 ),
               ),
               const Spacer(),
@@ -166,20 +178,24 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black,
+                    color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.auto_awesome, color: Colors.white, size: 10),
-                      SizedBox(width: 3),
+                      Icon(
+                        Icons.auto_awesome,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        size: 10,
+                      ),
+                      const SizedBox(width: 3),
                       Text(
                         'AI',
                         style: TextStyle(
                           fontFamily: 'Do Hyeon',
                           fontSize: 9,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -195,9 +211,9 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Theme.of(context).chipTheme.backgroundColor,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey[200]!),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,7 +239,9 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
                       fontFamily: 'Do Hyeon',
                       fontSize: 13,
                       height: 1.4,
-                      color: _isLoadingAi ? Colors.grey[400] : Colors.grey[800],
+                      color: _isLoadingAi
+                          ? Theme.of(context).disabledColor
+                          : Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
@@ -259,7 +277,9 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
               style: TextStyle(
                 fontFamily: 'Do Hyeon',
                 fontSize: 11,
-                color: Colors.grey[500],
+                color: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 4),
@@ -278,11 +298,13 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
                         style: TextStyle(
                           fontFamily: 'Do Hyeon',
                           fontSize: 11,
-                          color: Colors.grey[800],
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
-                      backgroundColor: Colors.grey[100],
-                      side: BorderSide(color: Colors.grey[300]!),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).chipTheme.backgroundColor,
+                      side: BorderSide(color: Theme.of(context).dividerColor),
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                     ),
                   )
@@ -299,9 +321,9 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: Theme.of(context).dividerColor),
         ),
         child: Column(
           children: [
@@ -312,7 +334,9 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
               style: TextStyle(
                 fontFamily: 'Do Hyeon',
                 fontSize: 10,
-                color: Colors.grey[500],
+                color: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
               ),
             ),
             Text(
@@ -321,7 +345,7 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
                 fontFamily: 'Do Hyeon',
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
               overflow: TextOverflow.ellipsis,
             ),

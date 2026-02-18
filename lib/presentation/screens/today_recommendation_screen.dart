@@ -161,7 +161,7 @@ class _TodayRecommendationScreenState
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: _buildAppBar(context, responsive, textTheme),
           body: _buildBody(context, responsive, foodCategories, textTheme),
           bottomNavigationBar: SafeArea(
@@ -221,7 +221,7 @@ class _TodayRecommendationScreenState
       preferredSize: Size.fromHeight(kToolbarHeight),
       child: SafeArea(
         child: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
           elevation: 0,
           titleSpacing: responsive.horizontalPadding(),
           centerTitle: false,
@@ -241,7 +241,7 @@ class _TodayRecommendationScreenState
           fontWeight: FontWeight.bold,
           fontSize: responsive.appBarFontSize(),
           fontFamily: 'SCDream',
-          color: Colors.grey[800],
+          color: Theme.of(context).textTheme.headlineMedium?.color,
         ),
       ),
     );
@@ -266,7 +266,7 @@ class _TodayRecommendationScreenState
       icon: Icon(
         Icons.notifications_outlined,
         size: responsive.iconSize(),
-        color: Colors.black,
+        color: Theme.of(context).iconTheme.color,
       ),
       onPressed: () => NotificationSettingsSheet.show(context),
       tooltip: '알림 설정',
@@ -280,7 +280,7 @@ class _TodayRecommendationScreenState
       icon: Icon(
         Icons.analytics,
         size: responsive.iconSize(),
-        color: Colors.black,
+        color: Theme.of(context).iconTheme.color,
       ),
       onPressed: () =>
           showDialog(context: context, builder: (_) => const UserStatsDialog()),
@@ -295,7 +295,7 @@ class _TodayRecommendationScreenState
       icon: Icon(
         Icons.rate_review,
         size: responsive.iconSize(),
-        color: Colors.black,
+        color: Theme.of(context).iconTheme.color,
       ),
       onPressed: () => _navigateToReviewScreen(
         context,
@@ -359,7 +359,7 @@ class _TodayRecommendationScreenState
               fontWeight: FontWeight.bold,
               fontSize: responsive.titleFontSize(),
               fontFamily: 'SCDream',
-              color: Colors.grey[800],
+              color: Theme.of(context).textTheme.titleLarge?.color,
             ),
           ),
         ],

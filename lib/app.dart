@@ -43,6 +43,8 @@ class _ReviewAIAppState extends State<ReviewAIApp> {
         title: '이거 먹자!',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: ThemeMode.system,
         locale: const Locale('ko', 'KR'),
         home: const SplashScreen(),
         navigatorKey: navigatorKey,

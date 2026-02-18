@@ -209,7 +209,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                       fontFamily: 'Do Hyeon',
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: Theme.of(context).textTheme.titleSmall?.color,
                     ),
                     textAlign: TextAlign.center,
                   ),
