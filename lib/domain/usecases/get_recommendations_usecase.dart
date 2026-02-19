@@ -1,16 +1,16 @@
 import '../entities/food_recommendation.dart';
 import '../repositories/recommendation_repository.dart';
 
-class GetRecommendationUseCase {
+class GetRecommendationsUseCase {
   final RecommendationRepository repository;
 
-  GetRecommendationUseCase(this.repository);
+  GetRecommendationsUseCase(this.repository);
 
-  Future<FoodRecommendation> call({
+  Future<List<FoodRecommendation>> call({
     required String category,
     required List<String> recentFoods,
   }) {
-    return repository.getRecommendation(
+    return repository.getRecommendations(
       category: category,
       recentFoods: recentFoods,
     );

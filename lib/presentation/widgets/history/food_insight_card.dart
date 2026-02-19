@@ -63,73 +63,7 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
   @override
   Widget build(BuildContext context) {
     if (widget.history.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.insights_rounded,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                  size: 18,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '나의 식습관 인사이트',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Do Hyeon',
-                    fontSize: 15,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).chipTheme.backgroundColor,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Theme.of(context).dividerColor),
-              ),
-              child: Column(
-                children: [
-                  const Text('🍽️', style: TextStyle(fontSize: 28)),
-                  const SizedBox(height: 8),
-                  Text(
-                    '아직 리뷰 기록이 없어요',
-                    style: TextStyle(
-                      fontFamily: 'Do Hyeon',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(
-                        context,
-                      ).textTheme.titleSmall?.color?.withValues(alpha: 0.8),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '음식을 선택하고 리뷰를 남기면\nAI가 식습관을 분석해드려요!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Do Hyeon',
-                      fontSize: 12,
-                      color: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+      return const _EmptyInsightCard();
     }
 
     final summary = FoodInsightService.generateSummary(widget.history);
@@ -151,172 +85,181 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 헤더
-          Row(
-            children: [
-              Icon(
-                Icons.insights_rounded,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '나의 식습관 인사이트',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Do Hyeon',
-                  fontSize: 15,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-              ),
-              const Spacer(),
-              // AI 배지
-              if (isAi && !_isLoadingAi)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        size: 10,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        'AI',
-                        style: TextStyle(
-                          fontFamily: 'Do Hyeon',
-                          fontSize: 9,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
+          _InsightHeader(isAi: isAi && !_isLoadingAi),
           const SizedBox(height: 10),
-
-          // 인사이트 메시지
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).chipTheme.backgroundColor,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Theme.of(context).dividerColor),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_isLoadingAi) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: Text(
-                    insightMessage,
-                    style: TextStyle(
-                      fontFamily: 'Do Hyeon',
-                      fontSize: 13,
-                      height: 1.4,
-                      color: _isLoadingAi
-                          ? Theme.of(context).disabledColor
-                          : Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _InsightMessage(message: insightMessage, isLoading: _isLoadingAi),
           const SizedBox(height: 10),
-
-          // 통계 요약 행
-          Row(
-            children: [
-              _buildStatBadge('📝', '총 리뷰', '$totalReviews개'),
-              const SizedBox(width: 6),
-              _buildStatBadge('📅', '이번 주', '$weeklyCount개'),
-              const SizedBox(width: 6),
-              if (categoryFrequency.isNotEmpty)
-                _buildStatBadge(
-                  FoodInsightService.categoryEmojis[categoryFrequency
-                          .keys
-                          .first] ??
-                      '🍽️',
-                  '선호',
-                  categoryFrequency.keys.first,
-                ),
-            ],
+          _StatBadgeRow(
+            totalReviews: totalReviews,
+            weeklyCount: weeklyCount,
+            categoryFrequency: categoryFrequency,
           ),
-
-          // Top 음식
           if (topFoods.isNotEmpty && topFoods.first['count'] as int >= 2) ...[
             const SizedBox(height: 10),
-            Text(
-              '자주 드시는 메뉴',
-              style: TextStyle(
-                fontFamily: 'Do Hyeon',
-                fontSize: 11,
-                color: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 4,
-              runSpacing: 3,
-              children: topFoods
-                  .where((f) => (f['count'] as int) >= 2)
-                  .take(5)
-                  .map(
-                    (f) => Chip(
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      label: Text(
-                        '${f['foodName']} ×${f['count']}',
-                        style: TextStyle(
-                          fontFamily: 'Do Hyeon',
-                          fontSize: 11,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
-                      ),
-                      backgroundColor: Theme.of(
-                        context,
-                      ).chipTheme.backgroundColor,
-                      side: BorderSide(color: Theme.of(context).dividerColor),
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                    ),
-                  )
-                  .toList(),
-            ),
+            _FrequentFoodChips(topFoods: topFoods),
           ],
         ],
       ),
     );
   }
+}
 
-  Widget _buildStatBadge(String emoji, String label, String value) {
+class _InsightHeader extends StatelessWidget {
+  final bool isAi;
+  const _InsightHeader({required this.isAi});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          Icons.insights_rounded,
+          color: Theme.of(context).textTheme.bodyLarge?.color,
+          size: 18,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '나의 식습관 인사이트',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Do Hyeon',
+            fontSize: 15,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
+        ),
+        const Spacer(),
+        if (isAi)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  size: 10,
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  'AI',
+                  style: TextStyle(
+                    fontFamily: 'Do Hyeon',
+                    fontSize: 9,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _InsightMessage extends StatelessWidget {
+  final String message;
+  final bool isLoading;
+
+  const _InsightMessage({required this.message, required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).chipTheme.backgroundColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Theme.of(context).dividerColor),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isLoading) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.grey[400],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontFamily: 'Do Hyeon',
+                fontSize: 13,
+                height: 1.4,
+                color: isLoading
+                    ? Theme.of(context).disabledColor
+                    : Theme.of(context).textTheme.bodyLarge?.color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatBadgeRow extends StatelessWidget {
+  final int totalReviews;
+  final int weeklyCount;
+  final Map<String, int> categoryFrequency;
+
+  const _StatBadgeRow({
+    required this.totalReviews,
+    required this.weeklyCount,
+    required this.categoryFrequency,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _StatBadge(emoji: '📝', label: '총 리뷰', value: '$totalReviews개'),
+        const SizedBox(width: 6),
+        _StatBadge(emoji: '📅', label: '이번 주', value: '$weeklyCount개'),
+        const SizedBox(width: 6),
+        if (categoryFrequency.isNotEmpty)
+          _StatBadge(
+            emoji:
+                FoodInsightService.categoryEmojis[categoryFrequency
+                    .keys
+                    .first] ??
+                '🍽️',
+            label: '선호',
+            value: categoryFrequency.keys.first,
+          ),
+      ],
+    );
+  }
+}
+
+class _StatBadge extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final String value;
+
+  const _StatBadge({
+    required this.emoji,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
@@ -351,6 +294,131 @@ class _FoodInsightCardState extends State<FoodInsightCard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FrequentFoodChips extends StatelessWidget {
+  final List<Map<String, dynamic>> topFoods;
+  const _FrequentFoodChips({required this.topFoods});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '자주 드시는 메뉴',
+          style: TextStyle(
+            fontFamily: 'Do Hyeon',
+            fontSize: 11,
+            color: Theme.of(
+              context,
+            ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 4,
+          runSpacing: 3,
+          children: topFoods
+              .where((f) => (f['count'] as int) >= 2)
+              .take(5)
+              .map(
+                (f) => Chip(
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  label: Text(
+                    '${f['foodName']} ×${f['count']}',
+                    style: TextStyle(
+                      fontFamily: 'Do Hyeon',
+                      fontSize: 11,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  ),
+                  backgroundColor: Theme.of(context).chipTheme.backgroundColor,
+                  side: BorderSide(color: Theme.of(context).dividerColor),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyInsightCard extends StatelessWidget {
+  const _EmptyInsightCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.insights_rounded,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+                size: 18,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '나의 식습관 인사이트',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Do Hyeon',
+                  fontSize: 15,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).chipTheme.backgroundColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Theme.of(context).dividerColor),
+            ),
+            child: Column(
+              children: [
+                const Text('🍽️', style: TextStyle(fontSize: 28)),
+                const SizedBox(height: 8),
+                Text(
+                  '아직 리뷰 기록이 없어요',
+                  style: TextStyle(
+                    fontFamily: 'Do Hyeon',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.color?.withValues(alpha: 0.8),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '음식을 선택하고 리뷰를 남기면\nAI가 식습관을 분석해드려요!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Do Hyeon',
+                    fontSize: 12,
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,7 +1,7 @@
 import '../entities/food_recommendation.dart';
 
 abstract class RecommendationRepository {
-  Future<FoodRecommendation> getRecommendation({
+  Future<List<FoodRecommendation>> getRecommendations({
     required String category,
     required List<String> recentFoods,
   });

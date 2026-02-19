@@ -1,34 +1,51 @@
 import 'package:review_ai/domain/entities/food_recommendation.dart' as domain;
 import 'package:review_ai/domain/repositories/recommendation_repository.dart';
-import '../datasources/recommendation_remote_data_source.dart';
+import 'package:review_ai/data/datasources/recommendation_remote_data_source.dart';
+import 'package:review_ai/data/datasources/recommendation_local_data_source.dart';
 
 class RecommendationRepositoryImpl implements RecommendationRepository {
   final RecommendationRemoteDataSource remoteDataSource;
+  final RecommendationLocalDataSource localDataSource;
 
-  RecommendationRepositoryImpl(this.remoteDataSource);
+  RecommendationRepositoryImpl({
+    required this.remoteDataSource,
+    required this.localDataSource,
+  });
 
   @override
-  Future<domain.FoodRecommendation> getRecommendation({
+  Future<List<domain.FoodRecommendation>> getRecommendations({
     required String category,
     required List<String> recentFoods,
   }) async {
-    // Data Source로부터 음식 추천 목록을 가져옴
-    final recommendations = await remoteDataSource.getFoodRecommendations(
+    // 1. 로컬 캐시 확인
+    final cached = await localDataSource.getCachedRecommendations(category);
+    if (cached != null && cached.isNotEmpty) {
+      return cached
+          .map(
+            (m) =>
+                domain.FoodRecommendation(name: m.name, imageUrl: m.imageUrl),
+          )
+          .toList();
+    }
+
+    // 2. 캐시 없으면 리모트 fetch
+    final remoteModels = await remoteDataSource.getFoodRecommendations(
       category: category,
       recentFoods: recentFoods,
     );
 
-    if (recommendations.isEmpty) {
+    if (remoteModels.isEmpty) {
       throw Exception('추천을 불러오지 못했습니다.');
     }
 
-    // 첫 번째 추천을 반환 (또는 스마트 선택 로직을 여기 추가 가능)
-    final firstRecommendation = recommendations.first;
+    // 3. 로컬 캐시 저장
+    await localDataSource.cacheRecommendations(category, remoteModels);
 
-    // Model을 Entity로 변환
-    return domain.FoodRecommendation(
-      name: firstRecommendation.name,
-      imageUrl: firstRecommendation.imageUrl,
-    );
+    // 4. Entity로 변환하여 반환
+    return remoteModels
+        .map(
+          (m) => domain.FoodRecommendation(name: m.name, imageUrl: m.imageUrl),
+        )
+        .toList();
   }
 }

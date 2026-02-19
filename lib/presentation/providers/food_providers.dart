@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/data/models/food_category.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
-import 'package:review_ai/services/recommendation_service.dart';
+import 'package:review_ai/services/user_preference_service.dart';
+import 'package:review_ai/presentation/providers/dependency_injection.dart';
 import 'package:flutter/material.dart';
 
 // =============================================================================
@@ -148,11 +149,22 @@ final recommendationListProvider =
 final recommendationProvider = FutureProvider.autoDispose
     .family<List<FoodRecommendation>, String>((ref, category) async {
       try {
-        // 서비스에서 추천 목록 가져오기
-        final recommendations =
-            await RecommendationService.getFoodRecommendations(
-              category: category,
-            );
+        // 추천 목록 가져오기 (UseCase 활용)
+        final history = await UserPreferenceService.getFoodSelectionHistory();
+        final recentFoods = history.map((s) => s.foodName).toList();
+
+        final getRecommendationsUseCase = ref.read(
+          getRecommendationsUseCaseProvider,
+        );
+        final domainFoods = await getRecommendationsUseCase(
+          category: category,
+          recentFoods: recentFoods,
+        );
+
+        // Entity를 UI용 Model로 변환
+        final recommendations = domainFoods
+            .map((f) => FoodRecommendation(name: f.name, imageUrl: f.imageUrl))
+            .toList();
 
         // 추천 목록을 recommendationListProvider에도 동기화
         final recommendationNames = recommendations

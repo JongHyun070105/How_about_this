@@ -6,7 +6,8 @@ import 'package:review_ai/data/models/food_category.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/presentation/providers/food_providers.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
-import 'package:review_ai/services/recommendation_service.dart';
+import 'package:review_ai/services/user_preference_service.dart';
+import 'package:review_ai/presentation/providers/dependency_injection.dart';
 
 class TodayRecommendationViewModel extends StateNotifier<bool> {
   final Ref _ref;
@@ -71,12 +72,27 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
   Future<List<FoodRecommendation>> _getFoodRecommendations(
     FoodCategory category,
   ) async {
-    // 캐싱 로직은 RecommendationService의 static 메서드 활용
-    // 실제 API 호출은 Use Case를 통해 수행
-    // TODO: 캐싱 로직을 Repository layer로 이동 필요
-    return await RecommendationService.getFoodRecommendations(
-      category: category.name,
+    // 최근 7일간 먹은 음식 가져오기 (히스토리에서 필터링)
+    final history = await UserPreferenceService.getFoodSelectionHistory();
+    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+    final recentFoods = history
+        .where((s) => s.selectedAt.isAfter(sevenDaysAgo))
+        .map((s) => s.foodName)
+        .toList();
+
+    // UseCase 활용 (캐싱은 Repository 구현체 내부에서 담당)
+    final getRecommendationsUseCase = _ref.read(
+      getRecommendationsUseCaseProvider,
     );
+    final domainFoods = await getRecommendationsUseCase(
+      category: category.name,
+      recentFoods: recentFoods,
+    );
+
+    // Entity를 Presentation용 Model로 변환
+    return domainFoods
+        .map((f) => FoodRecommendation(name: f.name, imageUrl: f.imageUrl))
+        .toList();
   }
 
   void _showInfoDialog(BuildContext context, String message) {
