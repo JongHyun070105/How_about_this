@@ -77,10 +77,11 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON_BASE64 }}" | base64 --decode > android/service_account.json
 
-      - name: Build App Bundle
+      - name: Build APK & App Bundle
         run: |
           BUILD_NUMBER=$(( ${{ github.run_number }} + 200 ))
           echo "Building with build-number: $BUILD_NUMBER"
+          flutter build apk --release --build-number=$BUILD_NUMBER
           flutter build appbundle --release --build-number=$BUILD_NUMBER
 
       - name: Setup Ruby
@@ -91,13 +92,13 @@ jobs:
           cache-version: 1
           working-directory: android
 
-      - name: Find AAB File
-        run: find . -name "*.aab"
+      - name: Find Build Files
+        run: find build/app/outputs -name "*.apk" && find build/app/outputs -name "*.aab"
 
       - name: Deploy to Firebase App Distribution
         uses: w9jds/firebase-action@master
         with:
-          args: appdistribution:distribute build/app/outputs/bundle/release/app-release.aab --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" --groups testers
+          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" --groups testers
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
