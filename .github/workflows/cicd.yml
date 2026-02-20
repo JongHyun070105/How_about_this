@@ -95,12 +95,11 @@ jobs:
         run: find . -name "*.aab"
 
       - name: Deploy to Firebase App Distribution
-        uses: w_99/firebase-distribution-github-action@v1
+        uses: w9jds/firebase-action@master
         with:
-          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-          groups: testers
-          file: android/app/build/outputs/bundle/release/app-release.aab
+          args: appdistribution:distribute android/app/build/outputs/bundle/release/app-release.aab --app ${{ secrets.FIREBASE_ANDROID_APP_ID }} --groups testers
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
       - name: Deploy to Play Store
         uses: maierj/fastlane-action@v3.0.0
