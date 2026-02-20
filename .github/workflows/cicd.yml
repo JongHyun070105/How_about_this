@@ -97,7 +97,7 @@ jobs:
       - name: Deploy to Firebase App Distribution
         uses: w9jds/firebase-action@master
         with:
-          args: appdistribution:distribute android/app/build/outputs/bundle/release/app-release.aab --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" --groups testers
+          args: appdistribution:distribute build/app/outputs/bundle/release/app-release.aab --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" --groups testers
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
