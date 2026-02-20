@@ -43,8 +43,8 @@ jobs:
   deploy:
     name: Android Deploy
     needs: qa
-    # main 브랜치에 푸시되거나 수동으로 실행될 때만 배포 진행
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    # main 또는 develop 브랜치에 푸시되거나 수동으로 실행될 때만 배포 진행
+    if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')) || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,12 +77,15 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_SERVICE_ACCOUNT_JSON_BASE64 }}" | base64 --decode > android/service_account.json
 
-      - name: Build APK & App Bundle
+      - name: Build Android App
         run: |
           BUILD_NUMBER=$(( ${{ github.run_number }} + 200 ))
           echo "Building with build-number: $BUILD_NUMBER"
-          flutter build apk --release --build-number=$BUILD_NUMBER
-          flutter build appbundle --release --build-number=$BUILD_NUMBER
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            flutter build appbundle --release --build-number=$BUILD_NUMBER
+          else
+            flutter build apk --release --build-number=$BUILD_NUMBER
+          fi
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -93,16 +96,18 @@ jobs:
           working-directory: android
 
       - name: Find Build Files
-        run: find build/app/outputs -name "*.apk" && find build/app/outputs -name "*.aab"
+        run: ls -R build/app/outputs/
 
-      - name: Deploy to Firebase App Distribution
+      - name: Deploy to Firebase App Distribution (Develop)
+        if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
         uses: w9jds/firebase-action@master
         with:
           args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" --groups testers
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
-      - name: Deploy to Play Store
+      - name: Deploy to Play Store (Main)
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
         uses: maierj/fastlane-action@v3.0.0
         with:
           lane: deploy
