@@ -12,6 +12,7 @@ dependencies:
   http: ^1.2.2
   image_picker: ^1.1.2
   clarity_flutter: ^1.0.0
+  logger: ^2.4.0
 
   shared_preferences: ^2.2.3
   flutter_secure_storage: ^9.0.0

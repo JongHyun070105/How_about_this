@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/services/api_proxy_service.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 import 'package:review_ai/utils/gemini_response_parser.dart';
 
 abstract class RecommendationRemoteDataSource {
@@ -35,8 +35,7 @@ class RecommendationRemoteDataSourceImpl
       // 공통 파서를 사용하여 응답 파싱
       return GeminiResponseParser.parseRecommendations(response);
     } catch (e, stackTrace) {
-      debugPrint('Gemini API 호출 또는 파싱 오류: $e');
-      debugPrint('Stack trace: $stackTrace');
+      LoggerService.e('Gemini API 호출 또는 파싱 오류', e, stackTrace);
       throw Exception('음식 추천을 받아오는 데 실패했습니다. 다시 시도해주세요.');
     }
   }

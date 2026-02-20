@@ -8,6 +8,7 @@ import 'package:review_ai/services/prompt_builder.dart';
 import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/utils/error_handler.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 /// Cloudflare Workers API 프록시 서버를 통한 Gemini API 호출 서비스
 class ApiProxyService {
@@ -50,20 +51,16 @@ class ApiProxyService {
 
       if (response.statusCode == 200) {
         final responseBody = utf8.decode(response.bodyBytes);
-        if (kDebugMode) {
-          debugPrint(
-            'Proxy API Response received (length: ${responseBody.length})',
-          );
-        }
+        LoggerService.i(
+          'Proxy API Response received (length: ${responseBody.length})',
+        );
         return jsonDecode(responseBody);
       } else {
         // 에러 응답 처리 - JSON이 아닐 수도 있음
         final responseBody = utf8.decode(response.bodyBytes);
-        if (kDebugMode) {
-          debugPrint(
-            'API Error Response (${response.statusCode}): $responseBody',
-          );
-        }
+        LoggerService.w(
+          'API Error Response (${response.statusCode}): $responseBody',
+        );
 
         // JSON 파싱 시도
         try {
@@ -74,7 +71,7 @@ class ApiProxyService {
           );
         } catch (e) {
           // JSON 파싱 실패 시 로그만 남기고 사용자에게는 일반 메시지
-          debugPrint(
+          LoggerService.w(
             'API Error Response (non-JSON): ${responseBody.length > 100 ? responseBody.substring(0, 100) : responseBody}',
           );
           throw GeminiApiException(
@@ -291,7 +288,7 @@ class ApiProxyService {
     } on ApiException {
       rethrow;
     } catch (e) {
-      debugPrint('Vision AI Error: $e');
+      LoggerService.e('Vision AI Error', e);
       throw ParsingException('이미지 분석 중 오류가 발생했습니다.');
     }
   }

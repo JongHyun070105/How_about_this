@@ -14,6 +14,7 @@ import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/services/config_service.dart';
 import 'package:review_ai/services/server_time_service.dart';
 import 'package:review_ai/services/notification_service.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 class AppInitializer {
   static Future<void> initialize() async {
@@ -62,7 +63,7 @@ class AppInitializer {
         await service.requestPermissions();
       }
     } catch (e) {
-      debugPrint('알림 권한 요청 실패: $e');
+      LoggerService.e('알림 권한 요청 실패', e);
     }
   }
 
@@ -86,7 +87,7 @@ class AppInitializer {
         permission = await Geolocator.requestPermission();
       }
     } catch (e) {
-      debugPrint('위치 권한 요청 실패: $e');
+      LoggerService.e('위치 권한 요청 실패', e);
     }
   }
 

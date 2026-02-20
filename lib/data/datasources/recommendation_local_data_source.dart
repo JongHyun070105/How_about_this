@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/food_recommendation.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 abstract class RecommendationLocalDataSource {
   Future<List<FoodRecommendation>?> getCachedRecommendations(String category);
@@ -45,7 +45,7 @@ class RecommendationLocalDataSourceImpl
       }
       return null;
     } catch (e) {
-      debugPrint('Error decoding cached data: $e');
+      LoggerService.e('Error decoding cached data', e);
       await clearCache(category);
       return null;
     }

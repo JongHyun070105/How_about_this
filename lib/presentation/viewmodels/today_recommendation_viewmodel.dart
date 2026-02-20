@@ -8,6 +8,7 @@ import 'package:review_ai/presentation/providers/food_providers.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 import 'package:review_ai/services/user_preference_service.dart';
 import 'package:review_ai/presentation/providers/dependency_injection.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 class TodayRecommendationViewModel extends StateNotifier<bool> {
   final Ref _ref;
@@ -103,7 +104,7 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
     if (!context.mounted) return;
 
     final errorString = error.toString().toLowerCase();
-    debugPrint("음식 추천 오류 상세: $error");
+    LoggerService.e("음식 추천 오류 발생", error);
 
     String userMessage;
     if (error is NetworkException ||
