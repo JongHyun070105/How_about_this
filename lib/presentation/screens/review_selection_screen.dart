@@ -70,12 +70,16 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       elevation: 0,
       centerTitle: true,
       automaticallyImplyLeading: false,
-      title: Text(
-        '리뷰 AI',
-        style: textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          fontSize: responsive.appBarFontSize(),
-          fontFamily: 'Do Hyeon',
+      title: Semantics(
+        header: true,
+        label: '마음에 드는 리뷰 선택하기',
+        child: Text(
+          '리뷰 AI',
+          style: textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: responsive.appBarFontSize(),
+            fontFamily: 'Do Hyeon',
+          ),
         ),
       ),
       actions: [
@@ -137,14 +141,17 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                 alignment: Alignment.center,
                 child: Column(
                   children: [
-                    Text(
-                      '마음에 드는 리뷰 하나를 선택하세요',
-                      textAlign: TextAlign.center,
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Do Hyeon',
-                        fontSize: responsive.titleFontSize(),
-                        color: Colors.grey[800],
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        '마음에 드는 리뷰 하나를 선택하세요',
+                        textAlign: TextAlign.center,
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Do Hyeon',
+                          fontSize: responsive.titleFontSize(),
+                          color: Colors.grey[800],
+                        ),
                       ),
                     ),
                     SizedBox(height: responsive.verticalSpacing() * 0.5),
@@ -222,24 +229,30 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
 
               // 반응형 스타일의 페이지 인디케이터
               if (reviews.isNotEmpty)
-                Container(
-                  padding: EdgeInsets.all(responsive.horizontalPadding() * 0.2),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(
-                      responsive.isTablet ? 25.0 : 20.0,
+                Semantics(
+                  label:
+                      '총 ${reviews.length}개의 리뷰 중 현재 ${(_pageController.hasClients ? _pageController.page?.round() ?? 0 : 0) + 1}번째 리뷰',
+                  child: Container(
+                    padding: EdgeInsets.all(
+                      responsive.horizontalPadding() * 0.2,
                     ),
-                  ),
-                  child: SmoothPageIndicator(
-                    controller: _pageController,
-                    count: reviews.length,
-                    effect: WormEffect(
-                      dotColor: Colors.grey.shade400,
-                      activeDotColor: Theme.of(context).primaryColor,
-                      dotHeight: responsive.iconSize() * 0.5,
-                      dotWidth: responsive.iconSize() * 0.5,
-                      spacing: responsive.iconSize() * 0.4,
-                      radius: responsive.iconSize() * 0.5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(
+                        responsive.isTablet ? 25.0 : 20.0,
+                      ),
+                    ),
+                    child: SmoothPageIndicator(
+                      controller: _pageController,
+                      count: reviews.length,
+                      effect: WormEffect(
+                        dotColor: Colors.grey.shade400,
+                        activeDotColor: Theme.of(context).primaryColor,
+                        dotHeight: responsive.iconSize() * 0.5,
+                        dotWidth: responsive.iconSize() * 0.5,
+                        spacing: responsive.iconSize() * 0.4,
+                        radius: responsive.iconSize() * 0.5,
+                      ),
                     ),
                   ),
                 ),
@@ -270,43 +283,50 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                           ]
                         : null,
                   ),
-                  child: ElevatedButton(
-                    onPressed: selectedReviewIndex == null
-                        ? null
-                        : () => _saveSelectedReview(context, responsive),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: selectedReviewIndex == null
-                          ? Colors.grey.shade400
-                          : Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          responsive.isTablet ? 24.0 : 20.0,
-                        ),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        vertical:
-                            responsive.verticalSpacing() * 0.8, // 버튼 높이 확보
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            selectedReviewIndex == null
-                                ? '리뷰를 선택하세요'
-                                : '선택한 리뷰 저장',
-                            style: TextStyle(
-                              fontFamily: 'Do Hyeon',
-                              fontSize: responsive.buttonFontSize(),
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
+                  child: Semantics(
+                    label: selectedReviewIndex == null
+                        ? '리뷰를 먼저 선택해야 저장할 수 있습니다'
+                        : '선택한 리뷰를 클립보드에 복사하고 히스토리에 저장하기',
+                    button: true,
+                    enabled: selectedReviewIndex != null,
+                    child: ElevatedButton(
+                      onPressed: selectedReviewIndex == null
+                          ? null
+                          : () => _saveSelectedReview(context, responsive),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: selectedReviewIndex == null
+                            ? Colors.grey.shade400
+                            : Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            responsive.isTablet ? 24.0 : 20.0,
                           ),
                         ),
-                      ],
+                        padding: EdgeInsets.symmetric(
+                          vertical:
+                              responsive.verticalSpacing() * 0.8, // 버튼 높이 확보
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              selectedReviewIndex == null
+                                  ? '리뷰를 선택하세요'
+                                  : '선택한 리뷰 저장',
+                              style: TextStyle(
+                                fontFamily: 'Do Hyeon',
+                                fontSize: responsive.buttonFontSize(),
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

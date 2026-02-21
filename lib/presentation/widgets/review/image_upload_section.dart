@@ -17,57 +17,68 @@ class ImageUploadSection extends ConsumerWidget {
     final image = reviewState.image;
     final isPicking = ref.watch(isPickingImageProvider);
 
-    return GestureDetector(
-      onTap: isPicking ? null : () => _pickImage(ref, context),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(color: Colors.grey[300]!, width: 1.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withAlpha((255 * 0.05).round()),
-                spreadRadius: 1,
-                blurRadius: 3,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              _buildImageContent(context, image, isPicking),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: IconButton(
-                  icon: Icon(
-                    Icons.info_outline,
-                    color: Colors.grey[600],
-                    size: 20,
-                  ),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text("좋은 사진 선택 팁"),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text("✓ 음식 전체가 잘 보이는 사진"),
-                            Text("✓ 조명이 밝고 선명한 사진"),
-                            Text("✓ 접시나 용기까지 포함된 사진"),
-                            Text("✗ 일부만 보이거나 흐린 사진"),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+    return Semantics(
+      label: image == null
+          ? '음식 사진 업로드. 현재 선택된 사진 없음.'
+          : '음식 사진 업로드. 현재 사진 선택됨.',
+      hint: '탭하여 갤러리에서 사진을 선택하세요',
+      button: true,
+      child: GestureDetector(
+        onTap: isPicking ? null : () => _pickImage(ref, context),
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.0),
+              border: Border.all(color: Colors.grey[300]!, width: 1.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withAlpha((255 * 0.05).round()),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Stack(
+              children: [
+                _buildImageContent(context, image, isPicking),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Semantics(
+                    label: '좋은 사진 선택 팁 보기',
+                    button: true,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.info_outline,
+                        color: Colors.grey[600],
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text("좋은 사진 선택 팁"),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text("✓ 음식 전체가 잘 보이는 사진"),
+                                Text("✓ 조명이 밝고 선명한 사진"),
+                                Text("✓ 접시나 용기까지 포함된 사진"),
+                                Text("✗ 일부만 보이거나 흐린 사진"),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

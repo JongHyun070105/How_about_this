@@ -204,12 +204,16 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       centerTitle: true,
-      title: Text(
-        '리뷰 AI',
-        style: textTheme.headlineMedium?.copyWith(
-          fontSize: responsive.appBarFontSize(),
-          fontWeight: FontWeight.bold,
-          fontFamily: 'SCDream',
+      title: Semantics(
+        header: true,
+        label: '리뷰 분석 및 생성 화면',
+        child: Text(
+          '리뷰 AI',
+          style: textTheme.headlineMedium?.copyWith(
+            fontSize: responsive.appBarFontSize(),
+            fontWeight: FontWeight.bold,
+            fontFamily: 'SCDream',
+          ),
         ),
       ),
       leading: IconButton(
@@ -317,13 +321,16 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Widget _buildSectionLabel(Responsive responsive, String title) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: responsive.inputFontSize() * 1.1,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'SCDream',
-          color: Colors.grey[800],
+      child: Semantics(
+        header: true,
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: responsive.inputFontSize() * 1.1,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'SCDream',
+            color: Colors.grey[800],
+          ),
         ),
       ),
     );
@@ -374,38 +381,46 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           suffixIcon: _isGeneratingFoodName
               ? null
               : IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.grey[800]!, Colors.black],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-                        const SizedBox(width: 4),
-                        Text(
-                          'AI',
-                          style: TextStyle(
-                            fontFamily: 'SCDream',
-                            fontSize: responsive.inputFontSize() * 0.8,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   onPressed: _generateFoodNameWithAI,
                   tooltip: 'AI로 음식명 생성',
+                  icon: Semantics(
+                    label: '음식 이미지로부터 음식명 자동 추출',
+                    button: true,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.grey[800]!, Colors.black],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'AI',
+                            style: TextStyle(
+                              fontFamily: 'SCDream',
+                              fontSize: responsive.inputFontSize() * 0.8,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
           border: const UnderlineInputBorder(borderSide: BorderSide.none),
           focusedBorder: const UnderlineInputBorder(
@@ -438,14 +453,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           end: Alignment.bottomRight,
         ),
       ),
-      child: PrimaryActionButton(
-        text: '리뷰 생성하기',
-        onPressed: isLoading
-            ? null
-            : () => ref
-                  .read(reviewViewModelProvider.notifier)
-                  .generateReviews(context),
-        isLoading: false,
+      child: Semantics(
+        label: '입력한 정보를 바탕으로 AI 리뷰 생성하기',
+        button: true,
+        child: PrimaryActionButton(
+          text: '리뷰 생성하기',
+          onPressed: isLoading
+              ? null
+              : () => ref
+                    .read(reviewViewModelProvider.notifier)
+                    .generateReviews(context),
+          isLoading: false,
+        ),
       ),
     );
   }

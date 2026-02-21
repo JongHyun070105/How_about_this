@@ -179,9 +179,12 @@ class _TodayRecommendationScreenState
                   SizedBox(
                     width: responsive.iconSize() * 2,
                     height: responsive.iconSize() * 2,
-                    child: const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      strokeWidth: 4,
+                    child: Semantics(
+                      label: '음식 추천 중',
+                      child: const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        strokeWidth: 4,
+                      ),
                     ),
                   ),
                   SizedBox(height: responsive.verticalSpacing()),
@@ -194,13 +197,17 @@ class _TodayRecommendationScreenState
                             child: child,
                           );
                         },
-                    child: Text(
-                      _loadingMessages[_currentMessageIndex],
-                      key: ValueKey<int>(_currentMessageIndex),
-                      style: textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'SCDream',
+                    child: Semantics(
+                      liveRegion: true,
+                      label: '상태: ${_loadingMessages[_currentMessageIndex]}',
+                      child: Text(
+                        _loadingMessages[_currentMessageIndex],
+                        key: ValueKey<int>(_currentMessageIndex),
+                        style: textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'SCDream',
+                        ),
                       ),
                     ),
                   ),
@@ -235,13 +242,17 @@ class _TodayRecommendationScreenState
   Widget _buildAppBarTitle(Responsive responsive, TextTheme textTheme) {
     return Container(
       alignment: Alignment.centerLeft,
-      child: Text(
-        '이거 먹자!',
-        style: textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          fontSize: responsive.appBarFontSize(),
-          fontFamily: 'SCDream',
-          color: Theme.of(context).textTheme.headlineMedium?.color,
+      child: Semantics(
+        header: true,
+        label: '앱 제목: 이거 먹자!',
+        child: Text(
+          '이거 먹자!',
+          style: textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            fontSize: responsive.appBarFontSize(),
+            fontFamily: 'SCDream',
+            color: Theme.of(context).textTheme.headlineMedium?.color,
+          ),
         ),
       ),
     );
@@ -353,13 +364,16 @@ class _TodayRecommendationScreenState
                 ),
               ),
             ),
-          Text(
-            '카테고리를 선택해주세요',
-            style: textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: responsive.titleFontSize(),
-              fontFamily: 'SCDream',
-              color: Theme.of(context).textTheme.titleLarge?.color,
+          Semantics(
+            header: true,
+            child: Text(
+              '카테고리를 선택해주세요',
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: responsive.titleFontSize(),
+                fontFamily: 'SCDream',
+                color: Theme.of(context).textTheme.titleLarge?.color,
+              ),
             ),
           ),
         ],

@@ -92,7 +92,11 @@ class _RestaurantSearchScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.foodName} 음식점 리스트'),
+        title: Semantics(
+          header: true,
+          label: '${widget.foodName} 주변 음식점 리스트',
+          child: Text('${widget.foodName} 음식점 리스트'),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -100,6 +104,7 @@ class _RestaurantSearchScreenState
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _searchRestaurants,
+            tooltip: '주변 다시 검색',
           ),
         ],
       ),
@@ -222,11 +227,15 @@ class _RestaurantSearchScreenState
               ),
             ),
             SizedBox(height: screenHeight * 0.015),
-            TextButton(
-              onPressed: () {
-                ref.read(restaurantSearchProvider.notifier).openAppSettings();
-              },
-              child: const Text('설정으로 이동'),
+            Semantics(
+              button: true,
+              label: '휴대폰 설정으로 이동하여 직접 권한 허용',
+              child: TextButton(
+                onPressed: () {
+                  ref.read(restaurantSearchProvider.notifier).openAppSettings();
+                },
+                child: const Text('설정으로 이동'),
+              ),
             ),
           ],
         ),
@@ -330,16 +339,22 @@ class _RestaurantSearchScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '${restaurants.length}개의 음식점을 찾았습니다',
-                style: Theme.of(context).textTheme.titleMedium,
+              Semantics(
+                header: true,
+                child: Text(
+                  '${restaurants.length}개의 음식점을 찾았습니다',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
               const SizedBox(height: 4),
-              Text(
-                '${widget.foodName} • ${widget.category}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+              Semantics(
+                label: '검색 필터: ${widget.foodName} 및 ${widget.category}',
+                child: Text(
+                  '${widget.foodName} • ${widget.category}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                ),
               ),
             ],
           ),
@@ -425,9 +440,13 @@ class _RestaurantSearchScreenState
               ),
             ],
           ),
-          trailing: const IconButton(
-            icon: Icon(Icons.delivery_dining),
-            onPressed: null,
+          trailing: Semantics(
+            label: '배달 앱 열기',
+            button: true,
+            child: const IconButton(
+              icon: Icon(Icons.delivery_dining),
+              onPressed: null,
+            ),
           ),
           onTap: () => _launchDeliveryApp(restaurant),
         ),
