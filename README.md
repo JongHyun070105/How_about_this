@@ -51,11 +51,17 @@
 - **지도 & 길찾기**: 카카오맵 API
 - **날씨**: OpenWeatherMap API
 
-### 보안 & 최적화
-- **API 키 보호**: Cloudflare Workers를 통한 서버 사이드 API 키 관리
-- **토큰 암호화**: flutter_secure_storage를 활용한 안전한 저장
-- **캐싱 전략**: 24시간 TTL의 음식 추천 캐싱으로 API 호출 최소화
-- **Rate Limiting**: 15분당 100회 요청 제한
+### 보안 & 인프라
+- **CI/CD**: GitHub Actions를 통한 자동화된 빌드 및 배포 프로세스
+- **API 보호**: Cloudflare Workers를 통한 고도화된 프록시 및 Rate Limiting
+- **모니터링**: Firebase Crashlytics를 통한 실시간 에러 트래킹 및 성능 모니터링
+- **캐싱 전략**: 24시간 TTL 기반의 지능적 추천 데이터 캐싱
+- **보안**: flutter_secure_storage를 이용한 민감 정보 암호화 저장
+
+## 아키텍처 및 품질
+- **Clean Architecture**: Domain, Data, Presentation 레이어 분리로 유지보수성 극대화
+- **OOP 원칙**: SOLID 원칙을 준수하는 객체 지향 설계
+- **로깅 시스템**: 프로덕션 레벨의 체계적인 로깅 인프라 구축
 
 ## 시작하기
 
@@ -84,17 +90,17 @@ cd ios
 pod install
 ```
 
-### 4. 앱 실행
+## CI/CD 및 배포 전략
 
-시뮬레이터 또는 실제 기기에서 앱을 실행합니다.
+이 프로젝트는 브랜치별 이원화 배포 시스템을 갖추고 있습니다.
 
-```bash
-flutter run
-```
+- **`develop` 브랜치**: 푸시 시 **Firebase App Distribution**을 통해 테스터에게 APK가 자동 배포됩니다.
+- **`main` 브랜치**: 푸시 시 **Google Play Store** 내부 테스트 트랙으로 AAB가 자동 빌드 및 업로드됩니다.
+- **Cloudflare**: `cloudflare-worker` 폴더 변경 시 Wrangler를 통해 Worker 스크립트가 자동 배포됩니다.
+
+## 앱 실행 방법
 
 ## 스토어 링크
-
-앱이 각 스토어에 출시되면 여기에 링크가 추가될 예정입니다.
 
 - **Google Play Store**: [[플레이스토어 링크](https://play.google.com/store/apps/details?id=com.jonghyun.reviewai_flutter&pcampaignid=web_share)]
 - **Apple App Store**: 업데이트 진행 X
