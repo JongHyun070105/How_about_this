@@ -74,8 +74,8 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
                         colors: [
                           Colors.transparent,
                           Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[700]!.withOpacity(0.5)
-                              : Colors.white.withOpacity(0.5),
+                              ? Colors.grey[700]!.withValues(alpha: 0.5)
+                              : Colors.white.withValues(alpha: 0.5),
                           Colors.transparent,
                         ],
                         stops: const [0.1, 0.5, 0.9],

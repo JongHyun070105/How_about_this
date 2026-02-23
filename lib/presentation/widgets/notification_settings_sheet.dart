@@ -114,7 +114,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).dialogBackgroundColor,
+        color:
+            Theme.of(context).dialogTheme.backgroundColor ??
+            Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -140,11 +142,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color:
-                          Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest ??
-                          Colors.grey[100],
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(

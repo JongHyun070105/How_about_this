@@ -69,7 +69,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       builder: (BuildContext context) {
         return Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).dialogBackgroundColor,
+            color:
+                Theme.of(context).dialogTheme.backgroundColor ??
+                Theme.of(context).colorScheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           padding: EdgeInsets.only(

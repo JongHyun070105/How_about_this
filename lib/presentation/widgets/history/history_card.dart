@@ -60,7 +60,9 @@ class HistoryCard extends ConsumerWidget {
                   if (entry.reviewStyle.isNotEmpty)
                     _buildTagChip(
                       entry.reviewStyle,
-                      Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.1),
                       Theme.of(context).colorScheme.secondary,
                       screenWidth,
                     ),

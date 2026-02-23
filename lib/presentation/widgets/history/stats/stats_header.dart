@@ -30,7 +30,9 @@ class StatsHeader extends StatelessWidget {
         vertical: 12,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).dialogBackgroundColor,
+        color:
+            Theme.of(context).dialogTheme.backgroundColor ??
+            Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).shadowColor.withAlpha((255 * 0.1).round()),
