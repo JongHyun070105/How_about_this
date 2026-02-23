@@ -26,7 +26,9 @@ class ReviewCard extends StatelessWidget {
         elevation: 0,
         shape: RoundedRectangleBorder(
           side: BorderSide(
-            color: isSelected ? Colors.blue : Colors.grey.shade300,
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).dividerColor,
             width: isSelected ? screenWidth * 0.005 : screenWidth * 0.0025,
           ),
           borderRadius: BorderRadius.circular(screenWidth * 0.025),
@@ -35,7 +37,11 @@ class ReviewCard extends StatelessWidget {
           horizontal: screenWidth * 0.02,
           vertical: screenHeight * 0.02,
         ),
-        color: isSelected ? Colors.blue.shade50 : const Color(0xFFF1F1F1),
+        color: isSelected
+            ? Theme.of(context).colorScheme.primaryContainer
+            : (Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[850]
+                  : const Color(0xFFF1F1F1)),
         child: Stack(
           children: [
             Padding(
@@ -62,12 +68,12 @@ class ReviewCard extends StatelessWidget {
                   width: screenWidth * 0.06,
                   height: screenWidth * 0.06,
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(screenWidth * 0.03),
                   ),
                   child: Icon(
                     Icons.check,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     size: screenWidth * 0.04,
                   ),
                 ),
@@ -77,7 +83,7 @@ class ReviewCard extends StatelessWidget {
               left: screenWidth * 0.03,
               child: IconButton(
                 icon: Icon(Icons.edit, size: screenWidth * 0.05),
-                color: Colors.grey.shade600,
+                color: Theme.of(context).textTheme.bodySmall?.color,
                 onPressed: onEdit,
               ),
             ),

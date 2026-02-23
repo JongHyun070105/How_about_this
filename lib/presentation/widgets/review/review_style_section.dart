@@ -46,7 +46,9 @@ class ReviewStyleSection extends ConsumerWidget {
                     style: TextStyle(
                       fontFamily: 'Do Hyeon',
                       fontSize: screenSize.width * 0.035,
-                      color: isSelected ? Colors.white : Colors.black,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).textTheme.bodyMedium?.color,
                     ),
                   ),
                   selected: isSelected,
@@ -57,10 +59,16 @@ class ReviewStyleSection extends ConsumerWidget {
                           .setSelectedReviewStyle(style);
                     }
                   },
-                  selectedColor: Colors.black, // 선택된 상태: 검은색
-                  backgroundColor: Colors.white, // 기본 상태: 흰색 배경
+                  selectedColor: Theme.of(
+                    context,
+                  ).colorScheme.primary, // 선택된 상태
+                  backgroundColor: Theme.of(
+                    context,
+                  ).chipTheme.backgroundColor, // 기본 상태
                   side: BorderSide(
-                    color: isSelected ? Colors.black : Colors.grey[400]!,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).dividerColor,
                     width: 1.0,
                   ),
                 ),

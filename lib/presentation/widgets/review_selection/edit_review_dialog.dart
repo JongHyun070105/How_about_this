@@ -49,7 +49,10 @@ class _EditReviewDialogState extends ConsumerState<EditReviewDialog> {
             hintText: '리뷰 내용을 수정해주세요',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+              borderSide: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 1,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -60,10 +63,15 @@ class _EditReviewDialogState extends ConsumerState<EditReviewDialog> {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+              borderSide: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 1,
+              ),
             ),
             filled: true,
-            fillColor: Colors.grey.shade100,
+            fillColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[850]
+                : Colors.grey.shade100,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 12,
@@ -77,9 +85,12 @@ class _EditReviewDialogState extends ConsumerState<EditReviewDialog> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text(
+          child: Text(
             '취소',
-            style: TextStyle(fontFamily: 'SCDream', color: Colors.red),
+            style: TextStyle(
+              fontFamily: 'SCDream',
+              color: Theme.of(context).colorScheme.error,
+            ),
           ),
         ),
         TextButton(

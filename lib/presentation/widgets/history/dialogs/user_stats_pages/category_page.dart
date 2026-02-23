@@ -107,7 +107,8 @@ class CategoryPageWidget extends StatelessWidget {
             sections: categoryList.map((cat) {
               final percent = cat['percent'] ?? 0.0;
               final color =
-                  categoryColorMap[cat['name']] ?? Colors.grey.shade400;
+                  categoryColorMap[cat['name']] ??
+                  Theme.of(context).disabledColor;
               final shouldShowTitle = percent >= 8.0 && animationValue > 0.8;
 
               return PieChartSectionData(
@@ -196,7 +197,8 @@ class CategoryPageWidget extends StatelessWidget {
     Size screenSize,
     Map<String, dynamic> cat,
   ) {
-    final color = categoryColorMap[cat['name']] ?? Colors.grey.shade400;
+    final color =
+        categoryColorMap[cat['name']] ?? Theme.of(context).disabledColor;
     final percent = cat['percent'] ?? 0.0;
 
     return Container(

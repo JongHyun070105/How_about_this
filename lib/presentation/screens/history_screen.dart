@@ -68,9 +68,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: Theme.of(context).dialogBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).padding.bottom + 16, // 수동으로 하단 패딩 추가
@@ -148,9 +148,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         title: Text(
           '히스토리',
           style: textTheme.headlineMedium?.copyWith(
@@ -191,10 +191,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         Expanded(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(12.0),
                               border: Border.all(
-                                color: Colors.grey[300]!,
+                                color: Theme.of(context).dividerColor,
                                 width: 1.0,
                               ),
                               boxShadow: [
@@ -265,11 +265,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         children: [
                           if (_searchQuery.isNotEmpty)
                             Chip(
-                              backgroundColor: Colors.grey[200],
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               label: Text(
                                 '검색: $_searchQuery',
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: Colors.black87,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   fontFamily: 'Do Hyeon',
                                 ),
                               ),
@@ -287,15 +291,21 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                   _searchQuery = '';
                                 });
                               },
-                              deleteIconColor: Colors.black54,
+                              deleteIconColor: Theme.of(
+                                context,
+                              ).iconTheme.color,
                             ),
                           if (_sortOption != HistorySortOption.latest)
                             Chip(
-                              backgroundColor: Colors.grey[200],
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               label: Text(
                                 '정렬: ${getSortOptionLabel(_sortOption)}',
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: Colors.black87,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   fontFamily: 'Do Hyeon',
                                 ),
                               ),
@@ -312,11 +322,15 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                   _sortOption = HistorySortOption.latest;
                                 });
                               },
-                              deleteIconColor: Colors.black54,
+                              deleteIconColor: Theme.of(
+                                context,
+                              ).iconTheme.color,
                             ),
                           if (_ratingFilter != null)
                             Chip(
-                              backgroundColor: Colors.grey[200],
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               label: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: List.generate(
@@ -341,7 +355,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                   _ratingFilter = null;
                                 });
                               },
-                              deleteIconColor: Colors.black54,
+                              deleteIconColor: Theme.of(
+                                context,
+                              ).iconTheme.color,
                             ),
                         ],
                       ),
@@ -374,7 +390,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           return ref.refresh(reviewHistoryProvider);
                         },
                         color: Theme.of(context).primaryColor,
-                        backgroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).cardColor,
                         strokeWidth: isTablet ? 3.0 : 2.5,
                         child: ListView.builder(
                           physics: const AlwaysScrollableScrollPhysics(),

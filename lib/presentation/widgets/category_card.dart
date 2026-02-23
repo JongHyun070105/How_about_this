@@ -32,7 +32,7 @@ class CategoryCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(screenWidth * 0.0375),
                   side: BorderSide(
-                    color: Colors.grey.shade300,
+                    color: Theme.of(context).dividerColor,
                     width: screenWidth * 0.0025,
                   ),
                 ),
@@ -48,9 +48,13 @@ class CategoryCard extends StatelessWidget {
                         height: screenWidth * 0.22,
                         excludeFromSemantics: true, // 이미지 대신 카드 라벨로 설명
                         placeholderBuilder: (context) => Container(
-                          color: Colors.grey.shade200,
+                          color: Theme.of(context).highlightColor,
                           child: Center(
-                            child: Icon(Icons.image, size: screenWidth * 0.17),
+                            child: Icon(
+                              Icons.image,
+                              size: screenWidth * 0.17,
+                              color: Theme.of(context).disabledColor,
+                            ),
                           ),
                         ),
                       ),
@@ -68,7 +72,7 @@ class CategoryCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Do Hyeon',
                           fontSize: screenWidth * 0.045,
-                          color: Colors.black87,
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                         textAlign: TextAlign.center,
                         softWrap: false,

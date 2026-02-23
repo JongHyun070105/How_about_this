@@ -19,7 +19,10 @@ void showAppDialog(
       onPressed: () => Navigator.of(context).pop(),
       child: Text(
         onConfirm != null ? '나중에' : cancelButtonText,
-        style: const TextStyle(fontFamily: 'SCDream', color: Colors.blue),
+        style: TextStyle(
+          fontFamily: 'SCDream',
+          color: Theme.of(context).primaryColor,
+        ),
       ),
     ),
   ];
@@ -35,10 +38,10 @@ void showAppDialog(
         },
         child: Text(
           confirmButtonText,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'SCDream',
             fontWeight: FontWeight.bold,
-            color: Colors.blue,
+            color: Theme.of(context).primaryColor,
           ),
         ),
       ),

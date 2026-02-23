@@ -97,8 +97,8 @@ class _RestaurantSearchScreenState
           label: '${widget.foodName} 주변 음식점 리스트',
           child: Text('${widget.foodName} 음식점 리스트'),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         elevation: 0,
         actions: [
           IconButton(
@@ -335,7 +335,7 @@ class _RestaurantSearchScreenState
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -421,13 +421,15 @@ class _RestaurantSearchScreenState
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue[50],
+                        color: Theme.of(context).colorScheme.secondaryContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         restaurant.categoryName,
-                        style: const TextStyle(
-                          color: Colors.blue,
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSecondaryContainer,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),

@@ -203,7 +203,7 @@ class _FoodRecommendationDialogState
                                                 : screenWidth * 0.08), // 짧은 텍스트
                                       fontWeight: FontWeight.bold,
                                       color: _isSpinning
-                                          ? Colors.grey.shade600
+                                          ? Theme.of(context).disabledColor
                                           : textColor,
                                     ),
                                     textAlign: TextAlign.center,
@@ -240,7 +240,9 @@ class _FoodRecommendationDialogState
                                   style: TextStyle(
                                     fontFamily: 'Do Hyeon',
                                     fontSize: screenWidth * 0.04,
-                                    color: Colors.grey.shade700,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium?.color,
                                   ),
                                 ),
                               ),
@@ -272,7 +274,11 @@ class _FoodRecommendationDialogState
                                     style: TextStyle(fontFamily: 'Do Hyeon'),
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green.shade400,
+                                    backgroundColor:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.green.shade700
+                                        : Colors.green.shade400,
                                     foregroundColor: Colors.white,
                                     padding: EdgeInsets.symmetric(
                                       horizontal: screenWidth * 0.02,
@@ -307,7 +313,9 @@ class _FoodRecommendationDialogState
                                     style: TextStyle(fontFamily: 'Do Hyeon'),
                                   ),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.grey.shade400,
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).disabledColor,
                                     foregroundColor: Colors.white,
                                     padding: EdgeInsets.symmetric(
                                       horizontal: screenWidth * 0.02,
@@ -354,8 +362,12 @@ class _FoodRecommendationDialogState
                               style: TextStyle(fontFamily: 'Do Hyeon'),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade500,
-                              foregroundColor: Colors.white,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary,
                               padding: EdgeInsets.symmetric(
                                 horizontal: screenWidth * 0.02,
                                 vertical: screenHeight * 0.015,

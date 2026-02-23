@@ -29,12 +29,17 @@ class ImageUploadSection extends ConsumerWidget {
           aspectRatio: 16 / 9,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12.0),
-              border: Border.all(color: Colors.grey[300]!, width: 1.0),
+              border: Border.all(
+                color: Theme.of(context).dividerColor,
+                width: 1.0,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withAlpha((255 * 0.05).round()),
+                  color: Theme.of(
+                    context,
+                  ).shadowColor.withAlpha((255 * 0.05).round()),
                   spreadRadius: 1,
                   blurRadius: 3,
                   offset: const Offset(0, 1),
@@ -53,7 +58,7 @@ class ImageUploadSection extends ConsumerWidget {
                     child: IconButton(
                       icon: Icon(
                         Icons.info_outline,
-                        color: Colors.grey[600],
+                        color: Theme.of(context).iconTheme.color,
                         size: 20,
                       ),
                       onPressed: () {
@@ -91,18 +96,18 @@ class ImageUploadSection extends ConsumerWidget {
     bool isPicking,
   ) {
     if (isPicking) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 12.0),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 12.0),
             Text(
               '이미지 처리 중...',
               style: TextStyle(
                 fontSize: 14.0,
                 fontFamily: 'SCDream',
-                color: Colors.grey,
+                color: Theme.of(context).disabledColor,
               ),
             ),
             SizedBox(height: 4.0),
@@ -111,7 +116,7 @@ class ImageUploadSection extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 12.0,
                 fontFamily: 'SCDream',
-                color: Colors.grey,
+                color: Theme.of(context).disabledColor,
               ),
             ),
           ],
@@ -127,13 +132,13 @@ class ImageUploadSection extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: Theme.of(context).hoverColor,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.add_photo_alternate_outlined,
                 size: 48.0,
-                color: Colors.grey[400],
+                color: Theme.of(context).disabledColor,
               ),
             ),
             const SizedBox(height: 16.0),
@@ -142,7 +147,7 @@ class ImageUploadSection extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 16.0,
                 fontFamily: 'SCDream',
-                color: Colors.grey[600],
+                color: Theme.of(context).textTheme.bodyMedium?.color,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -152,7 +157,7 @@ class ImageUploadSection extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 12.0,
                 fontFamily: 'SCDream',
-                color: Colors.grey[400],
+                color: Theme.of(context).disabledColor,
               ),
             ),
           ],

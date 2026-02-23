@@ -57,7 +57,7 @@ class RatingRow extends StatelessWidget {
                           Icons.star,
                           color: index < rating
                               ? Colors.amber
-                              : Colors.grey.shade300,
+                              : Theme.of(context).disabledColor,
                           size: iconSize ?? screenWidth * 0.07,
                         ),
                       ),

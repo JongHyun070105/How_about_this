@@ -113,9 +113,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).dialogBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
         child: Column(
@@ -127,7 +127,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Theme.of(context).dividerColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -140,20 +140,26 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color:
+                          Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest ??
+                          Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       Icons.notifications_active,
-                      color: Colors.grey[800],
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       size: 24,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         '식사 알림',
                         style: TextStyle(
                           fontSize: 18,
@@ -165,7 +171,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                         '식사 시간에 알림을 받아보세요',
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey,
+                          color:
+                              Theme.of(context).textTheme.bodySmall?.color ??
+                              Colors.grey,
                           fontFamily: 'SCDream',
                         ),
                       ),
@@ -184,7 +192,8 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
             else ...[
               _buildNotificationTile(
                 icon: Icons.wb_sunny_outlined,
-                iconColor: Colors.grey[800]!,
+                iconColor:
+                    Theme.of(context).iconTheme.color ?? Colors.grey[800]!,
                 title: '점심 알림',
                 subtitle: '매일 오후 12:00',
                 value: _lunchEnabled,
@@ -192,7 +201,8 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
               ),
               _buildNotificationTile(
                 icon: Icons.nightlight_outlined,
-                iconColor: Colors.grey[800]!,
+                iconColor:
+                    Theme.of(context).iconTheme.color ?? Colors.grey[800]!,
                 title: '저녁 알림',
                 subtitle: '매일 오후 7:00',
                 value: _dinnerEnabled,
@@ -244,7 +254,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color:
+                        Theme.of(context).textTheme.bodySmall?.color ??
+                        Colors.grey[600],
                     fontFamily: 'SCDream',
                   ),
                 ),
@@ -253,7 +265,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
           ),
           CupertinoSwitch(
             value: value,
-            activeTrackColor: Colors.black,
+            activeTrackColor: Theme.of(
+              context,
+            ).colorScheme.primary.withAlpha(255),
             onChanged: onChanged,
           ),
         ],

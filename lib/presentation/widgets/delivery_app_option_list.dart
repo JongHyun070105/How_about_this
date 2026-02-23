@@ -31,7 +31,9 @@ class DeliveryAppOptionList extends StatelessWidget {
     return RepaintBoundary(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: Colors.grey[200],
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest,
           child: Text(emoji, style: const TextStyle(fontSize: 20)),
         ),
         title: Text(name),

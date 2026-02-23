@@ -23,7 +23,11 @@ class EmptyHistory extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: screenWidth * 0.2, color: Colors.grey),
+            Icon(
+              icon,
+              size: screenWidth * 0.2,
+              color: Theme.of(context).disabledColor,
+            ),
             SizedBox(height: screenHeight * 0.03),
             Text(
               title,
@@ -36,7 +40,7 @@ class EmptyHistory extends StatelessWidget {
             Text(
               message,
               style: textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade600,
+                color: Theme.of(context).textTheme.bodySmall?.color,
                 fontFamily: 'Do Hyeon',
                 fontSize: screenWidth * 0.035,
               ),

@@ -50,7 +50,9 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
       margin: widget.margin,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(widget.borderRadius),
-        color: Colors.grey[200],
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[800]
+            : Colors.grey[200],
       ),
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
@@ -71,7 +73,9 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          Colors.white.withValues(alpha: 0.5),
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[700]!.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.5),
                           Colors.transparent,
                         ],
                         stops: const [0.1, 0.5, 0.9],

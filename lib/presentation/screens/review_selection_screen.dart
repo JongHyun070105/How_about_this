@@ -53,7 +53,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: _buildAppBar(context, responsive, textTheme),
         body: _buildBody(context, responsive, _cachedReviews, textTheme),
       ),
@@ -66,7 +66,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     TextTheme textTheme,
   ) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       elevation: 0,
       centerTitle: true,
       automaticallyImplyLeading: false,
@@ -159,7 +159,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                       '리뷰를 탭하여 선택할 수 있습니다',
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey.shade600,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                         fontFamily: 'Do Hyeon',
                         fontSize: responsive.subtitleFontSize(),
                       ),
@@ -237,7 +237,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                       responsive.horizontalPadding() * 0.2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(
                         responsive.isTablet ? 25.0 : 20.0,
                       ),
@@ -246,7 +248,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                       controller: _pageController,
                       count: reviews.length,
                       effect: WormEffect(
-                        dotColor: Colors.grey.shade400,
+                        dotColor: Theme.of(context).dividerColor,
                         activeDotColor: Theme.of(context).primaryColor,
                         dotHeight: responsive.iconSize() * 0.5,
                         dotWidth: responsive.iconSize() * 0.5,
@@ -295,7 +297,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                           : () => _saveSelectedReview(context, responsive),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: selectedReviewIndex == null
-                            ? Colors.grey.shade400
+                            ? Theme.of(context).disabledColor
                             : Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
                         elevation: 0,
@@ -352,13 +354,13 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     return Container(
       decoration: BoxDecoration(
         color: isSelected
-            ? Colors.blue[50] // 선택 시 연한 파란색 배경
-            : Colors.white,
+            ? Theme.of(context).colorScheme.secondaryContainer
+            : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(responsive.isTablet ? 16.0 : 12.0),
         border: Border.all(
           color: isSelected
               ? Theme.of(context).primaryColor.withAlpha((0.3 * 255).round())
-              : Colors.grey.shade300,
+              : Theme.of(context).dividerColor,
           width: isSelected ? 2.0 : 1.0,
         ),
         boxShadow: [
@@ -380,7 +382,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
               vertical: responsive.verticalSpacing() * 0.4,
             ),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
                 topRight: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
@@ -400,7 +402,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(
                       responsive.isTablet ? 8.0 : 6.0,
                     ),
@@ -429,7 +431,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                         child: Icon(
                           Icons.edit,
                           size: responsive.iconSize() * 0.7,
-                          color: Colors.grey.shade700,
+                          color:
+                              Theme.of(context).iconTheme.color ??
+                              Colors.grey.shade700,
                         ),
                       ),
                     ),
@@ -467,7 +471,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                             style: textTheme.bodyMedium?.copyWith(
                               fontFamily: 'Do Hyeon',
                               fontSize: responsive.bodyFontSize(),
-                              color: Colors.grey.shade800,
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
                               height: 1.5,
                             ),
                             textAlign: TextAlign.left,

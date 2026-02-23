@@ -41,7 +41,7 @@ class UsageIndicator extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'Do Hyeon',
                 fontSize: fontSize,
-                color: Colors.grey[700],
+                color: Theme.of(context).textTheme.bodyMedium?.color,
               ),
             ),
           ],
@@ -52,7 +52,9 @@ class UsageIndicator extends StatelessWidget {
           child: LinearProgressIndicator(
             value: percentage,
             minHeight: 12,
-            backgroundColor: Colors.grey[200],
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),
@@ -65,7 +67,7 @@ class UsageIndicator extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'SCDream',
                 fontSize: fontSize * 0.85,
-                color: Colors.grey[600],
+                color: Theme.of(context).textTheme.bodySmall?.color,
               ),
             ),
             Text(
@@ -73,7 +75,9 @@ class UsageIndicator extends StatelessWidget {
               style: TextStyle(
                 fontFamily: 'SCDream',
                 fontSize: fontSize * 0.85,
-                color: remaining >= 0 ? color : Colors.red,
+                color: remaining >= 0
+                    ? color
+                    : Theme.of(context).colorScheme.error,
                 fontWeight: FontWeight.bold,
               ),
             ),

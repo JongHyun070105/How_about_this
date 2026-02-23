@@ -21,9 +21,9 @@ class HistoryCard extends ConsumerWidget {
     return RepaintBoundary(
       child: Card(
         elevation: 0,
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(
-          side: BorderSide(color: Colors.grey.shade300),
+          side: BorderSide(color: Theme.of(context).dividerColor),
           borderRadius: BorderRadius.circular(screenWidth * 0.03),
         ),
         margin: EdgeInsets.only(bottom: screenHeight * 0.02),
@@ -51,15 +51,17 @@ class HistoryCard extends ConsumerWidget {
                     _buildTagChip(
                       '${FoodInsightService.categoryEmojis[entry.category] ?? '🍽️'} ${entry.category}',
                       FoodInsightService.categoryColors[entry.category] ??
-                          Colors.grey.shade100,
-                      Colors.black87,
+                          Theme.of(context).chipTheme.backgroundColor!,
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black87,
                       screenWidth,
                     ),
                   if (entry.reviewStyle.isNotEmpty)
                     _buildTagChip(
                       entry.reviewStyle,
-                      Colors.blue.shade50,
-                      Colors.blue.shade700,
+                      Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      Theme.of(context).colorScheme.secondary,
                       screenWidth,
                     ),
                 ],
@@ -69,7 +71,9 @@ class HistoryCard extends ConsumerWidget {
               Container(
                 padding: EdgeInsets.all(screenWidth * 0.03),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[850]
+                      : Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(screenWidth * 0.02),
                 ),
                 child: Column(
@@ -118,7 +122,7 @@ class HistoryCard extends ConsumerWidget {
                       IconButton(
                         icon: Icon(
                           Icons.delete_outline,
-                          color: Colors.red,
+                          color: Theme.of(context).colorScheme.error,
                           size: screenWidth * 0.05,
                         ),
                         onPressed: () {
@@ -169,7 +173,7 @@ class HistoryCard extends ConsumerWidget {
                       IconButton(
                         icon: Icon(
                           Icons.copy,
-                          color: Colors.blue,
+                          color: Theme.of(context).colorScheme.secondary,
                           size: screenWidth * 0.05,
                         ),
                         onPressed: () {
@@ -196,9 +200,11 @@ class HistoryCard extends ConsumerWidget {
                 width: double.infinity,
                 padding: EdgeInsets.all(screenWidth * 0.03),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[850]
+                      : Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

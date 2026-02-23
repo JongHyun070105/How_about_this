@@ -30,10 +30,10 @@ class StatsHeader extends StatelessWidget {
         vertical: 12,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).dialogBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha((255 * 0.1).round()),
+            color: Theme.of(context).shadowColor.withAlpha((255 * 0.1).round()),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -85,7 +85,9 @@ class _PageIndicatorDot extends StatelessWidget {
       height: 8,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isActive ? Theme.of(context).primaryColor : Colors.grey[300],
+        color: isActive
+            ? Theme.of(context).primaryColor
+            : Theme.of(context).disabledColor,
       ),
     );
   }

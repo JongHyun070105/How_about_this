@@ -358,7 +358,7 @@ class _TodayRecommendationScreenState
               child: Text(
                 _weatherMessage,
                 style: textTheme.bodyMedium?.copyWith(
-                  color: Colors.blue[700],
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'SCDream',
                 ),

@@ -188,7 +188,7 @@ class _InsightMessage extends StatelessWidget {
                 height: 14,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.grey[400],
+                  color: Theme.of(context).disabledColor,
                 ),
               ),
             ),

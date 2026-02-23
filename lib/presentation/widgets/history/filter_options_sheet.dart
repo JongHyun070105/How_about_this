@@ -54,7 +54,7 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
             height: 4,
             margin: const EdgeInsets.only(top: 12, bottom: 20),
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: theme.dividerColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -81,13 +81,15 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                         label: Text(
                           getSortOptionLabel(option),
                           style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
+                            color: isSelected
+                                ? theme.colorScheme.onPrimary
+                                : theme.textTheme.bodyMedium?.color,
                             fontFamily: 'SCDream',
                           ),
                         ),
                         selected: isSelected,
-                        selectedColor: Colors.black,
-                        backgroundColor: Colors.grey[100],
+                        selectedColor: theme.colorScheme.primary,
+                        backgroundColor: theme.chipTheme.backgroundColor,
                         onSelected: (selected) {
                           if (selected) {
                             setState(() {
@@ -116,14 +118,14 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                           '전체',
                           style: TextStyle(
                             color: _selectedRatingFilter == null
-                                ? Colors.white
-                                : Colors.black,
+                                ? theme.colorScheme.onPrimary
+                                : theme.textTheme.bodyMedium?.color,
                             fontFamily: 'SCDream',
                           ),
                         ),
                         selected: _selectedRatingFilter == null,
-                        selectedColor: Colors.black,
-                        backgroundColor: Colors.grey[100],
+                        selectedColor: theme.colorScheme.primary,
+                        backgroundColor: theme.chipTheme.backgroundColor,
                         onSelected: (selected) {
                           if (selected) {
                             setState(() {
@@ -148,8 +150,8 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                             ),
                           ),
                           selected: isSelected,
-                          selectedColor: Colors.black,
-                          backgroundColor: Colors.grey[100],
+                          selectedColor: theme.colorScheme.primary,
+                          backgroundColor: theme.chipTheme.backgroundColor,
                           onSelected: (selected) {
                             setState(() {
                               _selectedRatingFilter = selected ? rating : null;
@@ -178,8 +180,8 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                 });
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -191,7 +193,7 @@ class _FilterOptionsSheetState extends State<FilterOptionsSheet> {
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   fontFamily: 'SCDream',
-                  color: Colors.white,
+                  color: theme.colorScheme.onPrimary,
                 ),
               ),
             ),

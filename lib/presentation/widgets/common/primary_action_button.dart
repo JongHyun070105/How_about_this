@@ -42,8 +42,8 @@ class PrimaryActionButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: isButtonEnabled
               ? Theme.of(context).primaryColor
-              : Colors.grey.shade400,
-          foregroundColor: Colors.white,
+              : Theme.of(context).disabledColor,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(isTablet ? 12.0 : 8.0),
@@ -53,8 +53,8 @@ class PrimaryActionButton extends StatelessWidget {
           ),
         ),
         child: isLoading
-            ? const CircularProgressIndicator(
-                color: Colors.white,
+            ? CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.onPrimary,
                 strokeWidth: 3.0,
               )
             : Text(

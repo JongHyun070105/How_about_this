@@ -105,7 +105,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       child: Stack(
         children: [
           Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             appBar: _buildAppBar(context, responsive, textTheme),
             body: _buildBody(context, responsive, textTheme, isLoading),
           ),
@@ -201,7 +201,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     TextTheme textTheme,
   ) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       elevation: 0,
       centerTitle: true,
       title: Semantics(
@@ -269,9 +269,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(12.0),
-                  border: Border.all(color: Colors.grey[200]!, width: 1.0),
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor,
+                    width: 1.0,
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -329,7 +332,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             fontSize: responsive.inputFontSize() * 1.1,
             fontWeight: FontWeight.bold,
             fontFamily: 'SCDream',
-            color: Colors.grey[800],
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
         ),
       ),
@@ -339,12 +342,14 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Widget _buildFoodNameInput(Responsive responsive) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Colors.grey[300]!, width: 1.0),
+        border: Border.all(color: Theme.of(context).dividerColor, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha((255 * 0.05).round()),
+            color: Theme.of(
+              context,
+            ).shadowColor.withAlpha((255 * 0.05).round()),
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -367,7 +372,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         style: TextStyle(
           fontFamily: 'SCDream',
           fontSize: responsive.inputFontSize(),
-          color: Colors.grey[800],
+          color: Theme.of(context).textTheme.bodyMedium?.color,
           decoration: TextDecoration.none,
         ),
         decoration: InputDecoration(

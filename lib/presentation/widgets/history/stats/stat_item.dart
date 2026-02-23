@@ -35,9 +35,11 @@ class StatItem extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(screenWidth * 0.03),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[850]
+            : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Row(
         children: [
@@ -65,7 +67,7 @@ class StatItem extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'SCDream',
                     fontSize: labelFontSize,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).textTheme.bodySmall?.color,
                   ),
                 ),
                 SizedBox(height: screenWidth * 0.005),
@@ -75,7 +77,7 @@ class StatItem extends StatelessWidget {
                     fontFamily: 'Do Hyeon',
                     fontSize: valueFontSize,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
                   ),
                 ),
               ],
