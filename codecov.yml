@@ -1,0 +1,26 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+ignore:
+  # Presentation 계층 (UI 위젯 등 수동 검증 대상)
+  - "lib/presentation/**/*"
+  
+  # 앱 진입점 및 기본 설정 (테스트 불필요)
+  - "lib/main.dart"
+  - "lib/app.dart"
+  
+  # 자동 생성되는 코드 파일들
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.mocks.dart"
+  
+  # Cloudflare Worker 스크립트 등
+  - "cloudflare-worker/**/*"
