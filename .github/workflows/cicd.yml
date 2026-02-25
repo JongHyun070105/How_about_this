@@ -27,10 +27,30 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Analyze code
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-infos > flutter_analyze.log || true
+
+      - name: Setup ReviewDog
+        if: github.event_name == 'pull_request'
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Run ReviewDog
+        if: github.event_name == 'pull_request'
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat flutter_analyze.log | reviewdog -efm="    %tinfo • %m • %f:%l:%c • %n" -efm="    %twarning • %m • %f:%l:%c • %n" -efm="    %terror • %m • %f:%l:%c • %n" -name="flutter analyze" -reporter=github-pr-review -filter-mode=added -fail-on-error=false
 
       - name: Run tests with coverage
         run: flutter test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
       - name: Upload coverage report
         if: always()
