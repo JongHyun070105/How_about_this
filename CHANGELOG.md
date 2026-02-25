@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/JongHyun070105/how-about-this/compare/v1.0.0...v1.1.0) (2026-02-25)
+
+
+### Features
+
+* codecov.yml 파일 추가 ([1ff89a7](https://github.com/JongHyun070105/how-about-this/commit/1ff89a70af4451271cbc8397a30f772654124c1d))
+* codecov.yml 파일 추가 ([ba8f3f5](https://github.com/JongHyun070105/how-about-this/commit/ba8f3f522763c4ff2a55303b6b404ed2d365d234))
+
 ## 1.0.0 (2026-02-25)
 
 
