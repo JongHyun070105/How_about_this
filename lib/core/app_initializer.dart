@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:review_ai/services/crash_reporting_service.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
 
@@ -25,12 +25,21 @@ class AppInitializer {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Crashlytics 설정
+    // Crash Reporting 시스템 초기화 (내부적으로 Crashlytics 설정)
+    await CrashReportingService().initialize();
+
+    // Flutter 프레임워크 에러
     FlutterError.onError = (errorDetails) {
-      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+      CrashReportingService().recordError(
+        errorDetails.exception,
+        errorDetails.stack,
+        fatal: true,
+      );
     };
+
+    // 잡히지 않은 비동기 에러
     PlatformDispatcher.instance.onError = (error, stack) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      CrashReportingService().recordError(error, stack, fatal: true);
       return true;
     };
 

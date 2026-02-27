@@ -1,34 +1,36 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:review_ai/services/notification_service.dart';
+import 'package:review_ai/services/cache_service.dart';
 
-/// 알림 설정 바텀시트
+/// 앱 설정 바텀시트
 ///
-/// 점심/저녁 알림을 on/off 할 수 있는 설정 UI입니다.
-class NotificationSettingsSheet extends StatefulWidget {
-  const NotificationSettingsSheet({super.key});
+/// 점심/저녁 알림 및 캐시 관리 설정 UI입니다.
+class SettingsSheet extends StatefulWidget {
+  const SettingsSheet({super.key});
 
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => const NotificationSettingsSheet(),
+      builder: (context) => const SettingsSheet(),
     );
   }
 
   @override
-  State<NotificationSettingsSheet> createState() =>
-      _NotificationSettingsSheetState();
+  State<SettingsSheet> createState() => _SettingsSheetState();
 }
 
-class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
+class _SettingsSheetState extends State<SettingsSheet> {
   final NotificationService _notificationService = NotificationService();
+  final CacheService _cacheService = CacheService();
 
   bool _lunchEnabled = false;
   bool _dinnerEnabled = false;
   bool _isLoading = true;
   bool _permissionGranted = false;
+  String _cacheSize = "계산 중...";
 
   @override
   void initState() {
@@ -39,14 +41,18 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
   Future<void> _loadSettings() async {
     final lunch = await _notificationService.isLunchNotificationEnabled();
     final dinner = await _notificationService.isDinnerNotificationEnabled();
-    // 실제 OS 권한 상태 확인
     final hasPermission = await _notificationService.hasPermission();
+
+    // 캐시 용량 계산
+    final bytes = await _cacheService.calculateTotalCacheSize();
+    final mbString = _cacheService.formatBytesToMB(bytes);
 
     if (mounted) {
       setState(() {
         _lunchEnabled = lunch;
         _dinnerEnabled = dinner;
         _permissionGranted = hasPermission;
+        _cacheSize = mbString;
         _isLoading = false;
       });
     }
@@ -108,6 +114,44 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
     await _notificationService.toggleDinnerNotification(value);
     // 설정 변경 후 전체 상태 다시 로드하여 확실하게 UI 반영
     await _loadSettings();
+  }
+
+  Future<void> _confirmAndClearCache() async {
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('캐시 지우기', style: TextStyle(fontFamily: 'SCDream')),
+        content: const Text(
+          '앱에 임시로 저장된 이미지와 데이터를 지웁니다.\n앱 사용 속도가 일시적으로 느려질 수 있습니다.',
+          style: TextStyle(fontFamily: 'SCDream'),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('취소', style: TextStyle(fontFamily: 'SCDream')),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('지우기', style: TextStyle(fontFamily: 'SCDream')),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() => _isLoading = true);
+      await _cacheService.clearAllCache();
+      await _loadSettings(); // 다시 캐시 용량 산정 (0MB 확인용)
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('캐시를 모두 지웠습니다.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -207,6 +251,73 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                 subtitle: '매일 오후 7:00',
                 value: _dinnerEnabled,
                 onChanged: _toggleDinner,
+              ),
+
+              const Divider(height: 32),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.cleaning_services_outlined,
+                        color: Colors.redAccent,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '캐시 지우기',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'SCDream',
+                            ),
+                          ),
+                          Text(
+                            '현재 사용량: $_cacheSize',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color:
+                                  Theme.of(
+                                    context,
+                                  ).textTheme.bodySmall?.color ??
+                                  Colors.grey[600],
+                              fontFamily: 'SCDream',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _confirmAndClearCache,
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.redAccent,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      child: const Text(
+                        '지우기',
+                        style: TextStyle(
+                          fontFamily: 'SCDream',
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
 

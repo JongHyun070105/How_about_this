@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:review_ai/services/crash_reporting_service.dart';
 
 /// 앱 전역 로깅 시스템
 ///
@@ -40,7 +40,7 @@ class LoggerService {
 
     // 프로덕션 모드에서는 Crashlytics로 에러 전송
     if (!kDebugMode) {
-      FirebaseCrashlytics.instance.recordError(
+      CrashReportingService().recordError(
         error ?? message,
         stackTrace,
         reason: message,
@@ -54,7 +54,7 @@ class LoggerService {
     _logger.f(message, error: error, stackTrace: stackTrace);
 
     if (!kDebugMode) {
-      FirebaseCrashlytics.instance.recordError(
+      CrashReportingService().recordError(
         error ?? message,
         stackTrace,
         reason: message,
