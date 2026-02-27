@@ -92,8 +92,16 @@ pod install
 
 ## CI/CD 및 배포 전략
 
-이 프로젝트는 브랜치별 이원화 배포 시스템을 갖추고 있습니다.
+이 프로젝트는 브랜치별 이원화 배포 시스템 및 고도화된 자동화 파이프라인을 갖추고 있습니다.
 
+### 파이프라인 및 자동화 도구
+- **GitHub Actions**: 자동화된 빌드, 테스트 및 배포 프로세스
+- **ReviewDog**: Pull Request 생성 시 `flutter analyze` 결과를 바탕으로 자동 코드 린트 리뷰 작성
+- **Codecov**: 테스트 커버리지 측정 및 PR 브리핑 리포트 제공 (설정 파일을 통해 UI 및 자동 생성 코드 배제)
+- **Release Please**: `main` 병합 시 커밋 메시지(Conventional Commits)를 분석하여 자동 버전 펌핑 및 `CHANGELOG.md` 발행
+- **Branch Protection**: `main` 브랜치에 대한 강제 푸시 차단 및 필수 PR 리뷰 사이클 적용으로 코드 무결성 보장
+
+### 배포 워크플로우
 - **`develop` 브랜치**: 푸시 시 **Firebase App Distribution**을 통해 테스터에게 APK가 자동 배포됩니다.
 - **`main` 브랜치**: 푸시 시 **Google Play Store** 내부 테스트 트랙으로 AAB가 자동 빌드 및 업로드됩니다.
 - **Cloudflare**: `cloudflare-worker` 폴더 변경 시 Wrangler를 통해 Worker 스크립트가 자동 배포됩니다.
