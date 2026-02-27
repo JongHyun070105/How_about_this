@@ -279,7 +279,7 @@ class _TodayRecommendationScreenState
         size: responsive.iconSize(),
         color: Theme.of(context).iconTheme.color,
       ),
-      onPressed: () => NotificationSettingsSheet.show(context),
+      onPressed: () => SettingsSheet.show(context),
       tooltip: '알림 설정',
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
