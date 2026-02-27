@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/JongHyun070105/how-about-this/compare/v1.1.0...v1.2.0) (2026-02-27)
+
+
+### Features
+
+* 캐시 관리 및 통합 크래시 리포팅 서비스를 추가하고, 알림 설정 시트를 앱 설정 시트로 확장 ([e2949d7](https://github.com/JongHyun070105/how-about-this/commit/e2949d73808613cb6a192d0aa0547cb2159e51e2))
+* 캐시 관리 및 통합 크래시 리포팅 서비스를 추가하고, 알림 설정 시트를 앱 설정 시트로 확장 ([637c9d9](https://github.com/JongHyun070105/how-about-this/commit/637c9d9b2f7c36a18376464e1880ed1c51031e5e))
+
 ## [1.1.0](https://github.com/JongHyun070105/how-about-this/compare/v1.0.0...v1.1.0) (2026-02-25)
 
 
