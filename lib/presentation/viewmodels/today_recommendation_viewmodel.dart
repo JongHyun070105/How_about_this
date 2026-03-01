@@ -9,6 +9,7 @@ import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 import 'package:review_ai/services/user_preference_service.dart';
 import 'package:review_ai/presentation/providers/dependency_injection.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
+import 'package:review_ai/services/app_review_service.dart';
 
 class TodayRecommendationViewModel extends StateNotifier<bool> {
   final Ref _ref;
@@ -51,6 +52,9 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
             color: category.color,
           );
         }
+
+        // 음식 추천 로드에 성공했을 때 인앱 리뷰 요청 로직 트리거
+        await AppReviewService().onRecommendationReceived();
       } else {
         if (context.mounted) {
           _showInfoDialog(context, '추천을 불러오지 못했습니다.');
