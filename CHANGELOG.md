@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/JongHyun070105/how-about-this/compare/v1.2.0...v1.3.0) (2026-03-01)
+
+
+### Features
+
+* 인앱 리뷰 서비스를 추가하고 추천 로드 성공 시 리뷰 요청 로직을 연동합니다. ([3dfeee6](https://github.com/JongHyun070105/how-about-this/commit/3dfeee63706d7ad690ee5c1aa3e60830b15e017e))
+* 인앱 리뷰 서비스를 추가하고 추천 로드 성공 시 리뷰 요청 로직을 연동합니다. ([7ae5ea0](https://github.com/JongHyun070105/how-about-this/commit/7ae5ea0748c17454754a5aa4f1bba2a5b35384ef))
+
 ## [1.2.0](https://github.com/JongHyun070105/how-about-this/compare/v1.1.0...v1.2.0) (2026-02-27)
 
 
