@@ -23,54 +23,42 @@ class AppReviewService {
   static const int _coolDownDays = 14;
 
   /// 추천(Today Recommendation) 발생 시 카운트 증가 및 조건 충족 시 리뷰 요청
-  Future<void> onRecommendationReceived() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      int currentCount = prefs.getInt(_keyRecommendationCount) ?? 0;
-      currentCount++;
-      await prefs.setInt(_keyRecommendationCount, currentCount);
-
-      LoggerService.i('AppReviewService: Recommendation count = $currentCount');
-
-      if (currentCount >= _targetRecommendationCount) {
-        // 이미 표시 조건에 만족했으므로 카운트를 초기화하고 리뷰를 띄움
-        await prefs.setInt(_keyRecommendationCount, 0);
-        await _requestReviewIfNeeded(
-          reason: 'Target Recommendation Reached ($currentCount)',
-        );
-      }
-    } catch (e) {
-      LoggerService.e(
-        'AppReviewService: Error tracking recommendation count',
-        e,
-      );
-    }
+  Future<void> onRecommendationReceived() {
+    return _handleEvent(
+      countKey: _keyRecommendationCount,
+      targetCount: _targetRecommendationCount,
+      reason: 'Target Recommendation Reached',
+    );
   }
 
   /// AI 리뷰 생성 완료 시 카운트 증가 및 조건 충족 시 리뷰 요청
-  Future<void> onReviewGenerated() async {
+  Future<void> onReviewGenerated() {
+    return _handleEvent(
+      countKey: _keyReviewGenerationCount,
+      targetCount: _targetReviewGenerationCount,
+      reason: 'Target Review Generation Reached',
+    );
+  }
+
+  Future<void> _handleEvent({
+    required String countKey,
+    required int targetCount,
+    required String reason,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      int currentCount = prefs.getInt(_keyReviewGenerationCount) ?? 0;
+      int currentCount = prefs.getInt(countKey) ?? 0;
       currentCount++;
-      await prefs.setInt(_keyReviewGenerationCount, currentCount);
+      await prefs.setInt(countKey, currentCount);
 
-      LoggerService.i(
-        'AppReviewService: Review generation count = $currentCount',
-      );
+      LoggerService.i('AppReviewService: $countKey count = $currentCount');
 
-      if (currentCount >= _targetReviewGenerationCount) {
-        // 이미 표시 조건에 만족했으므로 카운트를 초기화하고 리뷰를 띄움
-        await prefs.setInt(_keyReviewGenerationCount, 0);
-        await _requestReviewIfNeeded(
-          reason: 'Target Review Generation Reached ($currentCount)',
-        );
+      if (currentCount >= targetCount) {
+        await prefs.setInt(countKey, 0);
+        await _requestReviewIfNeeded(reason: '$reason ($currentCount)');
       }
     } catch (e) {
-      LoggerService.e(
-        'AppReviewService: Error tracking review generation count',
-        e,
-      );
+      LoggerService.e('AppReviewService: Error tracking $countKey', e);
     }
   }
 
