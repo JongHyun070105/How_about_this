@@ -9,7 +9,6 @@ import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/presentation/providers/dependency_injection.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 import 'package:review_ai/presentation/providers/app_providers.dart'; // usageTrackingServiceProvider
-import 'package:review_ai/services/app_review_service.dart';
 
 class ReviewViewModel extends StateNotifier<ReviewState> {
   final Ref _ref;
@@ -180,7 +179,7 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
       debugPrint('사용량 추적 업데이트 완료');
 
       // AI 리뷰 생성이 성공했을 때 인앱 리뷰 요청 로직 트리거
-      await AppReviewService().onReviewGenerated();
+      await _ref.read(appReviewServiceProvider).onReviewGenerated();
     } catch (e) {
       debugPrint('사용량 추적 업데이트 오류: $e');
     }
