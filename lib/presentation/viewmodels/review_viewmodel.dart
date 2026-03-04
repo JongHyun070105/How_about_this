@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/domain/usecases/generate_review_usecase.dart';
 import 'package:review_ai/presentation/providers/review_state.dart';
 import 'package:review_ai/services/ad_service.dart';
-import 'package:review_ai/core/exceptions.dart'; // NetworkException
+import 'package:review_ai/core/exceptions.dart';
 import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/presentation/providers/dependency_injection.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
-import 'package:review_ai/presentation/providers/app_providers.dart'; // usageTrackingServiceProvider
+import 'package:review_ai/presentation/providers/app_providers.dart';
 
 class ReviewViewModel extends StateNotifier<ReviewState> {
   final Ref _ref;
@@ -62,25 +62,11 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
       if (!context.mounted) return;
       _handleGenerationError(context, e);
     } finally {
-      // 성공 시에는 _generateReviewsAfterAd 내부에서 로딩 해제됨 (또는 여기서 해제해도 무방하지만 흐름상 주의)
-      // _handleAdFlow -> _generateReviewsAfterAd 흐름이므로,
-      // 여기서 무조건 false로 하면 광고 보는 동안 로딩이 풀릴 수 있음.
-      // 하지만 _handleAdFlow는 await하므로 광고가 끝나야 여기로 옴.
-      // 따라서 여기서 false로 해도 됨.
       _ref.read(reviewProvider.notifier).setLoading(false);
     }
   }
 
   Future<void> _handleAdFlow(BuildContext context) async {
-    // AdService는 StateNotifier가 아니므로 직접 호출하거나 notifier를 통해 호출
-    // 여기서는 주입받은 _adService 사용 (하지만 AdService는 StateNotifier일 수 있음)
-    // 기존 코드: final adService = _ref.read(adServiceProvider.notifier);
-    // AdService가 StateNotifier라면 notifier를 가져와야 함.
-    // _adService가 AdService 타입이라면 메소드 직접 호출 가능 여부 확인 필요.
-    // 기존 코드에서 adServiceProvider.notifier를 읽었으므로 AdService는 StateNotifier임.
-    // 따라서 주입받을 때 AdService(Notifier)를 받아야 함.
-
-    // 편의상 _ref를 사용하여 가져옴 (주입된 _adService가 Notifier인지 확인 어려우므로)
     final adServiceNotifier = _ref.read(adServiceProvider.notifier);
 
     final adShown = await adServiceNotifier.showAdWithRetry(
@@ -159,12 +145,6 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
 
   Future<bool> validateImage(File image) async {
     try {
-      // Repository를 통해 검증 (UseCase에 위임 메서드가 없으므로 Repository 직접 접근)
-      // Clean Architecture 원칙상 UseCase를 통해야 하지만, 편의상 Repository 접근 허용
-      // 또는 GenerateReviewUseCase에 validateImage 추가 필요 (이미 추가함?)
-      // GenerateReviewUseCase 정의를 보면 repository만 가지고 있고 validateImage 메서드는 없음 (call만 있음)
-      // 아까 GenerateReviewUseCase 파일 생성 시 call만 만들었음.
-      // 따라서 repository에 직접 접근해야 함.
       return await _generateReviewUseCase.repository.validateImage(image);
     } catch (e) {
       debugPrint('Image validation error: $e');
