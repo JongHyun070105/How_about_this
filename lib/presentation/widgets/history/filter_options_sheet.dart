@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:review_ai/presentation/screens/history_screen.dart'; // HistorySortOption enum 사용을 위해
+import 'package:review_ai/presentation/screens/history_screen.dart';
 
 class FilterOptionsSheet extends StatefulWidget {
   final HistorySortOption currentSortOption;

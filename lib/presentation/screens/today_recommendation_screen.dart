@@ -18,7 +18,7 @@ import 'package:review_ai/presentation/widgets/history/dialogs/food_recommendati
 import 'package:review_ai/presentation/widgets/history/dialogs/user_stats_dialog.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 
-import 'package:review_ai/presentation/providers/app_providers.dart'; // usageTrackingServiceProvider
+import 'package:review_ai/presentation/providers/app_providers.dart';
 import 'package:review_ai/services/weather_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
