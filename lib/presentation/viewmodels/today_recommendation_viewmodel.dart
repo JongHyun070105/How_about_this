@@ -15,6 +15,8 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
 
   TodayRecommendationViewModel(this._ref) : super(false);
 
+  /// 카테고리(예: 한식, 일식 등) 선택 시 AI 음식 추천을 요청합니다.
+  /// 다중 클릭으로 인한 중복 API 호출을 state(bool: isLoading)로 방어합니다.
   Future<void> handleCategoryTap(
     BuildContext context,
     FoodCategory category,
@@ -73,6 +75,9 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
     _ref.read(selectedFoodProvider.notifier).state = null;
   }
 
+  /// 카테고리에 맞는 음식을 AI로부터 받아옵니다.
+  /// 최근 7일 동안 사용자가 먹은 기록(로컬 DB)을 함께 전송해, 추천 결과가 중복되지 않도록 유도합니다.
+  /// (데이터 캐싱 전략이나 세부 비즈니스 로직은 Repository 영역에서 분리하여 처리)
   Future<List<FoodRecommendation>> _getFoodRecommendations(
     FoodCategory category,
   ) async {

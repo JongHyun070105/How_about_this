@@ -18,6 +18,8 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
   ReviewViewModel(this._ref, this._generateReviewUseCase)
     : super(const ReviewState.initial());
 
+  /// 리뷰 생성의 전체 흐름을 제어하는 진입점.
+  /// 작동 순서: 1. 입력 검증 -> 2. 하루 생성 제한 확인 -> 3. 이미지 적합성 검증 -> 4. 리워드 광고 시청 -> 5. AI 리뷰 생성
   Future<void> generateReviews(BuildContext context) async {
     if (state.isLoading) return; // 이미 진행 중이면 리턴
 
@@ -66,6 +68,8 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
     }
   }
 
+  /// 사용자에게 리워드 광고를 노출하고 시청 완료(보상 획득) 여부를 확인합니다.
+  /// 이 단계를 무사히 통과해야 실제 AI 서버로 리뷰 생성 요청을 보냅니다.
   Future<void> _handleAdFlow(BuildContext context) async {
     final adServiceNotifier = _ref.read(adServiceProvider.notifier);
 
@@ -143,6 +147,8 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
     }
   }
 
+  /// 도메인 로직(UseCase)을 통해 이미지의 유효성을 1차 검증합니다.
+  /// 사진이 흔들리거나 음식이 아닌 경우 불필요한 API 토큰 낭비를 막고 사용자에게 재촬영을 암시합니다.
   Future<bool> validateImage(File image) async {
     try {
       return await _generateReviewUseCase.repository.validateImage(image);
