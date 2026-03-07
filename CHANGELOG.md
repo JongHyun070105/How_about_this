@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0](https://github.com/JongHyun070105/how-about-this/compare/v1.3.0...v1.4.0) (2026-03-07)
+
+
+### Features
+
+* Android 인앱 업데이트 기능 추가 ([1f6ea1f](https://github.com/JongHyun070105/how-about-this/commit/1f6ea1fc42cc9f406ec055eabe1d9cabfebd620b))
+* Android 인앱 업데이트 기능 추가 ([74b46b0](https://github.com/JongHyun070105/how-about-this/commit/74b46b0dc2c9ae51524b34d411adfbd799dd02e5))
+* 리뷰 및 오늘의 추천 뷰모델 로직을 개선했습니다. ([337daa6](https://github.com/JongHyun070105/how-about-this/commit/337daa6b4b4fdaa3b76bcadb711f6767a421adee))
+* 리뷰 및 오늘의 추천 뷰모델 로직을 개선했습니다. ([dfa848d](https://github.com/JongHyun070105/how-about-this/commit/dfa848df8ff4d59a7f8215d152c69175dd5439ef))
+
 ## [1.3.0](https://github.com/JongHyun070105/how-about-this/compare/v1.2.0...v1.3.0) (2026-03-01)
 
 
