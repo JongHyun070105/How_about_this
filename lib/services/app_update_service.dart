@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 class AppUpdateService {
   static const String _updateUrl =
@@ -59,5 +61,29 @@ class AppUpdateService {
     }
 
     return false; // 버전이 동일함
+  }
+
+  /// Android 플랫폼에서 인앱 업데이트를 확인하고, 가능하다면 다운로드를 시작(Flexible)합니다.
+  Future<void> checkForInAppUpdate() async {
+    if (!Platform.isAndroid) return; // iOS는 미지원
+
+    try {
+      final updateInfo = await InAppUpdate.checkForUpdate();
+
+      // 업데이트가 가능할 때 Flexible 다운로드 시작
+      if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
+        debugPrint(
+          'AppUpdateService: Update available. Starting flexible update.',
+        );
+        await InAppUpdate.startFlexibleUpdate();
+
+        // 다운로드 완료 시 설치 유도
+        await InAppUpdate.completeFlexibleUpdate();
+      } else {
+        debugPrint('AppUpdateService: No in-app update available.');
+      }
+    } catch (e) {
+      debugPrint('AppUpdateService: Error checking for in-app update: $e');
+    }
   }
 }
