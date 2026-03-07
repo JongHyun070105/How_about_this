@@ -194,15 +194,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     Future.microtask(() async {
       try {
         final appUpdateService = AppUpdateService();
-        final latestVersion = await appUpdateService.isUpdateAvailable();
-        if (latestVersion != null && mounted) {
-          showAppDialog(
-            context,
-            title: '업데이트 알림',
-            message: '새로운 버전(v$latestVersion)이 출시되었습니다.',
-            confirmButtonText: '업데이트',
-            onConfirm: () => _launchStoreUrl(),
-          );
+
+        if (Platform.isAndroid) {
+          // Android: Play Store 공식 인앱 업데이트 수행 (Flexible)
+          await appUpdateService.checkForInAppUpdate();
+        } else {
+          // iOS: 기존 Gist 기반 커스텀 버전 체크 후 다이얼로그
+          final latestVersion = await appUpdateService.isUpdateAvailable();
+          if (latestVersion != null && mounted) {
+            showAppDialog(
+              context,
+              title: '업데이트 알림',
+              message: '새로운 버전(v$latestVersion)이 출시되었습니다.',
+              confirmButtonText: '업데이트',
+              onConfirm: () => _launchStoreUrl(),
+            );
+          }
         }
       } catch (e) {
         debugPrint('Update check error: $e');
