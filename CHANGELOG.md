@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/JongHyun070105/how-about-this/compare/v1.4.0...v1.5.0) (2026-03-08)
+
+
+### Features
+
+* Firebase Remote Config를 도입하여 앱 리뷰 쿨다운 및 일일 사용량 제한 값을 원격 구성으로 관리… ([f2a477a](https://github.com/JongHyun070105/how-about-this/commit/f2a477a50622ec30da76693c130c8ef23e82fc05))
+* Firebase Remote Config를 도입하여 앱 리뷰 쿨다운 및 일일 사용량 제한 값을 원격 구성으로 관리합니다. ([bcb73c5](https://github.com/JongHyun070105/how-about-this/commit/bcb73c567de14aae1668da6dd5767a5ac43d853d))
+
 ## [1.4.0](https://github.com/JongHyun070105/how-about-this/compare/v1.3.0...v1.4.0) (2026-03-07)
 
 
