@@ -9,6 +9,7 @@ import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/presentation/providers/dependency_injection.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 import 'package:review_ai/presentation/providers/app_providers.dart';
+import 'package:review_ai/services/remote_config_service.dart';
 
 class ReviewViewModel extends StateNotifier<ReviewState> {
   final Ref _ref;
@@ -37,7 +38,12 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
     if (reached) {
       _ref.read(reviewProvider.notifier).setLoading(false);
       if (!context.mounted) return;
-      showAppDialog(context, title: '알림', message: '리뷰 생성은 하루 5회까지만 가능합니다.');
+      final limit = RemoteConfigService().maxDailyAiReviews;
+      showAppDialog(
+        context,
+        title: '알림',
+        message: '리뷰 생성은 하루 $limit회까지만 가능합니다.',
+      );
       return;
     }
 
