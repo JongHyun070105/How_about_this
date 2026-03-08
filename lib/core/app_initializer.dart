@@ -12,6 +12,7 @@ import '../firebase_options.dart';
 import 'package:review_ai/config/security_config.dart';
 import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/services/config_service.dart';
+import 'package:review_ai/services/remote_config_service.dart';
 import 'package:review_ai/services/server_time_service.dart';
 import 'package:review_ai/services/notification_service.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
@@ -52,6 +53,7 @@ class AppInitializer {
       MobileAds.instance.initialize(),
       AuthService.initialize(),
       ConfigService.initialize(),
+      RemoteConfigService().initialize(),
       ServerTimeService.initialize(),
       NotificationService().initialize(),
       DefaultFirebaseOptions.loadServerKeys(),

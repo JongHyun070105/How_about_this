@@ -1,6 +1,7 @@
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
+import 'package:review_ai/services/remote_config_service.dart';
 
 /// 앱 리뷰 유도를 관리하는 서비스 클래스
 class AppReviewService {
@@ -20,7 +21,6 @@ class AppReviewService {
   // 팝업 표시 조건 (기획에 맞게 조절 가능)
   static const int _targetRecommendationCount = 10;
   static const int _targetReviewGenerationCount = 3;
-  static const int _coolDownDays = 14;
 
   /// 추천(Today Recommendation) 발생 시 카운트 증가 및 조건 충족 시 리뷰 요청
   Future<void> onRecommendationReceived() {
@@ -73,8 +73,9 @@ class AppReviewService {
       final currentDate = DateTime.now();
 
       final difference = currentDate.difference(lastPromptDate).inDays;
+      final coolDownDays = RemoteConfigService().reviewCooldownDays;
 
-      if (difference >= _coolDownDays || lastPromptMillis == 0) {
+      if (difference >= coolDownDays || lastPromptMillis == 0) {
         if (await _inAppReview.isAvailable()) {
           LoggerService.i(
             'AppReviewService: Requesting In-App Review. Reason: $reason',
@@ -91,7 +92,7 @@ class AppReviewService {
         }
       } else {
         LoggerService.i(
-          'AppReviewService: Review request skipped. Cool down active ($difference / $_coolDownDays days).',
+          'AppReviewService: Review request skipped. Cool down active ($difference / $coolDownDays days).',
         );
       }
     } catch (e) {
