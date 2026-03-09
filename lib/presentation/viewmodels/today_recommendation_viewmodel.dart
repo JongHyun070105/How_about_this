@@ -9,7 +9,6 @@ import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 import 'package:review_ai/services/user_preference_service.dart';
 import 'package:review_ai/presentation/providers/dependency_injection.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
-import 'package:review_ai/services/remote_config_service.dart';
 
 class TodayRecommendationViewModel extends StateNotifier<bool> {
   final Ref _ref;
@@ -37,7 +36,9 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
       final usageTrackingService = _ref.read(usageTrackingServiceProvider);
       if (await usageTrackingService.hasReachedTotalRecommendationLimit()) {
         if (context.mounted) {
-          final limit = RemoteConfigService().maxDailyRecommendations;
+          final limit = _ref
+              .read(remoteConfigServiceProvider)
+              .maxDailyRecommendations;
           _showInfoDialog(context, '음식 추천은 하루 $limit회까지만 이용 가능합니다.');
         }
         return;

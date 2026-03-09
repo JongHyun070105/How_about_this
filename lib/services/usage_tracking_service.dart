@@ -4,7 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:review_ai/services/remote_config_service.dart';
 
 class UsageTrackingService {
+  final RemoteConfigService _remoteConfigService;
   final PersistentStorageService _storageService = PersistentStorageService();
+
+  UsageTrackingService(this._remoteConfigService);
   static const String _usageDataFile = 'usage_data.json';
 
   static const String _lastResetDateKey = 'last_reset_date';
@@ -13,9 +16,9 @@ class UsageTrackingService {
       'total_recommendation_count';
   static const String _lastAccessTimestampKey = 'last_access_timestamp';
 
-  int get _maxReviewsPerDay => RemoteConfigService().maxDailyAiReviews;
+  int get _maxReviewsPerDay => _remoteConfigService.maxDailyAiReviews;
   int get _maxTotalRecommendationsPerDay =>
-      RemoteConfigService().maxDailyRecommendations;
+      _remoteConfigService.maxDailyRecommendations;
 
   /// 사용량 카운터를 초기화합니다 (서버 시간 기준).
   Future<void> _resetCountsIfNewDay() async {
