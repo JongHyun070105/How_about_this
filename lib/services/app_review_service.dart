@@ -5,11 +5,9 @@ import 'package:review_ai/services/remote_config_service.dart';
 
 /// 앱 리뷰 유도를 관리하는 서비스 클래스
 class AppReviewService {
-  static final AppReviewService _instance = AppReviewService._internal();
+  final RemoteConfigService _remoteConfigService;
 
-  factory AppReviewService() => _instance;
-
-  AppReviewService._internal();
+  AppReviewService(this._remoteConfigService);
 
   final InAppReview _inAppReview = InAppReview.instance;
 
@@ -73,7 +71,7 @@ class AppReviewService {
       final currentDate = DateTime.now();
 
       final difference = currentDate.difference(lastPromptDate).inDays;
-      final coolDownDays = RemoteConfigService().reviewCooldownDays;
+      final coolDownDays = _remoteConfigService.reviewCooldownDays;
 
       if (difference >= coolDownDays || lastPromptMillis == 0) {
         if (await _inAppReview.isAvailable()) {

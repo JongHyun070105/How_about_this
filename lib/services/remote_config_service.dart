@@ -21,10 +21,10 @@ class RemoteConfigService {
       await _remoteConfig.setDefaults(const {
         keyReviewCooldownDays: 14,
         keyMaxDailyAiReviews: 5,
-        keyMaxDailyRecommendations: 10,
+        keyMaxDailyRecommendations: 40,
       });
 
-      // 2. 패치 주기를 짧게/개발용으로 변경 (배포시 변경 필요)
+      // 2. 개발 모드에서는 더 짧은 주기로 패치하도록 설정
       await _remoteConfig.setConfigSettings(
         RemoteConfigSettings(
           fetchTimeout: const Duration(minutes: 1),
