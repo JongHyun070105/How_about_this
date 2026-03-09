@@ -1,7 +1,7 @@
 name: review_ai
 description: "AI Food Review App"
 publish_to: "none"
-version: 1.5.0+106
+version: 1.6.0+107
 environment:
   sdk: ^3.8.1
 
