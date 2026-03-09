@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0](https://github.com/JongHyun070105/how-about-this/compare/v1.5.0...v1.6.0) (2026-03-09)
+
+
+### Features
+
+* 코드 리뷰 반영 ([ad64127](https://github.com/JongHyun070105/how-about-this/commit/ad64127e26a267be7d0ad36b4888b46facda3ae2))
+* 코드 리뷰 반영 ([e303602](https://github.com/JongHyun070105/how-about-this/commit/e303602f4b3cb79c23eee9ac7d88efa36d16b05b))
+
 ## [1.5.0](https://github.com/JongHyun070105/how-about-this/compare/v1.4.0...v1.5.0) (2026-03-08)
 
 
