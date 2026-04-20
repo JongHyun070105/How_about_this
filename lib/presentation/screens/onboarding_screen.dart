@@ -141,11 +141,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            data.icon,
-            size: 120,
-            color: Colors.black,
-          ),
+          Icon(data.icon, size: 120, color: Colors.black),
           const SizedBox(height: 64),
           Text(
             data.title,

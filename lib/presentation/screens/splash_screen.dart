@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -76,7 +77,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           isConnected = await _checkInternetConnectivity();
           retryCount++;
         } else {
-          exit(0);
+          SystemNavigator.pop();
         }
       }
 
@@ -97,7 +98,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                hasSeenOnboarding ? const TodayRecommendationScreen() : const OnboardingScreen(),
+                hasSeenOnboarding
+                ? const TodayRecommendationScreen()
+                : const OnboardingScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   return FadeTransition(opacity: animation, child: child);

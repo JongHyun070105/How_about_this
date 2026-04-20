@@ -31,10 +31,6 @@ class CategoryCard extends StatelessWidget {
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(screenWidth * 0.0375),
-                  side: BorderSide(
-                    color: Theme.of(context).dividerColor,
-                    width: screenWidth * 0.0025,
-                  ),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

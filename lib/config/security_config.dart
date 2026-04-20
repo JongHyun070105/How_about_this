@@ -1,9 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-// dotenv는 더 이상 사용하지 않음 (API 키가 서버로 이전됨)
-import 'package:device_info_plus/device_info_plus.dart';
-
 import 'package:flutter/material.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 // Added url_launcher import
@@ -88,8 +85,24 @@ class SecurityConfig {
 
   /// 직접 구현한 루팅/탈옥 탐지
   static Future<bool> detectRootingOrJailbreak() async {
-    // TODO: 보안 해제 우회 (베포 전에 반드시 원래 로직으로 복귀)
-    return false;
+    if (kDebugMode) {
+      debugPrint(
+        'SECURITY WARNING: Jailbreak detection is disabled in debug mode.',
+      );
+      return false;
+    }
+
+    try {
+      if (Platform.isAndroid) {
+        return await _checkAndroidRoot();
+      } else if (Platform.isIOS) {
+        return await _checkIOSJailbreak();
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Jailbreak detection error: $e');
+      return false;
+    }
   }
 
   /// Android 루팅 감지

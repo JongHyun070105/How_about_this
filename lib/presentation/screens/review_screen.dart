@@ -241,7 +241,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     bool isLoading,
   ) {
     final reviewState = ref.watch(reviewProvider);
-    final bool isValid = reviewState.foodName.trim().isNotEmpty &&
+    final bool isValid =
+        reviewState.foodName.trim().isNotEmpty &&
         reviewState.deliveryRating > 0 &&
         reviewState.tasteRating > 0 &&
         reviewState.portionRating > 0 &&
