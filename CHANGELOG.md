@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/JongHyun070105/how-about-this/compare/v1.6.0...v1.7.0) (2026-04-20)
+
+
+### Features
+
+* 온보딩 추가 ([25c0246](https://github.com/JongHyun070105/how-about-this/commit/25c024675ced8722a913aa7f9552b28cf0ccb976))
+
+
+### Bug Fixes
+
+* 루팅 감지 코드 수정등 ([7eadb07](https://github.com/JongHyun070105/how-about-this/commit/7eadb077dd235317d76437db2eeac3616c8ed7d0))
+
 ## [1.6.0](https://github.com/JongHyun070105/how-about-this/compare/v1.5.0...v1.6.0) (2026-03-09)
 
 
