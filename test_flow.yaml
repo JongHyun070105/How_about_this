@@ -1,0 +1,7 @@
+appId: com.jonghyun.reviewai_flutter
+---
+- launchApp
+- tapOn: 'Allow'
+- tapOn: '일식'
+- screenshot: 'category_japan_result'
+
