@@ -47,7 +47,7 @@ class AppInitializer {
     // Firebase Performance & Analytics
     await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
 
-    // 기타 서비스 동시 초기화
+    // 필수 서비스 초기화 (UI 비차단)
     await Future.wait([
       SecurityInitializer.initialize(),
       MobileAds.instance.initialize(),
@@ -58,9 +58,6 @@ class AppInitializer {
       NotificationService().initialize(),
       DefaultFirebaseOptions.loadServerKeys(),
       _configureSystemUI(),
-      _requestLocationPermission(),
-      _requestAccessibilityPermission(),
-      _requestNotificationPermission(),
     ]);
 
     SecurityConfig.logAdConfiguration();

@@ -66,7 +66,24 @@ class _TodayRecommendationScreenState
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.low,
-      );
+        timeLimit: const Duration(seconds: 5),
+      ).catchError((e) {
+        debugPrint('Location fetch timeout or error: $e');
+        return Position(
+          longitude: 127.0, // 서울 기본 위치 폴백
+          latitude: 37.5,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          heading: 0,
+          speed: 0,
+          speedAccuracy: 0,
+          altitudeAccuracy: 0,
+          headingAccuracy: 0,
+        );
+      });
+
+      if (position.timestamp == null) return;
 
       final weather = await WeatherService().getCurrentWeather(
         position.latitude,

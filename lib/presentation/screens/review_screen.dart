@@ -241,6 +241,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     bool isLoading,
   ) {
     final reviewState = ref.watch(reviewProvider);
+    final bool isValid = reviewState.foodName.trim().isNotEmpty &&
+        reviewState.deliveryRating > 0 &&
+        reviewState.tasteRating > 0 &&
+        reviewState.portionRating > 0 &&
+        reviewState.priceRating > 0;
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -312,7 +318,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               SizedBox(height: responsive.verticalSpacing() * 0.8),
               const ReviewStyleSection(),
               SizedBox(height: responsive.verticalSpacing() * 1.2),
-              _buildGenerateButton(isLoading),
+              _buildGenerateButton(isLoading, isValid),
               SizedBox(height: MediaQuery.of(context).padding.bottom + 16.0),
             ],
           ),
@@ -448,27 +454,31 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  Widget _buildGenerateButton(bool isLoading) {
+  Widget _buildGenerateButton(bool isLoading, bool isValid) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.0),
-        gradient: LinearGradient(
-          colors: [Colors.blue[600]!, Colors.blue[700]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: isValid
+            ? LinearGradient(
+                colors: [Colors.blue[600]!, Colors.blue[700]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: isValid ? null : Theme.of(context).disabledColor,
       ),
       child: Semantics(
         label: '입력한 정보를 바탕으로 AI 리뷰 생성하기',
         button: true,
         child: PrimaryActionButton(
           text: '리뷰 생성하기',
-          onPressed: isLoading
+          isEnabled: isValid,
+          onPressed: (isLoading || !isValid)
               ? null
               : () => ref
                     .read(reviewViewModelProvider.notifier)
                     .generateReviews(context),
-          isLoading: false,
+          isLoading: isLoading,
         ),
       ),
     );

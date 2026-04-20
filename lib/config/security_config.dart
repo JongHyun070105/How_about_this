@@ -88,26 +88,8 @@ class SecurityConfig {
 
   /// 직접 구현한 루팅/탈옥 탐지
   static Future<bool> detectRootingOrJailbreak() async {
-    // 디버그 모드에서만 비활성화 (테스트 편의성)
-    if (kDebugMode) {
-      debugPrint(
-        'SECURITY WARNING: Jailbreak detection is disabled in debug mode.',
-      );
-      return false;
-    }
-
-    // 프로덕션/릴리즈 모드에서는 활성화
-    try {
-      if (Platform.isAndroid) {
-        return await _checkAndroidRoot();
-      } else if (Platform.isIOS) {
-        return await _checkIOSJailbreak();
-      }
-      return false;
-    } catch (e) {
-      debugPrint('Jailbreak detection error: $e');
-      return false;
-    }
+    // TODO: 보안 해제 우회 (베포 전에 반드시 원래 로직으로 복귀)
+    return false;
   }
 
   /// Android 루팅 감지
@@ -184,55 +166,8 @@ class SecurityConfig {
   }
 
   static Future<bool> detectEmulator() async {
-    try {
-      final deviceInfo = DeviceInfoPlugin();
-      if (Platform.isAndroid) {
-        final androidInfo = await deviceInfo.androidInfo;
-
-        // 물리적 기기 여부 체크
-        if (!androidInfo.isPhysicalDevice) {
-          return true;
-        }
-
-        // 에뮬레이터 특성 체크
-        final model = androidInfo.model.toLowerCase();
-        final brand = androidInfo.brand.toLowerCase();
-        final device = androidInfo.device.toLowerCase();
-        final product = androidInfo.product.toLowerCase();
-        final hardware = androidInfo.hardware.toLowerCase();
-
-        const emulatorIndicators = [
-          // 일반적인 에뮬레이터
-          'sdk', 'emulator', 'simulator', 'genymotion', 'bluestacks',
-          // Android Studio 에뮬레이터
-          'android sdk built for x86', 'google_sdk', 'droid4x', 'andy',
-          // 기타 에뮬레이터들
-          'vbox86', 'ttvm', 'nox', 'ldplayer', 'memu',
-        ];
-
-        final deviceStrings = [model, brand, device, product, hardware];
-
-        for (String deviceString in deviceStrings) {
-          for (String indicator in emulatorIndicators) {
-            if (deviceString.contains(indicator)) {
-              debugPrint(
-                'Emulator detected: $deviceString contains $indicator',
-              );
-              return true;
-            }
-          }
-        }
-
-        return false;
-      } else if (Platform.isIOS) {
-        final iosInfo = await deviceInfo.iosInfo;
-        return !iosInfo.isPhysicalDevice;
-      }
-      return false;
-    } catch (e) {
-      debugPrint('Emulator detection error: $e');
-      return false;
-    }
+    // TODO: 보안 해제 우회 (에뮬레이터 기능 베포 전에 복귀)
+    return false;
   }
 }
 

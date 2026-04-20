@@ -12,6 +12,8 @@ import '../../services/notification_service.dart';
 import '../providers/food_providers.dart';
 import '../providers/review_provider.dart';
 import 'today_recommendation_screen.dart';
+import 'onboarding_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../presentation/widgets/common/app_dialogs.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -64,12 +66,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final stopwatch = Stopwatch()..start();
 
     try {
+      // 인터넷 연결 시도 (최대 2회)
+      int retryCount = 0;
       bool isConnected = await _checkInternetConnectivity();
-      while (!isConnected) {
+      while (!isConnected && retryCount < 2) {
         if (!mounted) return;
         final shouldRetry = await _showConnectionErrorDialog();
         if (shouldRetry) {
           isConnected = await _checkInternetConnectivity();
+          retryCount++;
         } else {
           exit(0);
         }
@@ -85,11 +90,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         await Future.delayed(minLoadingTime - elapsed);
       }
 
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const TodayRecommendationScreen(),
+                hasSeenOnboarding ? const TodayRecommendationScreen() : const OnboardingScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   return FadeTransition(opacity: animation, child: child);
@@ -152,7 +160,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       if (connectivityResult.contains(ConnectivityResult.none)) return false;
       final result = await InternetAddress.lookup(
         'google.com',
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 3));
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
     } catch (e) {
       return false;
