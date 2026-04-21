@@ -22,11 +22,11 @@ id = "7238157c15ff41a3bbdbbd25b8363784"
 # Durable Object for Region Proxy
 [[durable_objects.bindings]]
 name = "GEMINI_PROXY"
-class_name = "GeminiProxy"
+class_name = "GeminiProxyV2"
 
 [[migrations]]
-tag = "v2"
-new_sqlite_classes = ["GeminiProxy"]
+tag = "v3"
+new_sqlite_classes = ["GeminiProxyV2"]
 
 [observability]
 enabled = true

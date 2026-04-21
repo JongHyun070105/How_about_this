@@ -827,7 +827,7 @@ function jsonResponse(data, status = 200, headers = {}) {
 }
 
 // Durable Object 클래스 정의
-export class GeminiProxy {
+export class GeminiProxyV2 {
   constructor(state, env) {
     this.state = state;
     this.env = env;
