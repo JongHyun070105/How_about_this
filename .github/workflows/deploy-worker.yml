@@ -2,7 +2,7 @@ name: Deploy Cloudflare Worker
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     paths:
       - 'cloudflare-worker/**'
   workflow_dispatch:
@@ -31,4 +31,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: cloudflare-worker
-          command: deploy --verbose
+          preCommands: npx wrangler whoami
+          command: deploy
