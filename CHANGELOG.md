@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.2](https://github.com/JongHyun070105/how-about-this/compare/v1.8.1...v1.8.2) (2026-04-21)
+
+
+### Bug Fixes
+
+* .toml 파일 재수정 ([8593d70](https://github.com/JongHyun070105/how-about-this/commit/8593d70d6d84309d3d36a0ad71f8e4671ee76672))
+* **worker:** 해결을 위해 워크플로우 디버깅 단계 추가 및 wrangler 설정 최적화 ([c4ae452](https://github.com/JongHyun070105/how-about-this/commit/c4ae45255cb8e37530a8d4231ea450d43ab486c0))
+
 ## [1.8.1](https://github.com/JongHyun070105/how-about-this/compare/v1.8.0...v1.8.1) (2026-04-21)
 
 
