@@ -21,12 +21,13 @@ id = "7238157c15ff41a3bbdbbd25b8363784"
 
 # Durable Object for Region Proxy
 [[durable_objects.bindings]]
-name = "GEMINI_PROXY"
-class_name = "GeminiProxy"
+name = "GEMINI_PROXY_V2"
+class_name = "GeminiProxyV2"
 
 [[migrations]]
-tag = "v2"
-new_classes = ["GeminiProxy"]
+tag = "v6"
+new_sqlite_classes = ["GeminiProxyV2"]
+deleted_classes = ["GeminiProxy"]
 
 [observability]
 enabled = true
@@ -36,12 +37,6 @@ head_sampling_rate = 1
 enabled = true
 head_sampling_rate = 1
 invocation_logs = true
-persist = true
-
-[observability.traces]
-enabled = false
-persist = true
-head_sampling_rate = 1
 
 
 # 환경 변수 (민감한 정보는 wrangler secret으로 설정)
