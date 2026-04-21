@@ -381,10 +381,10 @@ async function handleGeminiProxy(request, env) {
 
   // Durable Object를 통해 Gemini API 호출 (미국 리전 강제)
   // "US_PROXY"라는 이름으로 고정된 DO ID 생성
-  const id = env.GEMINI_PROXY.idFromName("US_PROXY");
+  const id = env.GEMINI_PROXY_V2.idFromName("US_PROXY");
   
   // locationHint를 'wnam' (Western North America)로 설정하여 미국에 생성 유도
-  const stub = env.GEMINI_PROXY.get(id, { locationHint: "wnam" });
+  const stub = env.GEMINI_PROXY_V2.get(id, { locationHint: "wnam" });
   
   // DO에 요청 전달
   return stub.fetch(request);
@@ -729,8 +729,8 @@ async function handleFoodInsight(request, env) {
     // Gemini API로 인사이트 생성
     const prompt = buildInsightPrompt({ categoryFrequency, topFoods, totalReviews, weeklyCount, streak });
 
-    const id = env.GEMINI_PROXY.idFromName("US_PROXY");
-    const stub = env.GEMINI_PROXY.get(id, { locationHint: "wnam" });
+    const id = env.GEMINI_PROXY_V2.idFromName("US_PROXY");
+    const stub = env.GEMINI_PROXY_V2.get(id, { locationHint: "wnam" });
 
     const geminiRequest = new Request(request.url, {
       method: "POST",
