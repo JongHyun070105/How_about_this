@@ -511,8 +511,7 @@ async function handleKakaoLocalProxy(request, env) {
     return jsonResponse(
       {
         error: "Internal Server Error",
-        message: error.message,
-        stack: error.stack,
+        message: "An unexpected error occurred",
       },
       500,
       CORS_HEADERS
@@ -860,10 +859,9 @@ export class GeminiProxy {
         return jsonResponse({ error: "API key not configured" }, 500, CORS_HEADERS);
       }
 
-      // Gemini API 호출
+      // Gemini API 호출 (API 키는 절대 로깅하지 않음)
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:${endpoint}?key=${apiKey}`;
-
-      console.log(`Calling Gemini API from DO: ${geminiUrl}`);
+      console.log(`Calling Gemini API endpoint: ${endpoint}`);
 
       const response = await fetch(geminiUrl, {
         method: "POST",
