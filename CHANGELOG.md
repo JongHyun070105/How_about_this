@@ -1,5 +1,58 @@
 # Changelog
 
+## [1.8.1](https://github.com/JongHyun070105/how-about-this/compare/v1.8.0...v1.8.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* 설정 파일 문법 오류 수정 ([914d86b](https://github.com/JongHyun070105/how-about-this/commit/914d86bbbbac29c16acb5d9b0a23178648dcda37))
+
+## [1.8.0](https://github.com/JongHyun070105/how-about-this/compare/v1.7.0...v1.8.0) (2026-04-21)
+
+
+### Features
+
+* worker.js 업데이트 ([353590e](https://github.com/JongHyun070105/how-about-this/commit/353590ea11338288f99a4721b86fef60aaf7b2e7))
+* worker.js 업데이트 ([603088b](https://github.com/JongHyun070105/how-about-this/commit/603088b34148d4de233cb6063a29a94bedb8e969))
+
+## [1.7.0](https://github.com/JongHyun070105/how-about-this/compare/v1.6.0...v1.7.0) (2026-04-20)
+
+
+### Features
+
+* 온보딩 추가 ([25c0246](https://github.com/JongHyun070105/how-about-this/commit/25c024675ced8722a913aa7f9552b28cf0ccb976))
+
+
+### Bug Fixes
+
+* 루팅 감지 코드 수정등 ([7eadb07](https://github.com/JongHyun070105/how-about-this/commit/7eadb077dd235317d76437db2eeac3616c8ed7d0))
+
+## [1.6.0](https://github.com/JongHyun070105/how-about-this/compare/v1.5.0...v1.6.0) (2026-03-09)
+
+
+### Features
+
+* 코드 리뷰 반영 ([ad64127](https://github.com/JongHyun070105/how-about-this/commit/ad64127e26a267be7d0ad36b4888b46facda3ae2))
+* 코드 리뷰 반영 ([e303602](https://github.com/JongHyun070105/how-about-this/commit/e303602f4b3cb79c23eee9ac7d88efa36d16b05b))
+
+## [1.5.0](https://github.com/JongHyun070105/how-about-this/compare/v1.4.0...v1.5.0) (2026-03-08)
+
+
+### Features
+
+* Firebase Remote Config를 도입하여 앱 리뷰 쿨다운 및 일일 사용량 제한 값을 원격 구성으로 관리… ([f2a477a](https://github.com/JongHyun070105/how-about-this/commit/f2a477a50622ec30da76693c130c8ef23e82fc05))
+* Firebase Remote Config를 도입하여 앱 리뷰 쿨다운 및 일일 사용량 제한 값을 원격 구성으로 관리합니다. ([bcb73c5](https://github.com/JongHyun070105/how-about-this/commit/bcb73c567de14aae1668da6dd5767a5ac43d853d))
+
+## [1.4.0](https://github.com/JongHyun070105/how-about-this/compare/v1.3.0...v1.4.0) (2026-03-07)
+
+
+### Features
+
+* Android 인앱 업데이트 기능 추가 ([1f6ea1f](https://github.com/JongHyun070105/how-about-this/commit/1f6ea1fc42cc9f406ec055eabe1d9cabfebd620b))
+* Android 인앱 업데이트 기능 추가 ([74b46b0](https://github.com/JongHyun070105/how-about-this/commit/74b46b0dc2c9ae51524b34d411adfbd799dd02e5))
+* 리뷰 및 오늘의 추천 뷰모델 로직을 개선했습니다. ([337daa6](https://github.com/JongHyun070105/how-about-this/commit/337daa6b4b4fdaa3b76bcadb711f6767a421adee))
+* 리뷰 및 오늘의 추천 뷰모델 로직을 개선했습니다. ([dfa848d](https://github.com/JongHyun070105/how-about-this/commit/dfa848df8ff4d59a7f8215d152c69175dd5439ef))
+
 ## [1.3.0](https://github.com/JongHyun070105/how-about-this/compare/v1.2.0...v1.3.0) (2026-03-01)
 
 

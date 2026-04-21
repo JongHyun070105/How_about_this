@@ -25,11 +25,11 @@ jobs:
         working-directory: cloudflare-worker
         run: npm ci
 
-      - name: Deploy to Cloudflare
+      - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: cloudflare-worker
-          preCommands: npx wrangler whoami
+          workingDirectory: 'cloudflare-worker'
+          preCommand: npx wrangler whoami
           command: deploy
