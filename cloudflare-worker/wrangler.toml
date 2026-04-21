@@ -25,8 +25,9 @@ name = "GEMINI_PROXY"
 class_name = "GeminiProxyV2"
 
 [[migrations]]
-tag = "v3"
+tag = "v4"
 new_sqlite_classes = ["GeminiProxyV2"]
+renamed_classes = [{ from = "GeminiProxy", to = "GeminiProxyV2" }]
 
 [observability]
 enabled = true
@@ -36,7 +37,6 @@ head_sampling_rate = 1
 enabled = true
 head_sampling_rate = 1
 invocation_logs = true
-persist = true
 
 
 # 환경 변수 (민감한 정보는 wrangler secret으로 설정)
