@@ -26,7 +26,7 @@ class_name = "GeminiProxy"
 
 [[migrations]]
 tag = "v1"
-new_sqlite_classes = ["GeminiProxy"]
+new_classes = ["GeminiProxy"]
 
 [observability]
 enabled = true
