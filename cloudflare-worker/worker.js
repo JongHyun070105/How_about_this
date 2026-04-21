@@ -511,7 +511,7 @@ async function handleKakaoLocalProxy(request, env) {
     return jsonResponse(
       {
         error: "Internal Server Error",
-        message: error.message,
+        message: "An unexpected error occurred",
       },
       500,
       CORS_HEADERS
