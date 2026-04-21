@@ -25,9 +25,9 @@ name = "GEMINI_PROXY"
 class_name = "GeminiProxyV2"
 
 [[migrations]]
-tag = "v4"
+tag = "v5"
 new_sqlite_classes = ["GeminiProxyV2"]
-renamed_classes = [{ from = "GeminiProxy", to = "GeminiProxyV2" }]
+deleted_classes = ["GeminiProxy"]
 
 [observability]
 enabled = true
