@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/JongHyun070105/how-about-this/compare/v1.8.0...v1.8.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* 설정 파일 문법 오류 수정 ([914d86b](https://github.com/JongHyun070105/how-about-this/commit/914d86bbbbac29c16acb5d9b0a23178648dcda37))
+
 ## [1.8.0](https://github.com/JongHyun070105/how-about-this/compare/v1.7.0...v1.8.0) (2026-04-21)
 
 
