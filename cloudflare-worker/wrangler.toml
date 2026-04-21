@@ -1,6 +1,6 @@
 name = "reviewai-api-proxy"
 main = "worker.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-04-21"
 
 # Workers 플랜
 workers_dev = true
@@ -25,7 +25,7 @@ name = "GEMINI_PROXY"
 class_name = "GeminiProxy"
 
 [[migrations]]
-tag = "v1"
+tag = "v2"
 new_classes = ["GeminiProxy"]
 
 [observability]
