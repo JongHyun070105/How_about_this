@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.0](https://github.com/JongHyun070105/how-about-this/compare/v1.7.0...v1.8.0) (2026-04-21)
+
+
+### Features
+
+* worker.js 업데이트 ([353590e](https://github.com/JongHyun070105/how-about-this/commit/353590ea11338288f99a4721b86fef60aaf7b2e7))
+* worker.js 업데이트 ([603088b](https://github.com/JongHyun070105/how-about-this/commit/603088b34148d4de233cb6063a29a94bedb8e969))
+
 ## [1.7.0](https://github.com/JongHyun070105/how-about-this/compare/v1.6.0...v1.7.0) (2026-04-20)
 
 
