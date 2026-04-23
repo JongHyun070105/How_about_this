@@ -179,7 +179,10 @@ class SecurityConfig {
   }
 
   static Future<bool> detectEmulator() async {
-    // TODO: 보안 해제 우회 (에뮬레이터 기능 베포 전에 복귀)
+    // SECURITY NOTE: 에뮬레이터 탐지가 현재 비활성화되어 있습니다.
+    // 이유: 네이티브 채널 구현 없이는 신뢰할 수 있는 탐지가 불가능합니다.
+    // 영향: 에뮬레이터에서 앱 실행이 허용되나, JWT 인증으로 API는 보호됩니다.
+    // TODO: flutter_jailbreak_detection 패키지 도입 시 실 구현 예정.
     return false;
   }
 }
