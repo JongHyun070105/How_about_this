@@ -1,12 +1,13 @@
-import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/presentation/providers/review_provider.dart';
+import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
+import 'package:review_ai/presentation/widgets/review_selection/edit_review_dialog.dart';
+import 'package:review_ai/presentation/widgets/review_selection/review_card_widget.dart';
+import 'package:review_ai/presentation/widgets/review_selection/review_selection_widgets.dart';
 import 'package:review_ai/services/food_insight_service.dart';
 import 'package:review_ai/utils/responsive.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:review_ai/presentation/widgets/review_selection/edit_review_dialog.dart';
 
 class ReviewSelectionScreen extends ConsumerStatefulWidget {
   const ReviewSelectionScreen({super.key});
@@ -19,12 +20,11 @@ class ReviewSelectionScreen extends ConsumerStatefulWidget {
 class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
   final PageController _pageController = PageController();
   int? selectedReviewIndex;
-  List<String> _cachedReviews = []; // 리뷰를 캐시하여 상태 변화에 영향받지 않도록 함
+  List<String> _cachedReviews = [];
 
   @override
   void initState() {
     super.initState();
-    // 화면 초기화 시 리뷰를 캐시
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final reviewState = ref.read(reviewProvider);
       setState(() {
@@ -44,7 +44,6 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     final responsive = Responsive(context);
     final textTheme = Theme.of(context).textTheme;
 
-    // 캐시된 리뷰가 비어있다면 provider에서 다시 가져오기
     if (_cachedReviews.isEmpty) {
       final reviewState = ref.watch(reviewProvider);
       _cachedReviews = List<String>.from(reviewState.generatedReviews);
@@ -55,7 +54,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: _buildAppBar(context, responsive, textTheme),
-        body: _buildBody(context, responsive, _cachedReviews, textTheme),
+        body: _cachedReviews.isEmpty
+            ? _buildEmptyState(context, responsive, textTheme)
+            : _buildContent(context, responsive, textTheme),
       ),
     );
   }
@@ -82,49 +83,44 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
           ),
         ),
       ),
-      actions: [
-        // 선택됨 뱃지 제거
-      ],
     );
   }
 
-  Widget _buildBody(
+  Widget _buildEmptyState(
     BuildContext context,
     Responsive responsive,
-    List<String> reviews,
     TextTheme textTheme,
   ) {
-    // 리뷰가 없는 경우 처리
-    if (reviews.isEmpty) {
-      return SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: responsive.iconSize() * 2,
-                color: Colors.grey[400],
+    return SafeArea(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: responsive.iconSize() * 2, color: Colors.grey[400]),
+            SizedBox(height: responsive.verticalSpacing()),
+            Text(
+              '생성된 리뷰가 없습니다.',
+              style: textTheme.titleMedium?.copyWith(
+                color: Colors.grey[600],
+                fontFamily: 'Do Hyeon',
               ),
-              SizedBox(height: responsive.verticalSpacing()),
-              Text(
-                '생성된 리뷰가 없습니다.',
-                style: textTheme.titleMedium?.copyWith(
-                  color: Colors.grey[600],
-                  fontFamily: 'Do Hyeon',
-                ),
-              ),
-              SizedBox(height: responsive.verticalSpacing()),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('뒤로 가기', style: TextStyle(fontFamily: 'Do Hyeon')),
-              ),
-            ],
-          ),
+            ),
+            SizedBox(height: responsive.verticalSpacing()),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('뒤로 가기', style: TextStyle(fontFamily: 'Do Hyeon')),
+            ),
+          ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
+  Widget _buildContent(
+    BuildContext context,
+    Responsive responsive,
+    TextTheme textTheme,
+  ) {
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -135,205 +131,24 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
           child: Column(
             children: [
               SizedBox(height: responsive.verticalSpacing() * 2),
-
-              // 향상된 스타일의 타이틀 섹션
-              Container(
-                alignment: Alignment.center,
-                child: Column(
-                  children: [
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        '마음에 드는 리뷰 하나를 선택하세요',
-                        textAlign: TextAlign.center,
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Do Hyeon',
-                          fontSize: responsive.titleFontSize(),
-                          color: Colors.grey[800],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: responsive.verticalSpacing() * 0.5),
-                    Text(
-                      '리뷰를 탭하여 선택할 수 있습니다',
-                      textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                        fontFamily: 'Do Hyeon',
-                        fontSize: responsive.subtitleFontSize(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
+              _buildTitleSection(context, responsive, textTheme),
               SizedBox(height: responsive.verticalSpacing() * 2),
-
-              // 버튼 겹침 방지를 위한 개선된 레이아웃의 리뷰 카드
               Expanded(
                 flex: responsive.isTablet ? 6 : 5,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      responsive.isTablet ? 16.0 : 12.0,
-                    ),
-                  ),
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: reviews.length,
-                    onPageChanged: (index) {
-                      // 새 페이지로 스와이프할 때 자동 선택 해제하지 않음
-                    },
-                    itemBuilder: (context, index) {
-                      final review = reviews[index];
-                      final isSelected = selectedReviewIndex == index;
-
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: EdgeInsets.symmetric(
-                          horizontal: responsive.isSmallScreen ? 6.0 : 10.0,
-                          vertical: 8.0,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            responsive.isTablet ? 16.0 : 12.0,
-                          ),
-                        ),
-                        child: _buildImprovedReviewCard(
-                          review: review,
-                          isSelected: isSelected,
-                          responsive: responsive,
-                          textTheme: textTheme,
-                          onTap: () {
-                            setState(() {
-                              HapticFeedback.lightImpact();
-                              if (isSelected) {
-                                selectedReviewIndex = null;
-                              } else {
-                                selectedReviewIndex = index;
-                              }
-                            });
-                          },
-                          onEdit: () {
-                            _showEditReviewDialog(context, index, review);
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                child: _buildPageView(responsive, textTheme),
               ),
-
               SizedBox(height: responsive.verticalSpacing()),
-
-              // 반응형 스타일의 페이지 인디케이터
-              if (reviews.isNotEmpty)
-                Semantics(
-                  label:
-                      '총 ${reviews.length}개의 리뷰 중 현재 ${(_pageController.hasClients ? _pageController.page?.round() ?? 0 : 0) + 1}번째 리뷰',
-                  child: Container(
-                    padding: EdgeInsets.all(
-                      responsive.horizontalPadding() * 0.2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(
-                        responsive.isTablet ? 25.0 : 20.0,
-                      ),
-                    ),
-                    child: SmoothPageIndicator(
-                      controller: _pageController,
-                      count: reviews.length,
-                      effect: WormEffect(
-                        dotColor: Theme.of(context).dividerColor,
-                        activeDotColor: Theme.of(context).primaryColor,
-                        dotHeight: responsive.iconSize() * 0.5,
-                        dotWidth: responsive.iconSize() * 0.5,
-                        spacing: responsive.iconSize() * 0.4,
-                        radius: responsive.iconSize() * 0.5,
-                      ),
-                    ),
-                  ),
-                ),
-
-              SizedBox(height: responsive.verticalSpacing() * 2.5),
-
-              // 향상된 스타일과 수평 패딩이 추가된 액션 버튼
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: responsive.horizontalPadding() * 0.8,
-                ),
-                child: Container(
-                  width: double.infinity,
-                  height: responsive.buttonHeight(),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      responsive.isTablet ? 24.0 : 20.0,
-                    ),
-                    boxShadow: selectedReviewIndex != null
-                        ? [
-                            BoxShadow(
-                              color: Theme.of(
-                                context,
-                              ).primaryColor.withAlpha((0.3 * 255).round()),
-                              blurRadius: responsive.isTablet ? 12.0 : 8.0,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Semantics(
-                    label: selectedReviewIndex == null
-                        ? '리뷰를 먼저 선택해야 저장할 수 있습니다'
-                        : '선택한 리뷰를 클립보드에 복사하고 히스토리에 저장하기',
-                    button: true,
-                    enabled: selectedReviewIndex != null,
-                    child: ElevatedButton(
-                      onPressed: selectedReviewIndex == null
-                          ? null
-                          : () => _saveSelectedReview(context, responsive),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: selectedReviewIndex == null
-                            ? Theme.of(context).disabledColor
-                            : Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            responsive.isTablet ? 24.0 : 20.0,
-                          ),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          vertical:
-                              responsive.verticalSpacing() * 0.8, // 버튼 높이 확보
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              selectedReviewIndex == null
-                                  ? '리뷰를 선택하세요'
-                                  : '선택한 리뷰 저장',
-                              style: TextStyle(
-                                fontFamily: 'Do Hyeon',
-                                fontSize: responsive.buttonFontSize(),
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+              ReviewPageIndicator(
+                controller: _pageController,
+                count: _cachedReviews.length,
+                responsive: responsive,
               ),
-
+              SizedBox(height: responsive.verticalSpacing() * 2.5),
+              ReviewActionButton(
+                isEnabled: selectedReviewIndex != null,
+                responsive: responsive,
+                onPressed: () => _saveSelectedReview(context, responsive),
+              ),
               SizedBox(height: responsive.verticalSpacing()),
             ],
           ),
@@ -342,150 +157,36 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     );
   }
 
-  // 버튼 겹침 방지를 위한 개선된 레이아웃의 ReviewCard
-  Widget _buildImprovedReviewCard({
-    required String review,
-    required bool isSelected,
-    required Responsive responsive,
-    required TextTheme textTheme,
-    required VoidCallback onTap,
-    required VoidCallback onEdit,
-  }) {
+  Widget _buildTitleSection(
+    BuildContext context,
+    Responsive responsive,
+    TextTheme textTheme,
+  ) {
     return Container(
-      decoration: BoxDecoration(
-        color: isSelected
-            ? Theme.of(context).colorScheme.secondaryContainer
-            : Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(responsive.isTablet ? 16.0 : 12.0),
-        border: Border.all(
-          color: isSelected
-              ? Theme.of(context).primaryColor.withAlpha((0.3 * 255).round())
-              : Theme.of(context).dividerColor,
-          width: isSelected ? 2.0 : 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isSelected
-                ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).round())
-                : Colors.grey.withAlpha((0.08 * 255).round()),
-            blurRadius: isSelected ? 8.0 : 4.0,
-            offset: Offset(0, isSelected ? 4.0 : 2.0),
-          ),
-        ],
-      ),
+      alignment: Alignment.center,
       child: Column(
         children: [
-          // 편집 버튼이 있는 헤더 - 상단 고정
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: responsive.horizontalPadding() * 0.6,
-              vertical: responsive.verticalSpacing() * 0.4,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
-                topRight: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+          Semantics(
+            header: true,
+            child: Text(
+              '마음에 드는 리뷰 하나를 선택하세요',
+              textAlign: TextAlign.center,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Do Hyeon',
+                fontSize: responsive.titleFontSize(),
+                color: Colors.grey[800],
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'AI 생성 리뷰',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                    fontFamily: 'Do Hyeon',
-                    fontSize: responsive.captionFontSize(),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(
-                      responsive.isTablet ? 8.0 : 6.0,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withAlpha((0.2 * 255).round()),
-                        blurRadius: 2.0,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(
-                      responsive.isTablet ? 8.0 : 6.0,
-                    ),
-                    child: InkWell(
-                      onTap: onEdit,
-                      borderRadius: BorderRadius.circular(
-                        responsive.isTablet ? 8.0 : 6.0,
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(
-                          responsive.isTablet ? 8.0 : 6.0,
-                        ),
-                        child: Icon(
-                          Icons.edit,
-                          size: responsive.iconSize() * 0.7,
-                          color:
-                              Theme.of(context).iconTheme.color ??
-                              Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
-
-          // Content area - scrollable
-          Expanded(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(
-                    responsive.isTablet ? 16.0 : 12.0,
-                  ),
-                  bottomRight: Radius.circular(
-                    responsive.isTablet ? 16.0 : 12.0,
-                  ),
-                ),
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(responsive.horizontalPadding() * 0.6),
-                  child: Column(
-                    children: [
-                      // Review text - scrollable area
-                      Expanded(
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: Text(
-                            review,
-                            style: textTheme.bodyMedium?.copyWith(
-                              fontFamily: 'Do Hyeon',
-                              fontSize: responsive.bodyFontSize(),
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.color,
-                              height: 1.5,
-                            ),
-                            textAlign: TextAlign.left,
-                          ),
-                        ),
-                      ),
-
-                      // Selection indicator at bottom
-                    ],
-                  ),
-                ),
-              ),
+          SizedBox(height: responsive.verticalSpacing() * 0.5),
+          Text(
+            '리뷰를 탭하여 선택할 수 있습니다',
+            textAlign: TextAlign.center,
+            style: textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).textTheme.bodyMedium?.color,
+              fontFamily: 'Do Hyeon',
+              fontSize: responsive.subtitleFontSize(),
             ),
           ),
         ],
@@ -493,20 +194,48 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     );
   }
 
-  Future<void> _saveSelectedReview(
-    BuildContext context,
-    Responsive responsive,
-  ) async {
-    if (selectedReviewIndex == null) return;
+  Widget _buildPageView(Responsive responsive, TextTheme textTheme) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 16.0 : 12.0),
+      ),
+      child: PageView.builder(
+        controller: _pageController,
+        itemCount: _cachedReviews.length,
+        itemBuilder: (context, index) {
+          final isSelected = selectedReviewIndex == index;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: EdgeInsets.symmetric(
+              horizontal: responsive.isSmallScreen ? 6.0 : 10.0,
+              vertical: 8.0,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(responsive.isTablet ? 16.0 : 12.0),
+            ),
+            child: ReviewCardWidget(
+              review: _cachedReviews[index],
+              isSelected: isSelected,
+              responsive: responsive,
+              textTheme: textTheme,
+              onTap: () => setState(() {
+                HapticFeedback.lightImpact();
+                selectedReviewIndex = isSelected ? null : index;
+              }),
+              onEdit: () => _showEditReviewDialog(context, index, _cachedReviews[index]),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
+  Future<void> _saveSelectedReview(BuildContext context, Responsive responsive) async {
+    if (selectedReviewIndex == null) return;
     try {
       final reviewState = ref.read(reviewProvider);
       final selectedReviewText = _cachedReviews[selectedReviewIndex!];
-
-      // 카테고리가 비어있거나 '기타'이면 AI로 자동 추론
-      final foodName = reviewState.foodName.isEmpty
-          ? '이름 없음'
-          : reviewState.foodName;
+      final foodName = reviewState.foodName.isEmpty ? '이름 없음' : reviewState.foodName;
       String category = reviewState.category;
       if (category.isEmpty || category == '기타') {
         category = await FoodInsightService.inferCategory(foodName);
@@ -526,33 +255,22 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
       );
 
       await ref.read(reviewHistoryProvider.notifier).addReview(newEntry);
-
       await Clipboard.setData(ClipboardData(text: selectedReviewText));
-
-      // 저장 성공 시 햅틱 피드백
       HapticFeedback.mediumImpact();
 
       if (!context.mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('클립보드 복사 및 히스토리에 저장되었습니다.'),
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
         ),
       );
 
-      // 약간의 딜레이를 주어 사용자가 스낵바를 인지할 수 있도록 함
       await Future.delayed(const Duration(milliseconds: 500));
-
-      // 리뷰 상태를 완전히 리셋하고 홈 화면으로 돌아가기
       ref.read(reviewProvider.notifier).reset();
-
       if (!context.mounted) return;
-      // 모든 화면을 닫고 처음 화면으로 돌아가기
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       if (!context.mounted) return;
@@ -564,18 +282,11 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     }
   }
 
-  void _showEditReviewDialog(
-    BuildContext context,
-    int index,
-    String currentReview,
-  ) {
+  void _showEditReviewDialog(BuildContext context, int index, String currentReview) {
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return EditReviewDialog(index: index, currentReview: currentReview);
-      },
+      builder: (dialogContext) => EditReviewDialog(index: index, currentReview: currentReview),
     ).then((_) {
-      // 다이얼로그가 닫힌 후 provider에서 최신 리뷰를 가져와서 캐시 업데이트
       final reviewState = ref.read(reviewProvider);
       if (reviewState.generatedReviews.isNotEmpty &&
           index < reviewState.generatedReviews.length) {

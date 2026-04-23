@@ -591,7 +591,7 @@ async function handleWeatherProxy(request, env) {
     return jsonResponse(
       {
         error: "Internal Server Error",
-        message: error.message,
+        message: "An unexpected error occurred",
       },
       500,
       CORS_HEADERS
@@ -787,7 +787,7 @@ async function handleFoodInsight(request, env) {
   } catch (error) {
     console.error("Food insight error:", error);
     return jsonResponse(
-      { error: "Internal server error", details: error.message },
+      { error: "Internal server error" },
       500,
       CORS_HEADERS
     );
@@ -886,7 +886,7 @@ export class GeminiProxyV2 {
     } catch (error) {
       console.error("Durable Object error:", error);
       return jsonResponse(
-        { error: "Internal server error in DO", details: error.message },
+        { error: "Internal server error" },
         500,
         CORS_HEADERS
       );

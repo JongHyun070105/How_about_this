@@ -68,7 +68,8 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get android => FirebaseOptions(
-    apiKey: _serverAndroidApiKey ?? 'AIzaSyBfNotry0ovUtyRgFhbkTGAu2KH8-RV4lU',
+    // SECURITY: API 키는 서버에서만 관리됩니다. 하드코딩 폴백 제거됨.
+    apiKey: _serverAndroidApiKey ?? '',
     appId: '1:728734846473:android:b8758b19fdde6d70c872d8',
     messagingSenderId: '728734846473',
     projectId: 'reviewai-flutter',
@@ -76,7 +77,8 @@ class DefaultFirebaseOptions {
   );
 
   static FirebaseOptions get ios => FirebaseOptions(
-    apiKey: _serverIosApiKey ?? 'AIzaSyD0aITQ9v6TQLgxheTIGQhFP79FOa-UZDg',
+    // SECURITY: API 키는 서버에서만 관리됩니다. 하드코딩 폴백 제거됨.
+    apiKey: _serverIosApiKey ?? '',
     appId: '1:728734846473:ios:5788de31bc676837c872d8',
     messagingSenderId: '728734846473',
     projectId: 'reviewai-flutter',

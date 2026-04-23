@@ -1,0 +1,152 @@
+import 'package:flutter/material.dart';
+import 'package:review_ai/utils/responsive.dart';
+
+/// 리뷰 선택 화면 - 개선된 레이아웃의 리뷰 카드 위젯
+class ReviewCardWidget extends StatelessWidget {
+  final String review;
+  final bool isSelected;
+  final Responsive responsive;
+  final TextTheme textTheme;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+
+  const ReviewCardWidget({
+    super.key,
+    required this.review,
+    required this.isSelected,
+    required this.responsive,
+    required this.textTheme,
+    required this.onTap,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected
+            ? Theme.of(context).colorScheme.secondaryContainer
+            : Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 16.0 : 12.0),
+        border: Border.all(
+          color: isSelected
+              ? Theme.of(context).primaryColor.withAlpha((0.3 * 255).round())
+              : Theme.of(context).dividerColor,
+          width: isSelected ? 2.0 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isSelected
+                ? Theme.of(context).primaryColor.withAlpha((0.1 * 255).round())
+                : Colors.grey.withAlpha((0.08 * 255).round()),
+            blurRadius: isSelected ? 8.0 : 4.0,
+            offset: Offset(0, isSelected ? 4.0 : 2.0),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildHeader(context),
+          _buildContentArea(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: responsive.horizontalPadding() * 0.6,
+        vertical: responsive.verticalSpacing() * 0.4,
+      ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+          topRight: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'AI 생성 리뷰',
+            style: textTheme.bodySmall?.copyWith(
+              color: Colors.grey.shade600,
+              fontFamily: 'Do Hyeon',
+              fontSize: responsive.captionFontSize(),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          _buildEditButton(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 8.0 : 6.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withAlpha((0.2 * 255).round()),
+            blurRadius: 2.0,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(responsive.isTablet ? 8.0 : 6.0),
+        child: InkWell(
+          onTap: onEdit,
+          borderRadius: BorderRadius.circular(responsive.isTablet ? 8.0 : 6.0),
+          child: Padding(
+            padding: EdgeInsets.all(responsive.isTablet ? 8.0 : 6.0),
+            child: Icon(
+              Icons.edit,
+              size: responsive.iconSize() * 0.7,
+              color: Theme.of(context).iconTheme.color ?? Colors.grey.shade700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContentArea(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+            bottomRight: Radius.circular(responsive.isTablet ? 16.0 : 12.0),
+          ),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(responsive.horizontalPadding() * 0.6),
+            child: Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Text(
+                  review,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontFamily: 'Do Hyeon',
+                    fontSize: responsive.bodyFontSize(),
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
