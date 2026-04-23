@@ -96,7 +96,11 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: responsive.iconSize() * 2, color: Colors.grey[400]),
+            Icon(
+              Icons.error_outline,
+              size: responsive.iconSize() * 2,
+              color: Colors.grey[400],
+            ),
             SizedBox(height: responsive.verticalSpacing()),
             Text(
               '생성된 리뷰가 없습니다.',
@@ -211,7 +215,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
               vertical: 8.0,
             ),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(responsive.isTablet ? 16.0 : 12.0),
+              borderRadius: BorderRadius.circular(
+                responsive.isTablet ? 16.0 : 12.0,
+              ),
             ),
             child: ReviewCardWidget(
               review: _cachedReviews[index],
@@ -222,7 +228,8 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
                 HapticFeedback.lightImpact();
                 selectedReviewIndex = isSelected ? null : index;
               }),
-              onEdit: () => _showEditReviewDialog(context, index, _cachedReviews[index]),
+              onEdit: () =>
+                  _showEditReviewDialog(context, index, _cachedReviews[index]),
             ),
           );
         },
@@ -230,12 +237,17 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     );
   }
 
-  Future<void> _saveSelectedReview(BuildContext context, Responsive responsive) async {
+  Future<void> _saveSelectedReview(
+    BuildContext context,
+    Responsive responsive,
+  ) async {
     if (selectedReviewIndex == null) return;
     try {
       final reviewState = ref.read(reviewProvider);
       final selectedReviewText = _cachedReviews[selectedReviewIndex!];
-      final foodName = reviewState.foodName.isEmpty ? '이름 없음' : reviewState.foodName;
+      final foodName = reviewState.foodName.isEmpty
+          ? '이름 없음'
+          : reviewState.foodName;
       String category = reviewState.category;
       if (category.isEmpty || category == '기타') {
         category = await FoodInsightService.inferCategory(foodName);
@@ -264,7 +276,9 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
           content: const Text('클립보드 복사 및 히스토리에 저장되었습니다.'),
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
         ),
       );
 
@@ -282,10 +296,15 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
     }
   }
 
-  void _showEditReviewDialog(BuildContext context, int index, String currentReview) {
+  void _showEditReviewDialog(
+    BuildContext context,
+    int index,
+    String currentReview,
+  ) {
     showDialog(
       context: context,
-      builder: (dialogContext) => EditReviewDialog(index: index, currentReview: currentReview),
+      builder: (dialogContext) =>
+          EditReviewDialog(index: index, currentReview: currentReview),
     ).then((_) {
       final reviewState = ref.read(reviewProvider);
       if (reviewState.generatedReviews.isNotEmpty &&

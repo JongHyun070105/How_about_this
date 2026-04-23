@@ -17,8 +17,10 @@ export 'package:review_ai/services/food_stats_service.dart'
 /// 상수 데이터: [FoodCategoryData]
 class FoodInsightService {
   // 하위 호환성을 위해 상수를 위임 노출합니다.
-  static Map<String, String> get categoryEmojis => FoodCategoryData.categoryEmojis;
-  static Map<String, Color> get categoryColors => FoodCategoryData.categoryColors;
+  static Map<String, String> get categoryEmojis =>
+      FoodCategoryData.categoryEmojis;
+  static Map<String, Color> get categoryColors =>
+      FoodCategoryData.categoryColors;
 
   // ── 하위 호환성 위임 메서드 ──────────────────────────────────────
   // 기존 코드가 FoodInsightService를 통해 접근하므로 FoodStatsService에 위임합니다.
@@ -49,7 +51,6 @@ class FoodInsightService {
       FoodStatsService.generateSummary(h);
   // ────────────────────────────────────────────────────────────────
 
-
   /// 음식명으로부터 카테고리를 추론합니다.
   ///
   /// 1차: Gemini API 추론 → 2차: 키워드 폴백
@@ -69,8 +70,9 @@ class FoodInsightService {
   /// Gemini API를 사용한 카테고리 분류
   static Future<String?> _inferCategoryWithAI(String foodName) async {
     final apiService = ApiProxyService(http.Client(), ApiConfig.proxyUrl);
-    final categories =
-        FoodCategoryData.categoryEmojis.keys.where((c) => c != '기타').toList();
+    final categories = FoodCategoryData.categoryEmojis.keys
+        .where((c) => c != '기타')
+        .toList();
 
     final prompt =
         '다음 음식명이 어떤 카테고리에 해당하는지 분류해주세요.\n'

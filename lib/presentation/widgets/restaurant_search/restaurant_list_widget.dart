@@ -24,11 +24,10 @@ class RestaurantListWidget extends StatelessWidget {
         Expanded(
           child: ListView.builder(
             itemCount: restaurants.length,
-            itemBuilder: (context, index) =>
-                _RestaurantCard(
-                  restaurant: restaurants[index],
-                  onTap: () => onTapRestaurant(restaurants[index]),
-                ),
+            itemBuilder: (context, index) => _RestaurantCard(
+              restaurant: restaurants[index],
+              onTap: () => onTapRestaurant(restaurants[index]),
+            ),
           ),
         ),
       ],
@@ -55,9 +54,9 @@ class RestaurantListWidget extends StatelessWidget {
             label: '검색 필터: $foodName 및 $category',
             child: Text(
               '$foodName • $category',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ),
         ],

@@ -123,7 +123,9 @@ abstract class FoodStatsService {
       final name = food['foodName'] as String;
       final count = food['count'] as int;
       if (count >= 3) {
-        messages.add('$name 메뉴를 벌써 $count번이나 즐기셨네요! 혹시 오늘은 새로운 맛의 발견에 도전해 보시겠어요? 🌟');
+        messages.add(
+          '$name 메뉴를 벌써 $count번이나 즐기셨네요! 혹시 오늘은 새로운 맛의 발견에 도전해 보시겠어요? 🌟',
+        );
       }
     }
 
@@ -132,7 +134,9 @@ abstract class FoodStatsService {
       final weeklyCategories = getCategoryFrequency(weeklyEntries);
       if (weeklyCategories.length == 1) {
         final onlyCategory = weeklyCategories.keys.first;
-        final suggestion = FoodCategoryData.getSuggestionForCategory(onlyCategory);
+        final suggestion = FoodCategoryData.getSuggestionForCategory(
+          onlyCategory,
+        );
         messages.add(
           '이번 주에는 오직 $onlyCategory 카테고리만 즐기셨네요! 건강을 위해 오늘은 $suggestion 메뉴를 드셔보시는 건 어떨까요? 💪',
         );
@@ -177,8 +181,9 @@ abstract class FoodStatsService {
       'topFoods': topFoods,
       'weeklyCount': weeklyEntries.length,
       'averageRatings': averageRatings,
-      'favoriteCategory':
-          categoryFrequency.isNotEmpty ? categoryFrequency.keys.first : null,
+      'favoriteCategory': categoryFrequency.isNotEmpty
+          ? categoryFrequency.keys.first
+          : null,
       'streak': streak,
       'insightMessage': generateInsightMessage(history),
     };

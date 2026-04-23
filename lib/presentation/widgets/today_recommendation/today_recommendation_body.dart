@@ -24,7 +24,8 @@ class TodayRecommendationBody extends ConsumerWidget {
     required String category,
     required List<FoodRecommendation> foods,
     required Color color,
-  }) onShowRecommendationDialog;
+  })
+  onShowRecommendationDialog;
   final void Function() onStartLoadingRotation;
   final void Function() onStopLoadingRotation;
 
@@ -59,21 +60,13 @@ class TodayRecommendationBody extends ConsumerWidget {
                   SizedBox(height: responsive.verticalSpacing()),
                   _buildHeader(context, responsive, textTheme),
                   SizedBox(height: responsive.verticalSpacing()),
-                  _buildCategoryGrid(
-                    context,
-                    ref,
-                    responsive,
-                    foodCategories,
-                  ),
+                  _buildCategoryGrid(context, ref, responsive, foodCategories),
                 ],
               ),
             ),
           ),
         ),
-        SafeArea(
-          top: false,
-          child: _buildBottomBannerAd(),
-        ),
+        SafeArea(top: false, child: _buildBottomBannerAd()),
       ],
     );
   }
@@ -154,12 +147,8 @@ class TodayRecommendationBody extends ConsumerWidget {
           childAspectRatio: responsive.childAspectRatio(),
         ),
         itemCount: foodCategories.length,
-        itemBuilder: (context, index) => _buildCategoryItem(
-          context,
-          ref,
-          foodCategories[index],
-          index,
-        ),
+        itemBuilder: (context, index) =>
+            _buildCategoryItem(context, ref, foodCategories[index], index),
       ),
     );
   }
@@ -202,8 +191,8 @@ class TodayRecommendationBody extends ConsumerWidget {
     }
 
     final usageTrackingService = ref.read(usageTrackingServiceProvider);
-    final hasReachedLimit =
-        await usageTrackingService.hasReachedTotalRecommendationLimit();
+    final hasReachedLimit = await usageTrackingService
+        .hasReachedTotalRecommendationLimit();
 
     if (hasReachedLimit && context.mounted) {
       showAppDialog(

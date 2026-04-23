@@ -26,7 +26,9 @@ class ReviewPageIndicator extends StatelessWidget {
         padding: EdgeInsets.all(responsive.horizontalPadding() * 0.2),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(responsive.isTablet ? 25.0 : 20.0),
+          borderRadius: BorderRadius.circular(
+            responsive.isTablet ? 25.0 : 20.0,
+          ),
         ),
         child: SmoothPageIndicator(
           controller: controller,
@@ -68,7 +70,9 @@ class ReviewActionButton extends StatelessWidget {
         width: double.infinity,
         height: responsive.buttonHeight(),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(responsive.isTablet ? 24.0 : 20.0),
+          borderRadius: BorderRadius.circular(
+            responsive.isTablet ? 24.0 : 20.0,
+          ),
           boxShadow: isEnabled
               ? [
                   BoxShadow(

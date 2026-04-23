@@ -81,8 +81,10 @@ class TodayRecommendationAppBar extends ConsumerWidget
           size: responsive.iconSize(),
           color: Theme.of(context).iconTheme.color,
         ),
-        onPressed: () =>
-            showDialog(context: context, builder: (_) => const UserStatsDialog()),
+        onPressed: () => showDialog(
+          context: context,
+          builder: (_) => const UserStatsDialog(),
+        ),
         tooltip: '내 식습관 통계',
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,

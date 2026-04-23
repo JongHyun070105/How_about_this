@@ -140,12 +140,17 @@ abstract class DeliveryAppLauncher {
         : 'market://details?id=${appInfo.packageName}';
 
     try {
-      await launchUrl(Uri.parse(storeUrl), mode: LaunchMode.externalApplication);
+      await launchUrl(
+        Uri.parse(storeUrl),
+        mode: LaunchMode.externalApplication,
+      );
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isIOS ? 'App Store를 열 수 없습니다' : 'Play Store를 열 수 없습니다'),
+            content: Text(
+              isIOS ? 'App Store를 열 수 없습니다' : 'Play Store를 열 수 없습니다',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -188,7 +193,10 @@ abstract class DeliveryAppLauncher {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
+        await launchUrl(
+          Uri.parse(webUrl),
+          mode: LaunchMode.externalApplication,
+        );
       }
     } catch (_) {
       if (context.mounted) {

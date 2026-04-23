@@ -50,7 +50,9 @@ class _RestaurantSearchScreenState
         onAdLoaded: (_) => setState(() => _isBannerAdLoaded = true),
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
-          debugPrint('Ad load failed (code=${error.code} message=${error.message})');
+          debugPrint(
+            'Ad load failed (code=${error.code} message=${error.message})',
+          );
         },
       ),
     );
@@ -64,10 +66,12 @@ class _RestaurantSearchScreenState
   }
 
   void _searchRestaurants() {
-    ref.read(restaurantSearchProvider.notifier).searchRestaurants(
-      foodName: widget.foodName,
-      category: widget.category,
-    );
+    ref
+        .read(restaurantSearchProvider.notifier)
+        .searchRestaurants(
+          foodName: widget.foodName,
+          category: widget.category,
+        );
   }
 
   @override
@@ -119,7 +123,11 @@ class _RestaurantSearchScreenState
 
   Widget _buildBody(RestaurantSearchState state) {
     if (state.isLoading) {
-      return const SkeletonList(itemCount: 5, itemHeight: 120, padding: EdgeInsets.all(16));
+      return const SkeletonList(
+        itemCount: 5,
+        itemHeight: 120,
+        padding: EdgeInsets.all(16),
+      );
     }
     if (state.status == RestaurantSearchStatus.noPermission) {
       return const RestaurantPermissionErrorWidget();

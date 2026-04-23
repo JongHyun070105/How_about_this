@@ -18,7 +18,6 @@ import 'package:review_ai/utils/responsive.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
 
@@ -57,24 +56,25 @@ class _TodayRecommendationScreenState
         if (!status.isGranted) return;
       }
 
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.low,
-        timeLimit: const Duration(seconds: 5),
-      ).catchError((e) {
-        debugPrint('Location fetch timeout or error: $e');
-        return Position(
-          longitude: 127.0,
-          latitude: 37.5,
-          timestamp: DateTime.now(),
-          accuracy: 0,
-          altitude: 0,
-          heading: 0,
-          speed: 0,
-          speedAccuracy: 0,
-          altitudeAccuracy: 0,
-          headingAccuracy: 0,
-        );
-      });
+      final position =
+          await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.low,
+            timeLimit: const Duration(seconds: 5),
+          ).catchError((e) {
+            debugPrint('Location fetch timeout or error: $e');
+            return Position(
+              longitude: 127.0,
+              latitude: 37.5,
+              timestamp: DateTime.now(),
+              accuracy: 0,
+              altitude: 0,
+              heading: 0,
+              speed: 0,
+              speedAccuracy: 0,
+              altitudeAccuracy: 0,
+              headingAccuracy: 0,
+            );
+          });
 
       final weather = await WeatherService().getCurrentWeather(
         position.latitude,
@@ -254,8 +254,11 @@ class _TodayRecommendationScreenState
         barrierDismissible: true,
         barrierColor: Colors.black54,
         builder: (_) => SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, -0.3), end: Offset.zero)
-              .animate(
+          position:
+              Tween<Offset>(
+                begin: const Offset(0, -0.3),
+                end: Offset.zero,
+              ).animate(
                 CurvedAnimation(
                   parent: ModalRoute.of(context)!.animation!,
                   curve: Curves.easeOutBack,
@@ -288,8 +291,8 @@ class _TodayRecommendationScreenState
 
     if (result == true) {
       final usageTrackingService = ref.read(usageTrackingServiceProvider);
-      final hasReachedLimit =
-          await usageTrackingService.hasReachedTotalRecommendationLimit();
+      final hasReachedLimit = await usageTrackingService
+          .hasReachedTotalRecommendationLimit();
 
       if (hasReachedLimit && context.mounted) {
         showAppDialog(
@@ -309,13 +312,14 @@ class _TodayRecommendationScreenState
 
   Future<void> _showReviewPromptIfNeeded(BuildContext context) async {
     final usageTrackingService = ref.read(usageTrackingServiceProvider);
-    final currentCount =
-        await usageTrackingService.getTotalRecommendationCount();
+    final currentCount = await usageTrackingService
+        .getTotalRecommendationCount();
     if (_shouldShowReviewPrompt(currentCount) && context.mounted) {
       showAppDialog(
         context,
         title: '리뷰 작성 팁!',
-        message: '추천된 음식이 마음에 드셨나요? 드신 후, 상단의 리뷰 작성 버튼을 눌러 AI를 활용해서 리뷰를 작성해보세요!',
+        message:
+            '추천된 음식이 마음에 드셨나요? 드신 후, 상단의 리뷰 작성 버튼을 눌러 AI를 활용해서 리뷰를 작성해보세요!',
       );
     }
   }

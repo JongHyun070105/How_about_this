@@ -45,10 +45,7 @@ class ReviewCardWidget extends StatelessWidget {
         ],
       ),
       child: Column(
-        children: [
-          _buildHeader(context),
-          _buildContentArea(context),
-        ],
+        children: [_buildHeader(context), _buildContentArea(context)],
       ),
     );
   }
