@@ -8,10 +8,10 @@ import 'package:review_ai/presentation/screens/review_selection_screen.dart';
 import 'package:review_ai/utils/responsive.dart';
 import 'package:review_ai/presentation/viewmodels/review_viewmodel.dart';
 import 'package:review_ai/presentation/widgets/review/image_upload_section.dart';
-import 'package:review_ai/presentation/widgets/review/rating_row.dart';
 import 'package:review_ai/presentation/widgets/common/primary_action_button.dart';
 import 'package:review_ai/presentation/widgets/common/animated_loading_indicator.dart';
 import 'package:review_ai/presentation/widgets/review/review_style_section.dart';
+import 'package:review_ai/presentation/widgets/review/review_form_widgets.dart';
 import 'package:review_ai/services/image_labeling_service.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
@@ -27,8 +27,8 @@ class ReviewScreen extends ConsumerStatefulWidget {
 class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   final TextEditingController _foodNameController = TextEditingController();
   bool _hasNavigatedToSelection = false;
-  bool _isGeneratingFoodName = false; // AI 음식명 생성 중 상태
-  bool _isUpdatingFromProvider = false; // Provider로부터 업데이트 중인지 추적 (순환 업데이트 방지)
+  bool _isGeneratingFoodName = false;
+  bool _isUpdatingFromProvider = false;
   final ImageLabelingService _imageLabelingService = ImageLabelingService();
 
   @override
@@ -47,7 +47,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       _foodNameController.text = foodNameToSet;
       ref.read(reviewProvider.notifier).setFoodName(foodNameToSet);
       ref.read(reviewProvider.notifier).setCategory(widget.category);
-
       _hasNavigatedToSelection = false;
     });
   }
@@ -59,63 +58,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final responsive = Responsive(context);
-    final textTheme = Theme.of(context).textTheme;
-    final reviewState = ref.watch(reviewProvider);
-    final isLoading = reviewState.isLoading;
-
-    // Provider 상태 변경 감지 - 순환 업데이트 방지를 위해 플래그 사용
-    ref.listen(reviewProvider.select((state) => state.foodName), (_, next) {
-      if (_foodNameController.text != next) {
-        _isUpdatingFromProvider = true; // 플래그 설정
-        _foodNameController.text = next;
-        _isUpdatingFromProvider = false; // 플래그 해제
-      }
-    });
-
-    // 이미지가 업로드되어도 자동으로 음식명을 생성하지 않음 (사용자가 AI 버튼을 눌러야 함)
-
-    ref.listen(reviewProvider.select((state) => state.generatedReviews), (
-      previous,
-      next,
-    ) {
-      if (previous?.isEmpty == true &&
-          next.isNotEmpty &&
-          !_hasNavigatedToSelection &&
-          context.mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted && !_hasNavigatedToSelection) {
-            _navigateToReviewSelection();
-          }
-        });
-      }
-    });
-
-    return PopScope(
-      canPop: !isLoading,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) {
-          _hasNavigatedToSelection = false;
-          // 뒤로 가기 시 리뷰 상태 초기화
-          ref.read(reviewProvider.notifier).reset();
-        }
-      },
-      child: Stack(
-        children: [
-          Scaffold(
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            appBar: _buildAppBar(context, responsive, textTheme),
-            body: _buildBody(context, responsive, textTheme, isLoading),
-          ),
-          if (isLoading) _buildLoadingOverlay(),
-        ],
-      ),
-    );
-  }
-
-  // AI로 음식명 생성
+  // AI 음식명 생성
   Future<void> _generateFoodNameWithAI() async {
     final imageFile = ref.read(reviewProvider).image;
     if (imageFile == null) {
@@ -129,15 +72,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
       return;
     }
 
-    setState(() {
-      _isGeneratingFoodName = true;
-    });
+    setState(() => _isGeneratingFoodName = true);
 
     try {
       final labels = await _imageLabelingService.getLabels(imageFile);
       if (labels.isNotEmpty && mounted) {
         final suggestedFood = labels.first;
-        // AI 생성 시에도 순환 업데이트 방지 메커니즘 적용
         _isUpdatingFromProvider = true;
         ref.read(reviewProvider.notifier).setFoodName(suggestedFood);
         _foodNameController.text = suggestedFood;
@@ -162,11 +102,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isGeneratingFoodName = false;
-        });
-      }
+      if (mounted) setState(() => _isGeneratingFoodName = false);
     }
   }
 
@@ -195,10 +131,66 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final responsive = Responsive(context);
+    final reviewState = ref.watch(reviewProvider);
+    final isLoading = reviewState.isLoading;
+
+    // foodName 변경 → 텍스트 필드 동기화 (순환 방지)
+    ref.listen(reviewProvider.select((s) => s.foodName), (_, next) {
+      if (_foodNameController.text != next) {
+        _isUpdatingFromProvider = true;
+        _foodNameController.text = next;
+        _isUpdatingFromProvider = false;
+      }
+    });
+
+    // 리뷰 생성 완료 → 선택 화면으로 이동
+    ref.listen(reviewProvider.select((s) => s.generatedReviews), (prev, next) {
+      if (prev?.isEmpty == true &&
+          next.isNotEmpty &&
+          !_hasNavigatedToSelection &&
+          context.mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted && !_hasNavigatedToSelection) {
+            _navigateToReviewSelection();
+          }
+        });
+      }
+    });
+
+    final bool isValid =
+        reviewState.foodName.trim().isNotEmpty &&
+        reviewState.deliveryRating > 0 &&
+        reviewState.tasteRating > 0 &&
+        reviewState.portionRating > 0 &&
+        reviewState.priceRating > 0;
+
+    return PopScope(
+      canPop: !isLoading,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          _hasNavigatedToSelection = false;
+          ref.read(reviewProvider.notifier).reset();
+        }
+      },
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            appBar: _buildAppBar(context, responsive),
+            body: _buildBody(context, responsive, isLoading, isValid),
+          ),
+          if (isLoading) _buildLoadingOverlay(),
+        ],
+      ),
+    );
+  }
+
   PreferredSizeWidget _buildAppBar(
     BuildContext context,
     Responsive responsive,
-    TextTheme textTheme,
   ) {
     return AppBar(
       backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -209,7 +201,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         label: '리뷰 분석 및 생성 화면',
         child: Text(
           '리뷰 AI',
-          style: textTheme.headlineMedium?.copyWith(
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontSize: responsive.appBarFontSize(),
             fontWeight: FontWeight.bold,
             fontFamily: 'SCDream',
@@ -237,17 +229,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Widget _buildBody(
     BuildContext context,
     Responsive responsive,
-    TextTheme textTheme,
     bool isLoading,
+    bool isValid,
   ) {
-    final reviewState = ref.watch(reviewProvider);
-    final bool isValid =
-        reviewState.foodName.trim().isNotEmpty &&
-        reviewState.deliveryRating > 0 &&
-        reviewState.tasteRating > 0 &&
-        reviewState.portionRating > 0 &&
-        reviewState.priceRating > 0;
-
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.symmetric(
@@ -267,55 +251,18 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 child: const ImageUploadSection(),
               ),
               SizedBox(height: responsive.verticalSpacing() * 0.8),
-              _buildSectionLabel(responsive, '음식명'),
+              _sectionLabel(responsive, '음식명'),
               SizedBox(height: responsive.verticalSpacing() * 0.3),
-              _buildFoodNameInput(responsive),
-              SizedBox(height: responsive.verticalSpacing() * 0.6),
-              _buildSectionLabel(responsive, '평점'),
-              SizedBox(height: responsive.verticalSpacing() * 0.4),
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(12.0),
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor,
-                    width: 1.0,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    RatingRow(
-                      label: '배달',
-                      rating: reviewState.deliveryRating,
-                      onRate: (r) => ref
-                          .read(reviewProvider.notifier)
-                          .setDeliveryRating(r),
-                    ),
-                    SizedBox(height: responsive.verticalSpacing() * 0.02),
-                    RatingRow(
-                      label: '맛',
-                      rating: reviewState.tasteRating,
-                      onRate: (r) =>
-                          ref.read(reviewProvider.notifier).setTasteRating(r),
-                    ),
-                    SizedBox(height: responsive.verticalSpacing() * 0.02),
-                    RatingRow(
-                      label: '양',
-                      rating: reviewState.portionRating,
-                      onRate: (r) =>
-                          ref.read(reviewProvider.notifier).setPortionRating(r),
-                    ),
-                    SizedBox(height: responsive.verticalSpacing() * 0.02),
-                    RatingRow(
-                      label: '가격',
-                      rating: reviewState.priceRating,
-                      onRate: (r) =>
-                          ref.read(reviewProvider.notifier).setPriceRating(r),
-                    ),
-                  ],
-                ),
+              FoodNameInputField(
+                controller: _foodNameController,
+                isGenerating: _isGeneratingFoodName,
+                isUpdatingFromProvider: _isUpdatingFromProvider,
+                onAiTap: _generateFoodNameWithAI,
               ),
+              SizedBox(height: responsive.verticalSpacing() * 0.6),
+              _sectionLabel(responsive, '평점'),
+              SizedBox(height: responsive.verticalSpacing() * 0.4),
+              const RatingSection(),
               SizedBox(height: responsive.verticalSpacing() * 0.8),
               const ReviewStyleSection(),
               SizedBox(height: responsive.verticalSpacing() * 1.2),
@@ -328,7 +275,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  Widget _buildSectionLabel(Responsive responsive, String title) {
+  Widget _sectionLabel(Responsive responsive, String title) {
     return Align(
       alignment: Alignment.centerLeft,
       child: Semantics(
@@ -341,115 +288,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             fontFamily: 'SCDream',
             color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFoodNameInput(Responsive responsive) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(color: Theme.of(context).dividerColor, width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(
-              context,
-            ).shadowColor.withAlpha((255 * 0.05).round()),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: _foodNameController,
-        maxLength: AppConstants.maxFoodNameLength,
-        autocorrect: false,
-        enableSuggestions: false,
-        enableInteractiveSelection: false,
-        enabled: !_isGeneratingFoodName,
-        onChanged: (text) {
-          // Provider로부터의 업데이트가 아닐 때만 Provider 상태 업데이트 (순환 업데이트 방지)
-          if (!_isUpdatingFromProvider) {
-            ref.read(reviewProvider.notifier).setFoodName(text);
-          }
-        },
-        style: TextStyle(
-          fontFamily: 'SCDream',
-          fontSize: responsive.inputFontSize(),
-          color: Theme.of(context).textTheme.bodyMedium?.color,
-          decoration: TextDecoration.none,
-        ),
-        decoration: InputDecoration(
-          hintText: _isGeneratingFoodName ? 'AI가 음식명 생성 중...' : '음식명을 입력해주세요',
-          counterText: "",
-          hintStyle: TextStyle(
-            fontFamily: 'SCDream',
-            fontSize: responsive.inputFontSize() * 0.9,
-            color: _isGeneratingFoodName ? Colors.grey[500] : Colors.grey[400],
-          ),
-          suffixIcon: _isGeneratingFoodName
-              ? null
-              : IconButton(
-                  onPressed: _generateFoodNameWithAI,
-                  tooltip: 'AI로 음식명 생성',
-                  icon: Semantics(
-                    label: '음식 이미지로부터 음식명 자동 추출',
-                    button: true,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.grey[800]!, Colors.black],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.auto_awesome,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'AI',
-                            style: TextStyle(
-                              fontFamily: 'SCDream',
-                              fontSize: responsive.inputFontSize() * 0.8,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-          border: const UnderlineInputBorder(borderSide: BorderSide.none),
-          focusedBorder: const UnderlineInputBorder(
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide.none,
-          ),
-          errorBorder: const UnderlineInputBorder(borderSide: BorderSide.none),
-          disabledBorder: const UnderlineInputBorder(
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16.0,
-            vertical: 16.0,
-          ),
-          filled: false,
         ),
       ),
     );
