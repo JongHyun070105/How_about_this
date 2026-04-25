@@ -4,6 +4,7 @@ import 'package:review_ai/presentation/widgets/history/empty_history.dart';
 import 'package:review_ai/presentation/widgets/history/history_card.dart';
 import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/presentation/widgets/history/filter_options_sheet.dart';
+import 'package:review_ai/presentation/widgets/history/history_search_filter.dart';
 
 enum HistorySortOption { latest, oldest, ratingHigh, ratingLow }
 
@@ -188,182 +189,34 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   SizedBox(height: verticalSpacing),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(12.0),
-                              border: Border.all(
-                                color: Theme.of(context).dividerColor,
-                                width: 1.0,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withAlpha(
-                                    (255 * 0.05).round(),
-                                  ),
-                                  spreadRadius: 1,
-                                  blurRadius: 3,
-                                  offset: const Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: '음식 이름으로 검색',
-                                prefixIcon: const Icon(Icons.search),
-                                hintStyle: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontFamily: 'Do Hyeon',
-                                  fontSize: (screenWidth * 0.035).clamp(
-                                    12.0,
-                                    16.0,
-                                  ),
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                  vertical: 16.0,
-                                ),
-                              ),
-                              style: TextStyle(
-                                fontFamily: 'Do Hyeon',
-                                fontSize: (screenWidth * 0.04).clamp(
-                                  14.0,
-                                  18.0,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: horizontalPadding * 0.2),
-                        IconButton(
-                          icon: Icon(
-                            Icons.filter_list,
-                            size: (screenWidth * 0.06).clamp(24.0, 36.0),
-                          ),
-                          onPressed: _showFilterOptionsSheet,
-                          tooltip: '필터 및 정렬',
-                          splashColor: Colors.transparent,
-                          highlightColor: Colors.transparent,
-                        ),
-                      ],
+                    child: HistorySearchBar(
+                      controller: _searchController,
+                      screenWidth: screenWidth,
+                      onFilterTap: _showFilterOptionsSheet,
                     ),
                   ),
-                  // 필터 칩들
-                  Visibility(
-                    visible:
-                        _searchQuery.isNotEmpty ||
-                        _sortOption != HistorySortOption.latest ||
-                        _ratingFilter != null,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Wrap(
-                        spacing: 8.0,
-                        runSpacing: 4.0,
-                        children: [
-                          if (_searchQuery.isNotEmpty)
-                            Chip(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              label: Text(
-                                '검색: $_searchQuery',
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                  fontFamily: 'Do Hyeon',
-                                ),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                side: BorderSide.none,
-                                borderRadius: BorderRadius.circular(
-                                  screenWidth * 0.03,
-                                ),
-                              ),
-                              elevation: 0,
-                              shadowColor: Colors.transparent,
-                              onDeleted: () {
-                                setState(() {
-                                  _searchController.clear();
-                                  _searchQuery = '';
-                                });
-                              },
-                              deleteIconColor: Theme.of(
-                                context,
-                              ).iconTheme.color,
-                            ),
-                          if (_sortOption != HistorySortOption.latest)
-                            Chip(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              label: Text(
-                                '정렬: ${getSortOptionLabel(_sortOption)}',
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                  fontFamily: 'Do Hyeon',
-                                ),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                side: BorderSide.none,
-                                borderRadius: BorderRadius.circular(
-                                  screenWidth * 0.03,
-                                ),
-                              ),
-                              elevation: 0,
-                              shadowColor: Colors.transparent,
-                              onDeleted: () {
-                                setState(() {
-                                  _sortOption = HistorySortOption.latest;
-                                });
-                              },
-                              deleteIconColor: Theme.of(
-                                context,
-                              ).iconTheme.color,
-                            ),
-                          if (_ratingFilter != null)
-                            Chip(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: List.generate(
-                                  _ratingFilter!,
-                                  (index) => const Icon(
-                                    Icons.star,
-                                    color: Colors.amber,
-                                    size: 16,
-                                  ),
-                                ),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                side: BorderSide.none,
-                                borderRadius: BorderRadius.circular(
-                                  screenWidth * 0.03,
-                                ),
-                              ),
-                              elevation: 0,
-                              shadowColor: Colors.transparent,
-                              onDeleted: () {
-                                setState(() {
-                                  _ratingFilter = null;
-                                });
-                              },
-                              deleteIconColor: Theme.of(
-                                context,
-                              ).iconTheme.color,
-                            ),
-                        ],
-                      ),
-                    ),
+                  HistoryFilterChips(
+                    searchQuery: _searchQuery,
+                    sortOption: _sortOption,
+                    ratingFilter: _ratingFilter,
+                    screenWidth: screenWidth,
+                    onClearSearch: () {
+                      setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                      });
+                    },
+                    onClearSort: () {
+                      setState(() {
+                        _sortOption = HistorySortOption.latest;
+                      });
+                    },
+                    onClearRating: () {
+                      setState(() {
+                        _ratingFilter = null;
+                      });
+                    },
+                    getSortOptionLabel: getSortOptionLabel,
                   ),
                   SizedBox(height: verticalSpacing),
                 ],
