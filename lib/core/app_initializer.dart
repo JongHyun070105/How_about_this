@@ -18,6 +18,10 @@ class AppInitializer {
   static Future<void> initialize() async {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // 가장 먼저 서버 설정 및 Firebase 키 로드 (Firebase 초기화에 필수)
+    await ConfigService.getAdMobConfig(); // 캐시/서버로부터 설정 미리 가져오기
+    await DefaultFirebaseOptions.loadServerKeys();
+
     // Firebase 초기화
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -49,11 +53,9 @@ class AppInitializer {
       SecurityInitializer.initialize(),
       MobileAds.instance.initialize(),
       AuthService.initialize(),
-      ConfigService.initialize(),
       RemoteConfigService().initialize(),
       ServerTimeService.initialize(),
       NotificationService().initialize(),
-      DefaultFirebaseOptions.loadServerKeys(),
       _configureSystemUI(),
     ]);
 

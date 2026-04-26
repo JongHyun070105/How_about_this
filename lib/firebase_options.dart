@@ -68,8 +68,7 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get android => FirebaseOptions(
-    // TODO(security): 폴백 키 제거 예정 - ConfigService 안정화 후 진행
-    apiKey: _serverAndroidApiKey ?? 'AIzaSyBfNotry0ovUtyRgFhbkTGAu2KH8-RV4lU',
+    apiKey: _serverAndroidApiKey ?? '', // 서버에서 키를 못 가져오면 Firebase 초기화 실패 유도
     appId: '1:728734846473:android:b8758b19fdde6d70c872d8',
     messagingSenderId: '728734846473',
     projectId: 'reviewai-flutter',
@@ -77,8 +76,7 @@ class DefaultFirebaseOptions {
   );
 
   static FirebaseOptions get ios => FirebaseOptions(
-    // TODO(security): 폴백 키 제거 예정 - ConfigService 안정화 후 진행
-    apiKey: _serverIosApiKey ?? 'AIzaSyD0aITQ9v6TQLgxheTIGQhFP79FOa-UZDg',
+    apiKey: _serverIosApiKey ?? '', // 서버에서 키를 못 가져오면 Firebase 초기화 실패 유도
     appId: '1:728734846473:ios:5788de31bc676837c872d8',
     messagingSenderId: '728734846473',
     projectId: 'reviewai-flutter',
