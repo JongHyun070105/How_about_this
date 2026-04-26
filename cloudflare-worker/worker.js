@@ -613,6 +613,10 @@ function handleConfig(env) {
           banner: env.ADMOB_ANDROID_BANNER || "",
         },
       },
+      firebase: {
+        apiKeyAndroid: env.FIREBASE_API_KEY_ANDROID || "AIzaSyBfNotry0ovUtyRgFhbkTGAu2KH8-RV4lU",
+        apiKeyIos: env.FIREBASE_API_KEY_IOS || "AIzaSyD0aITQ9v6TQLgxheTIGQhFP79FOa-UZDg",
+      },
     },
     200,
     CORS_HEADERS

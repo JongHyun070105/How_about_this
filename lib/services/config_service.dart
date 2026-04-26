@@ -32,9 +32,15 @@ class ConfigService {
       if (cachedData != null && cachedTime != null) {
         final cacheAge = DateTime.now().millisecondsSinceEpoch - cachedTime;
         if (cacheAge < _cacheExpiry.inMilliseconds) {
-          _cachedConfig = jsonDecode(cachedData);
-          debugPrint('Loaded AdMob config from local cache');
-          return _cachedConfig!;
+          final decodedCache = jsonDecode(cachedData);
+          // firebase 블록이 없다면 구버전 캐시이므로 무시하고 다시 가져옴
+          if (decodedCache['firebase'] != null) {
+            _cachedConfig = decodedCache;
+            debugPrint('Loaded AdMob config from local cache');
+            return _cachedConfig!;
+          } else {
+            debugPrint('Cache ignored: missing firebase config');
+          }
         }
       }
 
