@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/data/models/location_models.dart';
+import 'package:review_ai/utils/kakao_api_filter_util.dart';
+export 'package:review_ai/utils/kakao_api_filter_util.dart'; // 추가: RestaurantSortType 등의 참조 유지
 import 'auth_service.dart';
 import 'package:review_ai/utils/error_handler.dart';
 import 'package:review_ai/utils/network_utils.dart';
@@ -112,7 +114,7 @@ class KakaoApiService {
     int size = 15,
   }) async {
     try {
-      final categoryCode = _getCategoryCode(category);
+      final categoryCode = KakaoApiFilterUtil.getCategoryCode(category);
 
       final params = RestaurantSearchParams(
         query: foodName, // "짜장면 맛집" 대신 그냥 "짜장면"
@@ -131,59 +133,12 @@ class KakaoApiService {
     }
   }
 
-  /// 카테고리에 맞는 카카오 카테고리 코드를 반환합니다.
-  /// 카카오 로컬 API 카테고리 그룹 코드:
-  /// - FD6: 음식점
-  /// - CE7: 카페
-  /// - CS2: 편의점
-  String? _getCategoryCode(String? category) {
-    if (category == null) return 'FD6'; // 기본값: 음식점
-
-    switch (category) {
-      case '카페':
-        return 'CE7';
-      case '편의점':
-        return 'CS2';
-      case '한식':
-      case '중식':
-      case '일식':
-      case '양식':
-      case '분식':
-      case '아시안':
-      case '패스트푸드':
-        return 'FD6'; // 모두 음식점
-      default:
-        return 'FD6';
-    }
-  }
-
-  /// 카테고리별 검색어를 생성합니다.
+  /// 카테고리별 검색어를 생성합니다. (기존 호환성 유지)
   String getCategorySearchQuery(String category, String foodName) {
-    switch (category) {
-      case '한식':
-        return foodName; // "짜장면" 그대로
-      case '중식':
-        return foodName;
-      case '일식':
-        return foodName;
-      case '양식':
-        return foodName;
-      case '분식':
-        return foodName;
-      case '아시안':
-        return foodName;
-      case '패스트푸드':
-        return foodName;
-      case '편의점':
-        return '편의점';
-      case '카페':
-        return foodName;
-      default:
-        return foodName;
-    }
+    return KakaoApiFilterUtil.getCategorySearchQuery(category, foodName);
   }
 
-  /// 검색 결과를 필터링합니다. (카테고리 필터링 강화)
+  /// 검색 결과를 필터링합니다. (기존 호환성 유지)
   List<KakaoPlace> filterRestaurants(
     List<KakaoPlace> restaurants, {
     String? targetCategory, // 원하는 카테고리
@@ -192,123 +147,22 @@ class KakaoApiService {
     int? maxDistance,
     List<String>? excludeCategories,
   }) {
-    return restaurants.where((restaurant) {
-      // 거리 필터링
-      if (maxDistance != null && restaurant.distanceInMeters != null) {
-        if (restaurant.distanceInMeters! > maxDistance) {
-          return false;
-        }
-      }
-
-      // 음식명 필터링: 음식점 이름이나 카테고리에 음식명이 포함되어야 함
-      if (foodName != null && foodName.isNotEmpty) {
-        final nameLower = restaurant.placeName.toLowerCase();
-        final categoryLower = restaurant.categoryName.toLowerCase();
-        final foodLower = foodName.toLowerCase();
-
-        // 음식점 이름이나 카테고리에 음식명이 포함되어 있으면 관련성이 높음
-        final hasRelevance =
-            nameLower.contains(foodLower) || categoryLower.contains(foodLower);
-
-        // 관련성이 전혀 없으면 제외
-        if (!hasRelevance && targetCategory != null) {
-          // 단, 카테고리만 맞는 경우는 허용 (예: "한식" 카테고리에서 한식당 찾기)
-          // 이 경우 아래 카테고리 필터링을 통과하면 OK
-        }
-      }
-
-      // 카테고리 정확도 필터링 강화
-      if (targetCategory != null) {
-        final categoryLower = restaurant.categoryName.toLowerCase();
-
-        switch (targetCategory) {
-          case '중식':
-            // "중식" 또는 "중국음식"이 카테고리에 포함되어야 함
-            if (!categoryLower.contains('중식') &&
-                !categoryLower.contains('중국')) {
-              return false;
-            }
-            break;
-          case '한식':
-            // 한식 관련 키워드 확장
-            if (!categoryLower.contains('한식') &&
-                !categoryLower.contains('한정식') &&
-                !categoryLower.contains('백반') &&
-                !categoryLower.contains('고기') &&
-                !categoryLower.contains('삼겹살') &&
-                !categoryLower.contains('갈비') &&
-                !categoryLower.contains('찌개') &&
-                !categoryLower.contains('국밥')) {
-              return false;
-            }
-            break;
-          case '일식':
-            if (!categoryLower.contains('일식') &&
-                !categoryLower.contains('일본') &&
-                !categoryLower.contains('스시') &&
-                !categoryLower.contains('초밥') &&
-                !categoryLower.contains('라멘') &&
-                !categoryLower.contains('우동')) {
-              return false;
-            }
-            break;
-          case '양식':
-            if (!categoryLower.contains('양식') &&
-                !categoryLower.contains('이탈리안') &&
-                !categoryLower.contains('스테이크') &&
-                !categoryLower.contains('파스타') &&
-                !categoryLower.contains('피자')) {
-              return false;
-            }
-            break;
-          case '분식':
-            if (!categoryLower.contains('분식')) {
-              return false;
-            }
-            break;
-          case '아시안':
-            if (!categoryLower.contains('아시아') &&
-                !categoryLower.contains('베트남') &&
-                !categoryLower.contains('태국') &&
-                !categoryLower.contains('인도') &&
-                !categoryLower.contains('동남아')) {
-              return false;
-            }
-            break;
-        }
-      }
-
-      // 카테고리 제외 필터링
-      if (excludeCategories != null && excludeCategories.isNotEmpty) {
-        for (final category in excludeCategories) {
-          if (restaurant.categoryName.contains(category)) {
-            return false;
-          }
-        }
-      }
-
-      return true;
-    }).toList();
+    return KakaoApiFilterUtil.filterRestaurants(
+      restaurants,
+      targetCategory: targetCategory,
+      foodName: foodName,
+      minRating: minRating,
+      maxDistance: maxDistance,
+      excludeCategories: excludeCategories,
+    );
   }
 
-  /// 검색 결과를 정렬합니다.
+  /// 검색 결과를 정렬합니다. (기존 호환성 유지)
   List<KakaoPlace> sortRestaurants(
     List<KakaoPlace> restaurants, {
     RestaurantSortType sortType = RestaurantSortType.distance,
   }) {
-    switch (sortType) {
-      case RestaurantSortType.distance:
-        return restaurants..sort((a, b) {
-          final distanceA = a.distanceInMeters ?? double.infinity;
-          final distanceB = b.distanceInMeters ?? double.infinity;
-          return distanceA.compareTo(distanceB);
-        });
-      case RestaurantSortType.name:
-        return restaurants..sort((a, b) => a.placeName.compareTo(b.placeName));
-      case RestaurantSortType.category:
-        return restaurants
-          ..sort((a, b) => a.categoryName.compareTo(b.categoryName));
-    }
+    return KakaoApiFilterUtil.sortRestaurants(restaurants, sortType: sortType);
   }
 }
 
@@ -326,13 +180,6 @@ class KakaoApiException implements Exception {
     }
     return 'KakaoApiException: $message';
   }
-}
-
-/// 맛집 정렬 타입
-enum RestaurantSortType {
-  distance, // 거리순
-  name, // 이름순
-  category, // 카테고리순
 }
 
 /// 검색 결과 캐시
