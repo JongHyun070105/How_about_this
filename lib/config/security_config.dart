@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
+import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 // Added url_launcher import
 import 'app_constants.dart';
 import 'environment_config.dart';
@@ -83,7 +84,7 @@ class SecurityConfig {
   static Future<bool> verifyAppIntegrity() async => true; // 현재는 단순화됨
   static bool detectDebugger() => kDebugMode || kProfileMode;
 
-  /// 직접 구현한 루팅/탈옥 탐지
+  /// flutter_jailbreak_detection 패키지를 활용한 루팅/탈옥 탐지
   static Future<bool> detectRootingOrJailbreak() async {
     if (kDebugMode) {
       debugPrint(
@@ -93,97 +94,21 @@ class SecurityConfig {
     }
 
     try {
-      if (Platform.isAndroid) {
-        return await _checkAndroidRoot();
-      } else if (Platform.isIOS) {
-        return await _checkIOSJailbreak();
-      }
-      return false;
+      return await FlutterJailbreakDetection.jailbroken;
     } catch (e) {
       debugPrint('Jailbreak detection error: $e');
       return false;
     }
   }
 
-  /// Android 루팅 감지
-  static Future<bool> _checkAndroidRoot() async {
-    try {
-      // su 바이너리 및 루팅 관련 경로 확인
-      const rootIndicators = [
-        '/system/app/Superuser.apk',
-        '/system/xbin/su',
-        '/system/bin/su',
-        '/sbin/su',
-        '/data/local/xbin/su',
-        '/data/local/bin/su',
-        '/data/local/su',
-        '/system/sd/xbin/su',
-        '/system/bin/failsafe/su',
-        '/su/bin/su',
-      ];
-
-      for (final path in rootIndicators) {
-        if (await File(path).exists()) {
-          debugPrint('Root indicator found: $path');
-          return true;
-        }
-      }
-
-      // Magisk 또는 루팅 앱 패키지 확인
-      const rootPackages = [
-        '/data/data/com.topjohnwu.magisk',
-        '/data/data/eu.chainfire.supersu',
-        '/data/data/com.koushikdutta.superuser',
-      ];
-
-      for (final pkg in rootPackages) {
-        if (await Directory(pkg).exists()) {
-          debugPrint('Root package found: $pkg');
-          return true;
-        }
-      }
-
-      return false;
-    } catch (e) {
-      debugPrint('Android root check error: $e');
-      return false;
-    }
-  }
-
-  /// iOS 탈옥 감지
-  static Future<bool> _checkIOSJailbreak() async {
-    try {
-      const jailbreakPaths = [
-        '/Applications/Cydia.app',
-        '/Library/MobileSubstrate/MobileSubstrate.dylib',
-        '/bin/bash',
-        '/usr/sbin/sshd',
-        '/etc/apt',
-        '/private/var/lib/apt/',
-        '/usr/bin/ssh',
-        '/private/var/stash',
-      ];
-
-      for (final path in jailbreakPaths) {
-        if (await File(path).exists() || await Directory(path).exists()) {
-          debugPrint('Jailbreak indicator found: $path');
-          return true;
-        }
-      }
-
-      return false;
-    } catch (e) {
-      debugPrint('iOS jailbreak check error: $e');
-      return false;
-    }
-  }
-
   static Future<bool> detectEmulator() async {
-    // SECURITY NOTE: 에뮬레이터 탐지가 현재 비활성화되어 있습니다.
-    // 이유: 네이티브 채널 구현 없이는 신뢰할 수 있는 탐지가 불가능합니다.
-    // 영향: 에뮬레이터에서 앱 실행이 허용되나, JWT 인증으로 API는 보호됩니다.
-    // TODO: flutter_jailbreak_detection 패키지 도입 시 실 구현 예정.
-    return false;
+    try {
+      // developerMode는 Android의 경우 개발자 모드나 에뮬레이터 등을 감지하는 데 활용됩니다.
+      return await FlutterJailbreakDetection.developerMode;
+    } catch (e) {
+      debugPrint('Emulator detection error: $e');
+      return false;
+    }
   }
 }
 
