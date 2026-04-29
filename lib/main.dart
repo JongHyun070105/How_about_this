@@ -5,8 +5,8 @@ import 'app.dart';
 
 void main() async {
   try {
-    // 앱 필수 시스템 초기화
-    await AppInitializer.initialize();
+    // UI 및 프레임워크 필수 초기화 (가벼운 작업)
+    await AppInitializer.initializePreRun();
 
     // 글로벌 에러 위젯 설정 (한 번만 설정)
     ErrorWidget.builder = (FlutterErrorDetails errorDetails) {

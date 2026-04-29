@@ -15,9 +15,12 @@ import 'package:review_ai/services/server_time_service.dart';
 import 'package:review_ai/services/notification_service.dart';
 
 class AppInitializer {
-  static Future<void> initialize() async {
+  static Future<void> initializePreRun() async {
     WidgetsFlutterBinding.ensureInitialized();
+    await _configureSystemUI();
+  }
 
+  static Future<void> initializePostRun() async {
     // 가장 먼저 서버 설정 및 Firebase 키 로드 (Firebase 초기화에 필수)
     await ConfigService.getAdMobConfig(); // 캐시/서버로부터 설정 미리 가져오기
     await DefaultFirebaseOptions.loadServerKeys();
@@ -56,7 +59,6 @@ class AppInitializer {
       RemoteConfigService().initialize(),
       ServerTimeService.initialize(),
       NotificationService().initialize(),
-      _configureSystemUI(),
     ]);
 
     SecurityConfig.logAdConfiguration();
