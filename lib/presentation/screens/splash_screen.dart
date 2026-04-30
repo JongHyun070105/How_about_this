@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/app_initializer.dart';
 import '../../config/security_config.dart';
 import '../../services/app_update_service.dart';
 import '../../services/notification_service.dart';
@@ -80,6 +81,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           SystemNavigator.pop();
         }
       }
+
+      // 무거운 비동기 초기화 작업 (Firebase, AdMob 등)
+      await AppInitializer.initializePostRun();
 
       _startBackgroundCaching();
       _performSecurityCheckInBackground();

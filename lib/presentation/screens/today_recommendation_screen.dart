@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+
 import 'package:review_ai/config/security_config.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/presentation/providers/app_providers.dart';
@@ -13,7 +13,7 @@ import 'package:review_ai/presentation/widgets/today_recommendation/today_recomm
 import 'package:review_ai/presentation/widgets/today_recommendation/today_recommendation_body.dart';
 import 'package:review_ai/services/recommendation_service.dart';
 import 'package:review_ai/services/user_preference_service.dart';
-import 'package:review_ai/services/weather_service.dart';
+import 'package:review_ai/presentation/viewmodels/weather_viewmodel.dart';
 import 'package:review_ai/utils/responsive.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,82 +36,14 @@ class _TodayRecommendationScreenState
   ];
   int _currentMessageIndex = 0;
   Timer? _messageRotationTimer;
-  BannerAd? _bannerAd;
-  bool _isBannerAdLoaded = false;
-  WeatherCondition? _currentWeather;
-  String _weatherMessage = '';
 
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
-    _fetchWeather();
-  }
-
-  Future<void> _fetchWeather() async {
-    try {
-      var status = await Permission.location.status;
-      if (!status.isGranted) {
-        status = await Permission.location.request();
-        if (!status.isGranted) return;
-      }
-
-      final position =
-          await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.low,
-            timeLimit: const Duration(seconds: 5),
-          ).catchError((e) {
-            debugPrint('Location fetch timeout or error: $e');
-            return Position(
-              longitude: 127.0,
-              latitude: 37.5,
-              timestamp: DateTime.now(),
-              accuracy: 0,
-              altitude: 0,
-              heading: 0,
-              speed: 0,
-              speedAccuracy: 0,
-              altitudeAccuracy: 0,
-              headingAccuracy: 0,
-            );
-          });
-
-      final weather = await WeatherService().getCurrentWeather(
-        position.latitude,
-        position.longitude,
-      );
-
-      if (mounted) {
-        setState(() {
-          _currentWeather = weather;
-          _weatherMessage = _getWeatherMessage(weather);
-        });
-      }
-    } catch (e) {
-      debugPrint('Error fetching weather: $e');
-    }
-  }
-
-  String _getWeatherMessage(WeatherCondition weather) {
-    switch (weather) {
-      case WeatherCondition.rain:
-      case WeatherCondition.drizzle:
-      case WeatherCondition.thunderstorm:
-        return '비가 오네요 ☔ 뜨끈한 국물이나 파전 어때요?';
-      case WeatherCondition.snow:
-        return '눈이 내려요 ❄️ 따뜻한 전골 요리 추천해요!';
-      case WeatherCondition.clear:
-        return '날씨가 참 좋네요 ☀️ 시원한 냉면이나 아이스 커피?';
-      case WeatherCondition.clouds:
-        return '구름 낀 날 ☁️ 기분 전환할 맛있는 음식!';
-      default:
-        return '';
-    }
   }
 
   @override
   void dispose() {
-    _bannerAd?.dispose();
     _messageRotationTimer?.cancel();
     super.dispose();
   }
@@ -134,30 +66,15 @@ class _TodayRecommendationScreenState
     _messageRotationTimer = null;
   }
 
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: SecurityConfig.bannerAdUnitId,
-      request: const AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (ad) => setState(() {
-          _bannerAd = ad as BannerAd;
-          _isBannerAdLoaded = true;
-        }),
-        onAdFailedToLoad: (ad, error) {
-          debugPrint('BannerAd failed to load: $error');
-          ad.dispose();
-          setState(() => _isBannerAdLoaded = false);
-        },
-      ),
-    )..load();
-  }
+  // _loadBannerAd is removed.
 
   @override
   Widget build(BuildContext context) {
     final responsive = Responsive(context);
     final isLoading = ref.watch(todayRecommendationViewModelProvider);
     final textTheme = Theme.of(context).textTheme;
+    final weatherState = ref.watch(weatherViewModelProvider);
+    final weatherInfo = weatherState.value;
 
     return Stack(
       children: [
@@ -165,10 +82,8 @@ class _TodayRecommendationScreenState
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: const TodayRecommendationAppBar(),
           body: TodayRecommendationBody(
-            weatherMessage: _weatherMessage,
-            currentWeather: _currentWeather,
-            bannerAd: _bannerAd,
-            isBannerAdLoaded: _isBannerAdLoaded,
+            weatherMessage: weatherInfo?.message ?? '',
+            currentWeather: weatherInfo?.condition,
             onShowRecommendationDialog: _showRecommendationDialog,
             onStartLoadingRotation: _startLoadingMessageRotation,
             onStopLoadingRotation: _stopLoadingMessageRotation,
@@ -237,12 +152,14 @@ class _TodayRecommendationScreenState
           .toSet()
           .toList();
 
+      final weatherState = ref.read(weatherViewModelProvider);
+      
       final analysis = await UserPreferenceService.analyzeUserPreferences();
       final resultTuple = RecommendationService.pickSmartFood(
         foods,
         recentFoods,
         analysis,
-        weather: _currentWeather,
+        weather: weatherState.value?.condition,
       );
 
       ref.read(selectedFoodProvider.notifier).state = resultTuple.food;
