@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:review_ai/presentation/providers/location_providers.dart';
 import 'package:review_ai/services/location_service.dart';
 import 'package:review_ai/services/weather_service.dart';
 
@@ -13,7 +14,8 @@ class WeatherViewModel extends StateNotifier<AsyncValue<WeatherInfo?>> {
   final WeatherService _weatherService;
   final LocationService _locationService;
 
-  WeatherViewModel(this._weatherService, this._locationService) : super(const AsyncValue.loading()) {
+  WeatherViewModel(this._weatherService, this._locationService)
+    : super(const AsyncValue.loading()) {
     fetchWeather();
   }
 
@@ -32,7 +34,9 @@ class WeatherViewModel extends StateNotifier<AsyncValue<WeatherInfo?>> {
       );
 
       final message = _getWeatherMessage(weather);
-      state = AsyncValue.data(WeatherInfo(condition: weather, message: message));
+      state = AsyncValue.data(
+        WeatherInfo(condition: weather, message: message),
+      );
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -60,8 +64,9 @@ final weatherServiceProvider = Provider<WeatherService>((ref) {
   return WeatherService();
 });
 
-final weatherViewModelProvider = StateNotifierProvider<WeatherViewModel, AsyncValue<WeatherInfo?>>((ref) {
-  final weatherService = ref.watch(weatherServiceProvider);
-  final locationService = ref.watch(Provider((ref) => LocationService()));
-  return WeatherViewModel(weatherService, locationService);
-});
+final weatherViewModelProvider =
+    StateNotifierProvider<WeatherViewModel, AsyncValue<WeatherInfo?>>((ref) {
+      final weatherService = ref.watch(weatherServiceProvider);
+      final locationService = ref.watch(locationServiceProvider);
+      return WeatherViewModel(weatherService, locationService);
+    });

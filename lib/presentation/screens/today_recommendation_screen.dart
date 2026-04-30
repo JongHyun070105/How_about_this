@@ -15,8 +15,6 @@ import 'package:review_ai/services/recommendation_service.dart';
 import 'package:review_ai/services/user_preference_service.dart';
 import 'package:review_ai/presentation/viewmodels/weather_viewmodel.dart';
 import 'package:review_ai/utils/responsive.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
@@ -153,7 +151,7 @@ class _TodayRecommendationScreenState
           .toList();
 
       final weatherState = ref.read(weatherViewModelProvider);
-      
+
       final analysis = await UserPreferenceService.analyzeUserPreferences();
       final resultTuple = RecommendationService.pickSmartFood(
         foods,

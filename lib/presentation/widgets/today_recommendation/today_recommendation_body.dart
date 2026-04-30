@@ -63,7 +63,10 @@ class TodayRecommendationBody extends ConsumerWidget {
             ),
           ),
         ),
-        SafeArea(top: false, child: BannerAdWidget(adUnitId: SecurityConfig.bannerAdUnitId)),
+        SafeArea(
+          top: false,
+          child: BannerAdWidget(adUnitId: SecurityConfig.bannerAdUnitId),
+        ),
       ],
     );
   }
