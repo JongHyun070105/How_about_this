@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.9.0](https://github.com/JongHyun070105/how-about-this/compare/v1.8.2...v1.9.0) (2026-04-30)
+
+
+### Features
+
+* flutter_jailbreak_detection 패키지 도입 ([7db394e](https://github.com/JongHyun070105/how-about-this/commit/7db394e30df60d164feefb4ca12ed1e1be2ffb9f))
+* flutter_jailbreak_detection 패키지 도입 ([4417197](https://github.com/JongHyun070105/how-about-this/commit/4417197b9891051264e8a2740fe8a914f16232a5))
+* 관심사 로직 분리 및 BannerAdWidget 컴포넌트 캡슐화, 단위 테스트 작성 ([1dda27a](https://github.com/JongHyun070105/how-about-this/commit/1dda27a7e1eff8de2691f8161d2d33d143052e85))
+
 ## [1.8.2](https://github.com/JongHyun070105/how-about-this/compare/v1.8.1...v1.8.2) (2026-04-21)
 
 
