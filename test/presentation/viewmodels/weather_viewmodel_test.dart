@@ -16,10 +16,12 @@ class FakeLocationService implements LocationService {
   }
 
   @override
-  Future<LocationPermissionStatus> requestLocationPermission() async => LocationPermissionStatus.always;
+  Future<LocationPermissionStatus> requestLocationPermission() async =>
+      LocationPermissionStatus.always;
 
   @override
-  Future<LocationServiceStatus> checkLocationService() async => LocationServiceStatus.enabled;
+  Future<LocationServiceStatus> checkLocationService() async =>
+      LocationServiceStatus.enabled;
 
   @override
   Future<void> openLocationSettings() async {}
@@ -31,7 +33,12 @@ class FakeLocationService implements LocationService {
   void clearLocationCache() {}
 
   @override
-  double calculateDistance(double lat1, double lng1, double lat2, double lng2) => 0.0;
+  double calculateDistance(
+    double lat1,
+    double lng1,
+    double lat2,
+    double lng2,
+  ) => 0.0;
 
   @override
   bool isValidLocation(double latitude, double longitude) => true;
