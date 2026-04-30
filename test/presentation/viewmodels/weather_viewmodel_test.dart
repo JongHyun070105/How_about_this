@@ -16,7 +16,25 @@ class FakeLocationService implements LocationService {
   }
 
   @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  Future<LocationPermissionStatus> requestLocationPermission() async => LocationPermissionStatus.always;
+
+  @override
+  Future<LocationServiceStatus> checkLocationService() async => LocationServiceStatus.enabled;
+
+  @override
+  Future<void> openLocationSettings() async {}
+
+  @override
+  Future<void> openAppSettings() async {}
+
+  @override
+  void clearLocationCache() {}
+
+  @override
+  double calculateDistance(double lat1, double lng1, double lat2, double lng2) => 0.0;
+
+  @override
+  bool isValidLocation(double latitude, double longitude) => true;
 }
 
 class FakeWeatherService implements WeatherService {
@@ -28,9 +46,6 @@ class FakeWeatherService implements WeatherService {
     if (shouldThrow) throw Exception('Weather API failed');
     return mockCondition;
   }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

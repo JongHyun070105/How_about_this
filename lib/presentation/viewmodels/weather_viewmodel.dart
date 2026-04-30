@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:review_ai/presentation/providers/location_providers.dart';
 import 'package:review_ai/services/location_service.dart';
 import 'package:review_ai/services/weather_service.dart';
 
@@ -62,6 +63,6 @@ final weatherServiceProvider = Provider<WeatherService>((ref) {
 
 final weatherViewModelProvider = StateNotifierProvider<WeatherViewModel, AsyncValue<WeatherInfo?>>((ref) {
   final weatherService = ref.watch(weatherServiceProvider);
-  final locationService = ref.watch(Provider((ref) => LocationService()));
+  final locationService = ref.watch(locationServiceProvider);
   return WeatherViewModel(weatherService, locationService);
 });
