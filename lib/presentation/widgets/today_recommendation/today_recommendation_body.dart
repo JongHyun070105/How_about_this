@@ -10,15 +10,14 @@ import 'package:review_ai/presentation/viewmodels/today_recommendation_viewmodel
 import 'package:review_ai/presentation/widgets/category_card.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 import 'package:review_ai/presentation/widgets/common/skeleton_loader.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:review_ai/services/weather_service.dart';
+import 'package:review_ai/presentation/widgets/common/banner_ad_widget.dart';
+import 'package:review_ai/config/security_config.dart';
 
 /// 오늘의 추천 화면 - Body (카테고리 그리드 + 배너 광고)
 class TodayRecommendationBody extends ConsumerWidget {
   final String weatherMessage;
   final WeatherCondition? currentWeather;
-  final BannerAd? bannerAd;
-  final bool isBannerAdLoaded;
   final void Function(
     BuildContext context, {
     required String category,
@@ -33,8 +32,6 @@ class TodayRecommendationBody extends ConsumerWidget {
     super.key,
     required this.weatherMessage,
     required this.currentWeather,
-    required this.bannerAd,
-    required this.isBannerAdLoaded,
     required this.onShowRecommendationDialog,
     required this.onStartLoadingRotation,
     required this.onStopLoadingRotation,
@@ -66,7 +63,7 @@ class TodayRecommendationBody extends ConsumerWidget {
             ),
           ),
         ),
-        SafeArea(top: false, child: _buildBottomBannerAd()),
+        SafeArea(top: false, child: BannerAdWidget(adUnitId: SecurityConfig.bannerAdUnitId)),
       ],
     );
   }
@@ -214,12 +211,5 @@ class TodayRecommendationBody extends ConsumerWidget {
     }
   }
 
-  Widget _buildBottomBannerAd() {
-    if (!isBannerAdLoaded || bannerAd == null) return const SizedBox.shrink();
-    return Container(
-      alignment: Alignment.center,
-      height: bannerAd!.size.height.toDouble(),
-      child: AdWidget(ad: bannerAd!),
-    );
-  }
+  // _buildBottomBannerAd is replaced by BannerAdWidget
 }
