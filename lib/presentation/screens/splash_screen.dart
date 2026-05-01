@@ -86,8 +86,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await AppInitializer.initializePostRun();
 
       _startBackgroundCaching();
-      
-      final securityResult = await SecurityInitializer.performRuntimeSecurityCheck();
+
+      final securityResult =
+          await SecurityInitializer.performRuntimeSecurityCheck();
       if (!mounted) return;
       if (!securityResult.isSecure) {
         await SecurityInitializer.handleSecurityThreat(context, securityResult);
