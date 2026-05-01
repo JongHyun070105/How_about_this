@@ -86,7 +86,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       await AppInitializer.initializePostRun();
 
       _startBackgroundCaching();
-      _performSecurityCheckInBackground();
+      
+      final securityResult = await SecurityInitializer.performRuntimeSecurityCheck();
+      if (!mounted) return;
+      if (!securityResult.isSecure) {
+        await SecurityInitializer.handleSecurityThreat(context, securityResult);
+        return; // Halt initialization and stay on SecurityBlockScreen
+      }
+
       _checkForUpdateInBackground();
       _updateNotificationMessages();
 
@@ -174,23 +181,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     }
   }
 
-  void _performSecurityCheckInBackground() {
-    Future.microtask(() async {
-      try {
-        final securityResult =
-            await SecurityInitializer.performRuntimeSecurityCheck();
-        if (!mounted) return;
-        if (!securityResult.isSecure) {
-          await SecurityInitializer.handleSecurityThreat(
-            context,
-            securityResult,
-          );
-        }
-      } catch (e) {
-        debugPrint('Security check error: $e');
-      }
-    });
-  }
+  // _performSecurityCheckInBackground is removed and done synchronously instead
 
   void _updateNotificationMessages() {
     Future.microtask(() async {
