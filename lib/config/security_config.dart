@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
+import 'package:review_ai/presentation/screens/security_block_screen.dart';
 import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 // Added url_launcher import
 import 'app_constants.dart';
@@ -164,13 +165,11 @@ class SecurityInitializer {
     }
 
     if (message.isNotEmpty) {
-      showAppDialog(
-        context,
-        title: '보안 경고',
-        message: message,
-        isError: true,
-        cancelButtonText: '앱 종료',
-        onConfirm: () => SystemNavigator.pop(), // 앱을 종료합니다
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => SecurityBlockScreen(message: message),
+        ),
+        (Route<dynamic> route) => false,
       );
     }
   }
