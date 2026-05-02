@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.10.0](https://github.com/JongHyun070105/how-about-this/compare/v1.9.0...v1.10.0) (2026-05-02)
+
+
+### Features
+
+* API 캐싱 적용 ([c951b87](https://github.com/JongHyun070105/how-about-this/commit/c951b8730bf8a0ae954d2b4286c513097e300021))
+* API 캐싱 적용 ([298b4fb](https://github.com/JongHyun070105/how-about-this/commit/298b4fba019563728841d86e0f57bec54650b25c))
+* 보안 차단 화면 구현 및 스플래시 화면 Race Condition 수정 ([86d5248](https://github.com/JongHyun070105/how-about-this/commit/86d5248dd677ff476ffe53c46d2adfbc72fcca85))
+* 보안 차단 화면 구현 및 스플래시 화면 Race Condition 수정 ([615dbf1](https://github.com/JongHyun070105/how-about-this/commit/615dbf16335af679e011d9e952f5497d2575b473))
+
 ## [1.9.0](https://github.com/JongHyun070105/how-about-this/compare/v1.8.2...v1.9.0) (2026-04-30)
 
 
