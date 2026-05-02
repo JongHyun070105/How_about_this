@@ -460,6 +460,18 @@ async function handleKakaoLocalProxy(request, env) {
       );
     }
 
+    // 캐싱: x, y를 소수점 3자리까지만 잘라서 캐시 히트율 높이기 (반경 약 100m 단위 캐싱)
+    const shortX = parseFloat(x).toFixed(3);
+    const shortY = parseFloat(y).toFixed(3);
+    const cacheKey = `kakao:${query}:${shortX}:${shortY}:${radius}:${page}:${size}:${categoryGroupCode || 'all'}`;
+
+    // 캐시 확인
+    const cached = await env.API_CACHE.get(cacheKey, { type: "json" });
+    if (cached) {
+      console.log(`Kakao Local cache hit: ${cacheKey}`);
+      return jsonResponse({ ...cached, cached: true }, 200, CORS_HEADERS);
+    }
+
     // 카카오 API 키 가져오기
     const apiKey = env.KAKAO_API_KEY;
     if (!apiKey) {
@@ -505,7 +517,13 @@ async function handleKakaoLocalProxy(request, env) {
     }
 
     const data = await response.json();
-    return jsonResponse(data, 200, CORS_HEADERS);
+    
+    // KV에 캐싱 (24시간 TTL = 86400초)
+    await env.API_CACHE.put(cacheKey, JSON.stringify(data), {
+      expirationTtl: 86400,
+    });
+
+    return jsonResponse({ ...data, cached: false }, 200, CORS_HEADERS);
   } catch (error) {
     console.error("Worker Error in handleKakaoLocalProxy:", error);
     return jsonResponse(
@@ -564,6 +582,17 @@ async function handleWeatherProxy(request, env) {
     );
   }
 
+  // 캐싱: lat, lon을 소수점 2자리까지만 잘라서 캐시 히트율 높이기 (반경 약 1.1km 단위 캐싱)
+  const shortLat = parseFloat(lat).toFixed(2);
+  const shortLon = parseFloat(lon).toFixed(2);
+  const cacheKey = `weather:${shortLat}:${shortLon}`;
+
+  const cached = await env.API_CACHE.get(cacheKey, { type: "json" });
+  if (cached) {
+    console.log(`Weather cache hit: ${cacheKey}`);
+    return jsonResponse({ ...cached, cached: true }, 200, CORS_HEADERS);
+  }
+
   const apiKey = env.OPEN_WEATHER_MAP_API_KEY;
   if (!apiKey) {
     console.error("OPEN_WEATHER_MAP_API_KEY not found in environment variables");
@@ -585,7 +614,13 @@ async function handleWeatherProxy(request, env) {
     }
 
     const data = await response.json();
-    return jsonResponse(data, 200, CORS_HEADERS);
+
+    // KV에 날씨 데이터 캐싱 (30분 TTL = 1800초)
+    await env.API_CACHE.put(cacheKey, JSON.stringify(data), {
+      expirationTtl: 1800,
+    });
+
+    return jsonResponse({ ...data, cached: false }, 200, CORS_HEADERS);
   } catch (error) {
     console.error("Worker Error in handleWeatherProxy:", error);
     return jsonResponse(
@@ -720,7 +755,7 @@ async function handleFoodInsight(request, env) {
     const cacheKey = `insight:${user.deviceHash}:${today}`;
 
     // 캐시 확인
-    const cached = await env.FOOD_INSIGHT.get(cacheKey, { type: "json" });
+    const cached = await env.API_CACHE.get(cacheKey, { type: "json" });
     if (cached) {
       console.log(`Food insight cache hit: ${cacheKey}`);
       return jsonResponse(
@@ -778,8 +813,8 @@ async function handleFoodInsight(request, env) {
       generatedAt: new Date().toISOString(),
     };
 
-    // KV에 캐싱 (12시간 TTL)
-    await env.FOOD_INSIGHT.put(cacheKey, JSON.stringify(result), {
+    // KV에 캐싱 (12시간 TTL = 43200초)
+    await env.API_CACHE.put(cacheKey, JSON.stringify(result), {
       expirationTtl: 43200,
     });
 

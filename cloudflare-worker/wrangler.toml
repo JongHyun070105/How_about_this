@@ -14,9 +14,9 @@ mode = "smart"
 binding = "RATE_LIMIT"
 id = "00cc2b1530ca499fbaef968ef9c7ca95"
 
-# KV Namespace for AI food insight caching
+# KV Namespace for general API caching
 [[kv_namespaces]]
-binding = "FOOD_INSIGHT"
+binding = "API_CACHE"
 id = "7238157c15ff41a3bbdbbd25b8363784"
 
 # Durable Object for Region Proxy
