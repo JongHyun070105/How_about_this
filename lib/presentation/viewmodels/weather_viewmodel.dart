@@ -1,7 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:review_ai/presentation/providers/location_providers.dart';
-import 'package:review_ai/services/location_service.dart';
 import 'package:review_ai/services/weather_service.dart';
+
+part 'weather_viewmodel.g.dart';
 
 class WeatherInfo {
   final WeatherCondition condition;
@@ -10,36 +11,39 @@ class WeatherInfo {
   WeatherInfo({required this.condition, required this.message});
 }
 
-class WeatherViewModel extends StateNotifier<AsyncValue<WeatherInfo?>> {
-  final WeatherService _weatherService;
-  final LocationService _locationService;
+@riverpod
+WeatherService weatherService(WeatherServiceRef ref) {
+  return WeatherService();
+}
 
-  WeatherViewModel(this._weatherService, this._locationService)
-    : super(const AsyncValue.loading()) {
-    fetchWeather();
+@riverpod
+class WeatherViewModel extends _$WeatherViewModel {
+  @override
+  FutureOr<WeatherInfo?> build() async {
+    return _fetchWeather();
   }
 
-  Future<void> fetchWeather() async {
-    state = const AsyncValue.loading();
-    try {
-      final position = await _locationService.getCurrentLocation();
-      if (position == null) {
-        state = const AsyncValue.data(null);
-        return;
-      }
+  Future<WeatherInfo?> _fetchWeather() async {
+    final weatherService = ref.watch(weatherServiceProvider);
+    final locationService = ref.watch(locationServiceProvider);
 
-      final weather = await _weatherService.getCurrentWeather(
-        position.latitude,
-        position.longitude,
-      );
-
-      final message = _getWeatherMessage(weather);
-      state = AsyncValue.data(
-        WeatherInfo(condition: weather, message: message),
-      );
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    final position = await locationService.getCurrentLocation();
+    if (position == null) {
+      return null;
     }
+
+    final weather = await weatherService.getCurrentWeather(
+      position.latitude,
+      position.longitude,
+    );
+
+    final message = _getWeatherMessage(weather);
+    return WeatherInfo(condition: weather, message: message);
+  }
+
+  Future<void> refreshWeather() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _fetchWeather());
   }
 
   String _getWeatherMessage(WeatherCondition weather) {
@@ -59,14 +63,3 @@ class WeatherViewModel extends StateNotifier<AsyncValue<WeatherInfo?>> {
     }
   }
 }
-
-final weatherServiceProvider = Provider<WeatherService>((ref) {
-  return WeatherService();
-});
-
-final weatherViewModelProvider =
-    StateNotifierProvider<WeatherViewModel, AsyncValue<WeatherInfo?>>((ref) {
-      final weatherService = ref.watch(weatherServiceProvider);
-      final locationService = ref.watch(locationServiceProvider);
-      return WeatherViewModel(weatherService, locationService);
-    });

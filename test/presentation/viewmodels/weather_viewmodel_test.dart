@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:review_ai/data/models/location_models.dart';
 import 'package:review_ai/presentation/viewmodels/weather_viewmodel.dart';
+import 'package:review_ai/presentation/providers/location_providers.dart';
 import 'package:review_ai/services/location_service.dart';
 import 'package:review_ai/services/weather_service.dart';
 
@@ -67,14 +68,14 @@ void main() {
   ProviderContainer createContainer() {
     final container = ProviderContainer(
       overrides: [
-        weatherServiceProvider.overrideWithValue(fakeWeatherService),
-        // we can override the inner Provider inside weatherViewModelProvider but let's just test ViewModel directly
+        weatherServiceProvider.overrideWith((ref) => fakeWeatherService),
+        locationServiceProvider.overrideWithValue(fakeLocationService),
       ],
     );
     return container;
   }
 
-  test('fetchWeather succeeds and returns WeatherInfo', () async {
+  test('build succeeds and returns WeatherInfo', () async {
     fakeLocationService.mockLocation = UserLocation(
       latitude: 37.5,
       longitude: 127.0,
@@ -83,32 +84,32 @@ void main() {
     );
     fakeWeatherService.mockCondition = WeatherCondition.clouds;
 
-    final viewModel = WeatherViewModel(fakeWeatherService, fakeLocationService);
+    final container = createContainer();
 
-    // Initial state in constructor is loading, then it calls fetchWeather
-    expect(viewModel.state, isA<AsyncLoading>());
+    // build is async, wait for it
+    await container.read(weatherViewModelProvider.future);
 
-    // Wait for fetchWeather to complete
-    await Future.delayed(Duration.zero);
-
-    expect(viewModel.state, isA<AsyncData>());
-    final data = viewModel.state.value!;
+    final state = container.read(weatherViewModelProvider);
+    expect(state, isA<AsyncData>());
+    final data = state.value!;
     expect(data.condition, WeatherCondition.clouds);
     expect(data.message, '구름 낀 날 ☁️ 기분 전환할 맛있는 음식!');
   });
 
-  test('fetchWeather handles location permission denied', () async {
+  test('build handles location permission denied', () async {
     fakeLocationService.shouldThrow = true;
 
-    final viewModel = WeatherViewModel(fakeWeatherService, fakeLocationService);
+    final container = createContainer();
 
-    await Future.delayed(Duration.zero);
+    try {
+      await container.read(weatherViewModelProvider.future);
+    } catch (_) {}
 
-    // If location throws, it should emit AsyncError
-    expect(viewModel.state, isA<AsyncError>());
+    final state = container.read(weatherViewModelProvider);
+    expect(state, isA<AsyncError>());
   });
 
-  test('fetchWeather handles weather API error', () async {
+  test('build handles weather API error', () async {
     fakeLocationService.mockLocation = UserLocation(
       latitude: 37.5,
       longitude: 127.0,
@@ -117,21 +118,25 @@ void main() {
     );
     fakeWeatherService.shouldThrow = true;
 
-    final viewModel = WeatherViewModel(fakeWeatherService, fakeLocationService);
+    final container = createContainer();
 
-    await Future.delayed(Duration.zero);
+    try {
+      await container.read(weatherViewModelProvider.future);
+    } catch (_) {}
 
-    expect(viewModel.state, isA<AsyncError>());
+    final state = container.read(weatherViewModelProvider);
+    expect(state, isA<AsyncError>());
   });
 
-  test('fetchWeather handles null location (e.g. timeout fallback)', () async {
+  test('build handles null location (e.g. timeout fallback)', () async {
     fakeLocationService.mockLocation = null;
 
-    final viewModel = WeatherViewModel(fakeWeatherService, fakeLocationService);
+    final container = createContainer();
 
-    await Future.delayed(Duration.zero);
+    await container.read(weatherViewModelProvider.future);
 
-    expect(viewModel.state, isA<AsyncData>());
-    expect(viewModel.state.value, isNull);
+    final state = container.read(weatherViewModelProvider);
+    expect(state, isA<AsyncData>());
+    expect(state.value, isNull);
   });
 }
