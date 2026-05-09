@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:review_ai/config/security_config.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/presentation/providers/app_providers.dart';
 import 'package:review_ai/presentation/providers/food_providers.dart';

@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:review_ai/presentation/providers/location_providers.dart';
 import 'package:review_ai/services/weather_service.dart';
@@ -12,7 +13,7 @@ class WeatherInfo {
 }
 
 @riverpod
-WeatherService weatherService(WeatherServiceRef ref) {
+WeatherService weatherService(Ref ref) {
   return WeatherService();
 }
 
