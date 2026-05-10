@@ -43,7 +43,9 @@ invocation_logs = true
 [env.production]
 # wrangler secret put GEMINI_API_KEY
 # wrangler secret put JWT_SECRET
+MIN_APP_VERSION = "1.0.0"
 
-# 환경 변수 예시 (non-sensitive)
-[vars]
+[env.staging]
+# wrangler secret put GEMINI_API_KEY --env staging
+# wrangler secret put JWT_SECRET --env staging
 MIN_APP_VERSION = "1.0.0"

@@ -194,7 +194,7 @@ export default {
 
       // 카카오 로컬 API 프록시
       if (path === "/api/kakao-local" && request.method === "GET") {
-        return handleKakaoLocalProxy(request, env);
+        return handleKakaoLocalProxy(request, env, ctx);
       }
 
       // 동적 설정 API
@@ -209,12 +209,12 @@ export default {
 
       // 날씨 API 프록시
       if (path === "/weather" && request.method === "GET") {
-        return handleWeatherProxy(request, env);
+        return handleWeatherProxy(request, env, ctx);
       }
 
       // AI 식습관 인사이트 API
       if (path === "/api/food-insight" && request.method === "POST") {
-        return handleFoodInsight(request, env);
+        return handleFoodInsight(request, env, ctx);
       }
 
       return jsonResponse({ error: "Not Found" }, 404, CORS_HEADERS);
@@ -391,7 +391,7 @@ async function handleGeminiProxy(request, env) {
 }
 
 // 카카오 로컬 API 프록시 핸들러
-async function handleKakaoLocalProxy(request, env) {
+async function handleKakaoLocalProxy(request, env, ctx) {
   // JWT 검증
   const authHeader = request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -460,16 +460,18 @@ async function handleKakaoLocalProxy(request, env) {
       );
     }
 
-    // 캐싱: x, y를 소수점 3자리까지만 잘라서 캐시 히트율 높이기 (반경 약 100m 단위 캐싱)
+    // 캐싱 (Native Cache API)
     const shortX = parseFloat(x).toFixed(3);
     const shortY = parseFloat(y).toFixed(3);
-    const cacheKey = `kakao:${query}:${shortX}:${shortY}:${radius}:${page}:${size}:${categoryGroupCode || 'all'}`;
-
-    // 캐시 확인
-    const cached = await env.API_CACHE.get(cacheKey, { type: "json" });
-    if (cached) {
-      console.log(`Kakao Local cache hit: ${cacheKey}`);
-      return jsonResponse({ ...cached, cached: true }, 200, CORS_HEADERS);
+    const cacheUrl = new URL(`https://api.reviewai.internal/kakao?q=${encodeURIComponent(query)}&x=${shortX}&y=${shortY}&r=${radius}&p=${page}&s=${size}&c=${categoryGroupCode || 'all'}`);
+    const cacheRequest = new Request(cacheUrl);
+    const cache = caches.default;
+    
+    const cachedResponse = await cache.match(cacheRequest);
+    if (cachedResponse) {
+      console.log(`Kakao Local Native Cache hit: ${cacheUrl.href}`);
+      const data = await cachedResponse.json();
+      return jsonResponse({ ...data, cached: true }, 200, CORS_HEADERS);
     }
 
     // 카카오 API 키 가져오기
@@ -518,10 +520,11 @@ async function handleKakaoLocalProxy(request, env) {
 
     const data = await response.json();
     
-    // KV에 캐싱 (24시간 TTL = 86400초)
-    await env.API_CACHE.put(cacheKey, JSON.stringify(data), {
-      expirationTtl: 86400,
+    // Native Cache 저장 (24시간)
+    const responseToCache = new Response(JSON.stringify(data), {
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "Cache-Control": "public, max-age=86400" }
     });
+    ctx.waitUntil(cache.put(cacheRequest, responseToCache));
 
     return jsonResponse({ ...data, cached: false }, 200, CORS_HEADERS);
   } catch (error) {
@@ -538,7 +541,7 @@ async function handleKakaoLocalProxy(request, env) {
 }
 
 // 날씨 API 프록시 핸들러
-async function handleWeatherProxy(request, env) {
+async function handleWeatherProxy(request, env, ctx) {
   // JWT 검증
   const authHeader = request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -582,15 +585,18 @@ async function handleWeatherProxy(request, env) {
     );
   }
 
-  // 캐싱: lat, lon을 소수점 2자리까지만 잘라서 캐시 히트율 높이기 (반경 약 1.1km 단위 캐싱)
+  // 캐싱 (Native Cache API)
   const shortLat = parseFloat(lat).toFixed(2);
   const shortLon = parseFloat(lon).toFixed(2);
-  const cacheKey = `weather:${shortLat}:${shortLon}`;
+  const cacheUrl = new URL(`https://api.reviewai.internal/weather?lat=${shortLat}&lon=${shortLon}`);
+  const cacheRequest = new Request(cacheUrl);
+  const cache = caches.default;
 
-  const cached = await env.API_CACHE.get(cacheKey, { type: "json" });
-  if (cached) {
-    console.log(`Weather cache hit: ${cacheKey}`);
-    return jsonResponse({ ...cached, cached: true }, 200, CORS_HEADERS);
+  const cachedResponse = await cache.match(cacheRequest);
+  if (cachedResponse) {
+    console.log(`Weather Native Cache hit: ${cacheUrl.href}`);
+    const data = await cachedResponse.json();
+    return jsonResponse({ ...data, cached: true }, 200, CORS_HEADERS);
   }
 
   const apiKey = env.OPEN_WEATHER_MAP_API_KEY;
@@ -615,10 +621,11 @@ async function handleWeatherProxy(request, env) {
 
     const data = await response.json();
 
-    // KV에 날씨 데이터 캐싱 (30분 TTL = 1800초)
-    await env.API_CACHE.put(cacheKey, JSON.stringify(data), {
-      expirationTtl: 1800,
+    // Native Cache 저장 (30분)
+    const responseToCache = new Response(JSON.stringify(data), {
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "Cache-Control": "public, max-age=1800" }
     });
+    ctx.waitUntil(cache.put(cacheRequest, responseToCache));
 
     return jsonResponse({ ...data, cached: false }, 200, CORS_HEADERS);
   } catch (error) {
@@ -708,7 +715,7 @@ async function handleServerTime(request, env) {
 }
 
 // AI 식습관 인사이트 핸들러 (KV 캐싱 + Gemini API)
-async function handleFoodInsight(request, env) {
+async function handleFoodInsight(request, env, ctx) {
   // JWT 검증
   const authHeader = request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -750,19 +757,17 @@ async function handleFoodInsight(request, env) {
       );
     }
 
-    // KV 캐시 키: deviceHash + 날짜 기반 (하루 단위)
+    // 캐싱 (Native Cache API)
     const today = new Date().toISOString().split("T")[0];
-    const cacheKey = `insight:${user.deviceHash}:${today}`;
+    const cacheUrl = new URL(`https://api.reviewai.internal/insight?hash=${user.deviceHash}&date=${today}`);
+    const cacheRequest = new Request(cacheUrl);
+    const cache = caches.default;
 
-    // 캐시 확인
-    const cached = await env.API_CACHE.get(cacheKey, { type: "json" });
-    if (cached) {
-      console.log(`Food insight cache hit: ${cacheKey}`);
-      return jsonResponse(
-        { ...cached, cached: true },
-        200,
-        CORS_HEADERS
-      );
+    const cachedResponse = await cache.match(cacheRequest);
+    if (cachedResponse) {
+      console.log(`Food insight Native Cache hit: ${cacheUrl.href}`);
+      const data = await cachedResponse.json();
+      return jsonResponse({ ...data, cached: true }, 200, CORS_HEADERS);
     }
 
     // Gemini API로 인사이트 생성
@@ -813,16 +818,13 @@ async function handleFoodInsight(request, env) {
       generatedAt: new Date().toISOString(),
     };
 
-    // KV에 캐싱 (12시간 TTL = 43200초)
-    await env.API_CACHE.put(cacheKey, JSON.stringify(result), {
-      expirationTtl: 43200,
+    // Native Cache 저장 (12시간)
+    const responseToCache = new Response(JSON.stringify(result), {
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "Cache-Control": "public, max-age=43200" }
     });
+    ctx.waitUntil(cache.put(cacheRequest, responseToCache));
 
-    return jsonResponse(
-      { ...result, cached: false },
-      200,
-      CORS_HEADERS
-    );
+    return jsonResponse({ ...result, cached: false }, 200, CORS_HEADERS);
   } catch (error) {
     console.error("Food insight error:", error);
     return jsonResponse(

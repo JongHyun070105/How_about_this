@@ -35,4 +35,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: 'cloudflare-worker'
           preCommands: npx wrangler whoami
-          command: deploy
+          command: deploy --env ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
