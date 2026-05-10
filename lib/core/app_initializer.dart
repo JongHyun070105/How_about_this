@@ -51,14 +51,27 @@ class AppInitializer {
     // Firebase Performance & Analytics
     await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
 
-    // 필수 서비스 초기화 (UI 비차단)
+    // 필수 서비스 초기화 (UI 비차단) - 각 서비스별 에러 캡처로 부분 실패 허용
     await Future.wait([
-      SecurityInitializer.initialize(),
-      MobileAds.instance.initialize(),
-      AuthService.initialize(),
-      RemoteConfigService().initialize(),
-      ServerTimeService.initialize(),
-      NotificationService().initialize(),
+      SecurityInitializer.initialize().catchError((e) {
+        debugPrint('SecurityInitializer failed: $e');
+      }),
+      MobileAds.instance.initialize().catchError((e) {
+        debugPrint('MobileAds initialization failed: $e');
+        return InitializationStatus({});
+      }),
+      AuthService.initialize().catchError((e) {
+        debugPrint('AuthService initialization failed: $e');
+      }),
+      RemoteConfigService().initialize().catchError((e) {
+        debugPrint('RemoteConfigService initialization failed: $e');
+      }),
+      ServerTimeService.initialize().catchError((e) {
+        debugPrint('ServerTimeService initialization failed: $e');
+      }),
+      NotificationService().initialize().catchError((e) {
+        debugPrint('NotificationService initialization failed: $e');
+      }),
     ]);
 
     SecurityConfig.logAdConfiguration();
