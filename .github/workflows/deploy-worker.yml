@@ -34,5 +34,6 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: 'cloudflare-worker'
+          environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
           preCommands: npx wrangler whoami
-          command: deploy --env ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          command: deploy
