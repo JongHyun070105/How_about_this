@@ -1,18 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:review_ai/services/location_service.dart';
 import 'package:review_ai/services/kakao_api_service.dart';
 import 'package:review_ai/data/models/location_models.dart';
 import 'package:review_ai/utils/error_handler.dart';
 
+part 'location_providers.g.dart';
+
 /// 위치 서비스 프로바이더
-final locationServiceProvider = Provider<LocationService>((ref) {
+@Riverpod(keepAlive: true)
+LocationService locationService(Ref ref) {
   return LocationService();
-});
+}
 
 /// 카카오 API 서비스 프로바이더
-final kakaoApiServiceProvider = Provider<KakaoApiService>((ref) {
+@Riverpod(keepAlive: true)
+KakaoApiService kakaoApiService(Ref ref) {
   return KakaoApiService();
-});
+}
 
 /// 맛집 검색 상태 프로바이더
 final restaurantSearchProvider =
@@ -192,23 +197,22 @@ class RestaurantSearchNotifier extends StateNotifier<RestaurantSearchState> {
 }
 
 /// 위치 권한 상태 프로바이더
-final locationPermissionProvider = FutureProvider<LocationPermissionStatus>((
-  ref,
-) async {
+@Riverpod(keepAlive: true)
+Future<LocationPermissionStatus> locationPermission(Ref ref) async {
   final locationService = ref.watch(locationServiceProvider);
   return await locationService.requestLocationPermission();
-});
+}
 
 /// 위치 서비스 상태 프로바이더
-final locationServiceStatusProvider = FutureProvider<LocationServiceStatus>((
-  ref,
-) async {
+@Riverpod(keepAlive: true)
+Future<LocationServiceStatus> locationServiceStatus(Ref ref) async {
   final locationService = ref.watch(locationServiceProvider);
   return await locationService.checkLocationService();
-});
+}
 
 /// 현재 위치 프로바이더
-final currentLocationProvider = FutureProvider<UserLocation?>((ref) async {
+@Riverpod(keepAlive: true)
+Future<UserLocation?> currentLocation(Ref ref) async {
   final locationService = ref.watch(locationServiceProvider);
   return await locationService.getCurrentLocation();
-});
+}
