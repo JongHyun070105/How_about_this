@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0](https://github.com/JongHyun070105/how-about-this/compare/v1.10.0...v1.11.0) (2026-05-11)
+
+
+### Features
+
+* Cloudflare Worker 리팩토링 ([4dec854](https://github.com/JongHyun070105/how-about-this/commit/4dec85438f7ecd9dc0f36f2de73c1e3d08f05297))
+* Cloudflare Worker 리팩토링 ([ae06a2d](https://github.com/JongHyun070105/how-about-this/commit/ae06a2d253d3ed0d3bdab2ece8c3ce3607d17860))
+
 ## [1.10.0](https://github.com/JongHyun070105/how-about-this/compare/v1.9.0...v1.10.0) (2026-05-02)
 
 
