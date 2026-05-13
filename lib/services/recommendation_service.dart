@@ -173,11 +173,14 @@ class RecommendationService {
     }
 
     final random = Random();
+    final recentFoodNames = recentFoods.toSet();
+    final dislikedFoodNames = preferences.dislikedFoods.toSet();
+    final preferredFoodNames = preferences.preferredFoods.toSet();
 
     // 1. 기본 필터링 (최근 먹은 음식, 싫어하는 음식 제외)
     List<FoodRecommendation> available = foods
-        .where((f) => !recentFoods.contains(f.name))
-        .where((f) => !preferences.dislikedFoods.contains(f.name))
+        .where((f) => !recentFoodNames.contains(f.name))
+        .where((f) => !dislikedFoodNames.contains(f.name))
         .toList();
 
     // 필터링 후 남은 음식이 없으면 단계적으로 완화
@@ -187,7 +190,7 @@ class RecommendationService {
       );
       // 1단계: 최근 음식만 제외하고 다시 시도
       available = foods
-          .where((f) => !preferences.dislikedFoods.contains(f.name))
+          .where((f) => !dislikedFoodNames.contains(f.name))
           .toList();
 
       // 2단계: 그래도 없으면 모든 필터 제거
@@ -204,9 +207,9 @@ class RecommendationService {
     };
 
     // 2-1. 선호 음식 가중치 증가 (x 1.5)
-    if (preferences.preferredFoods.isNotEmpty) {
+    if (preferredFoodNames.isNotEmpty) {
       for (var f in available) {
-        if (preferences.preferredFoods.contains(f.name)) {
+        if (preferredFoodNames.contains(f.name)) {
           weightedFoods[f] = (weightedFoods[f] ?? 1.0) * 1.5;
         }
       }
@@ -221,14 +224,14 @@ class RecommendationService {
     final selectedFood = _selectWeightedFood(weightedFoods, random);
 
     // 4. 추천 사유 생성
-    String reason = _generateReason(selectedFood, preferences, weather);
+    String reason = _generateReason(selectedFood, preferredFoodNames, weather);
 
     return (food: selectedFood, reason: reason);
   }
 
   static String _generateReason(
     FoodRecommendation food,
-    UserPreferenceAnalysis preferences,
+    Set<String> preferredFoodNames,
     WeatherCondition? weather,
   ) {
     // 1. 날씨 기반 사유 (가장 우선)
@@ -261,7 +264,7 @@ class RecommendationService {
     }
 
     // 2. 선호 기반 사유
-    if (preferences.preferredFoods.contains(food.name)) {
+    if (preferredFoodNames.contains(food.name)) {
       return '평소에 좋아하시는 메뉴라 추천해봤어요! 👍';
     }
 
