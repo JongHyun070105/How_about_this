@@ -1,12 +1,14 @@
 import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+
 import 'package:review_ai/presentation/providers/app_providers.dart';
 import 'package:review_ai/presentation/providers/review_provider.dart';
 
-import 'dart:io';
-import 'package:image/image.dart' as img;
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart';
+import 'image_optimization_service.dart';
 
 // 새로운 ReviewService의 Provider
 final reviewServiceProvider = Provider((ref) => ReviewService(ref));
@@ -18,45 +20,28 @@ class ReviewService {
 
   /// 이미지를 최적화하여 API 호출 속도 향상
   Future<File?> _optimizeImage(File? imageFile) async {
-    if (imageFile == null || !imageFile.existsSync()) return null;
+    if (imageFile == null || !await imageFile.exists()) return null;
 
     try {
       debugPrint('이미지 최적화 시작: ${imageFile.path}');
 
-      // 이미지가 너무 클 경우 리사이징
+      // 파일 읽기는 메인 isolate에서, 무거운 디코드/리사이즈/인코드는 background isolate에서 처리
       final bytes = await imageFile.readAsBytes();
-      final image = img.decodeImage(bytes);
+      final optimizedBytes = await optimizeUploadedImageBytes(bytes);
 
-      if (image == null) {
-        debugPrint('이미지 디코딩 실패');
+      if (optimizedBytes == null) {
+        debugPrint('이미지 최적화 불필요 (크기 적절함 또는 디코딩 실패)');
         return imageFile;
       }
 
-      debugPrint('원본 이미지 크기: ${image.width}x${image.height}');
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File(
+        '${tempDir.path}/optimized_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+      await tempFile.writeAsBytes(optimizedBytes, flush: true);
 
-      // 최대 크기 제한 (가로/세로 각각 800px)
-      img.Image resized = image;
-      if (image.width > 800 || image.height > 800) {
-        resized = img.copyResize(
-          image,
-          width: image.width > image.height ? 800 : null,
-          height: image.height > image.width ? 800 : null,
-        );
-
-        final tempDir = await getTemporaryDirectory();
-        final tempFile = File(
-          '${tempDir.path}/optimized_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        );
-        await tempFile.writeAsBytes(img.encodeJpg(resized, quality: 85));
-
-        debugPrint(
-          '이미지 최적화 완료: ${image.width}x${image.height} -> ${resized.width}x${resized.height}',
-        );
-        return tempFile;
-      }
-
-      debugPrint('이미지 최적화 불필요 (크기 적절함)');
-      return imageFile;
+      debugPrint('이미지 최적화 완료: ${imageFile.path} -> ${tempFile.path}');
+      return tempFile;
     } catch (e) {
       debugPrint('이미지 최적화 실패: $e');
       return imageFile; // 최적화 실패시 원본 반환
