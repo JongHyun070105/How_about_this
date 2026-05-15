@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -42,21 +43,21 @@ class AdService extends StateNotifier<AdState> {
   Future<void> loadAd() async {
     if (state.isAdLoaded || state.isAdShowing) return;
 
-    debugPrint('광고 로딩 시작... (시도: ${_retryCount + 1})');
+    LoggerService.d('광고 로딩 시작... (시도: ${_retryCount + 1})');
 
     await RewardedAd.load(
       adUnitId: SecurityConfig.rewardedAdUnitId,
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          debugPrint('광고 로딩 성공');
+          LoggerService.i('광고 로딩 성공');
           _retryCount = 0; // 성공 시 재시도 카운트 초기화
           _retryTimer?.cancel();
           _configureAdCallbacks(ad);
           state = state.copyWith(rewardedAd: ad, isAdLoaded: true);
         },
         onAdFailedToLoad: (error) {
-          debugPrint('광고 로딩 실패: $error');
+          LoggerService.e('광고 로딩 실패: $error');
           state = state.copyWith(rewardedAd: null, isAdLoaded: false);
           _scheduleRetry();
         },
@@ -66,12 +67,12 @@ class AdService extends StateNotifier<AdState> {
 
   void _scheduleRetry() {
     if (_retryCount >= _maxRetries) {
-      debugPrint('최대 재시도 횟수 초과, 로딩 중단');
+      LoggerService.d('최대 재시도 횟수 초과, 로딩 중단');
       return;
     }
 
     final delay = Duration(seconds: 2 * (1 << _retryCount)); // 2, 4, 8초...
-    debugPrint('${delay.inSeconds}초 후 광고 로딩 재시도 예정...');
+    LoggerService.d('${delay.inSeconds}초 후 광고 로딩 재시도 예정...');
 
     _retryTimer?.cancel();
     _retryTimer = Timer(delay, () {
@@ -83,11 +84,11 @@ class AdService extends StateNotifier<AdState> {
   void _configureAdCallbacks(RewardedAd ad) {
     ad.fullScreenContentCallback = FullScreenContentCallback(
       onAdShowedFullScreenContent: (ad) {
-        debugPrint('광고 표시 시작');
+        LoggerService.d('광고 표시 시작');
         state = state.copyWith(isAdShowing: true);
       },
       onAdDismissedFullScreenContent: (ad) {
-        debugPrint('광고 닫힘 - 보상 상태: $_rewardReceived');
+        LoggerService.d('광고 닫힘 - 보상 상태: $_rewardReceived');
         ad.dispose();
         state = state.copyWith(
           rewardedAd: null,
@@ -104,7 +105,7 @@ class AdService extends StateNotifier<AdState> {
         loadAd();
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
-        debugPrint('광고 표시 실패: $error');
+        LoggerService.e('광고 표시 실패: $error');
         ad.dispose();
         state = state.copyWith(
           rewardedAd: null,
@@ -129,13 +130,13 @@ class AdService extends StateNotifier<AdState> {
   }) async {
     // 이미 광고가 표시 중이면 기다림
     if (state.isAdShowing) {
-      debugPrint('이미 광고가 표시 중입니다.');
+      LoggerService.d('이미 광고가 표시 중입니다.');
       return false;
     }
 
     // 첫 시도 전 로딩 확인
     if (!state.isAdLoaded) {
-      debugPrint('광고가 로드되지 않음, 로딩 시도...');
+      LoggerService.d('광고가 로드되지 않음, 로딩 시도...');
       await loadAd();
       // 로딩 대기 (최대 5초)
       for (int i = 0; i < 5; i++) {
@@ -146,7 +147,7 @@ class AdService extends StateNotifier<AdState> {
 
     for (int i = 0; i < 3; i++) {
       if (state.isAdLoaded && !state.isAdShowing) {
-        debugPrint('광고 표시 시도 ${i + 1}번째');
+        LoggerService.d('광고 표시 시도 ${i + 1}번째');
         final success = await showAd(onUserEarnedReward: onUserEarnedReward);
         if (success) {
           return true;
@@ -172,20 +173,20 @@ class AdService extends StateNotifier<AdState> {
 
     // 최종 시도
     if (state.isAdLoaded && !state.isAdShowing) {
-      debugPrint('최종 광고 표시 시도');
+      LoggerService.d('최종 광고 표시 시도');
       final success = await showAd(onUserEarnedReward: onUserEarnedReward);
       if (success) {
         return true;
       }
     }
 
-    debugPrint('모든 광고 시도 실패');
+    LoggerService.e('모든 광고 시도 실패');
     return false;
   }
 
   Future<bool> showAd({required Function onUserEarnedReward}) async {
     if (!state.isAdLoaded || state.isAdShowing) {
-      debugPrint(
+      LoggerService.i(
         '광고를 표시할 수 없습니다. 로드됨: ${state.isAdLoaded}, 표시중: ${state.isAdShowing}',
       );
       return false;
@@ -200,7 +201,7 @@ class AdService extends StateNotifier<AdState> {
 
       await state.rewardedAd!.show(
         onUserEarnedReward: (ad, reward) {
-          debugPrint('보상 획득: ${reward.type}, ${reward.amount}');
+          LoggerService.d('보상 획득: ${reward.type}, ${reward.amount}');
           _rewardReceived = true;
           // 보상 콜백 실행
           onUserEarnedReward();
@@ -209,11 +210,11 @@ class AdService extends StateNotifier<AdState> {
 
       // 광고가 완전히 끝날 때까지 기다림
       final success = await _adCompleter!.future;
-      debugPrint('광고 완료 결과: $success');
+      LoggerService.i('광고 완료 결과: $success');
 
       return success;
     } catch (e) {
-      debugPrint('광고 표시 중 오류: $e');
+      LoggerService.e('광고 표시 중 오류: $e');
       _adCompleter?.complete(false);
       _adCompleter = null;
       _rewardReceived = false;

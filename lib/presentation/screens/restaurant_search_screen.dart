@@ -10,6 +10,7 @@ import 'package:review_ai/presentation/widgets/restaurant_search/restaurant_list
 import 'package:review_ai/utils/delivery_app_launcher.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:review_ai/config/security_config.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 /// 맛집 검색 화면
 class RestaurantSearchScreen extends ConsumerStatefulWidget {
@@ -50,7 +51,7 @@ class _RestaurantSearchScreenState
         onAdLoaded: (_) => setState(() => _isBannerAdLoaded = true),
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
-          debugPrint(
+          LoggerService.e(
             'Ad load failed (code=${error.code} message=${error.message})',
           );
         },

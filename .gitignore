@@ -48,6 +48,11 @@ app.*.map.json
 .kiro/
 node_modules/
 
+# AI 에디터 / 분석 도구
+.cursor/
+.omx/
+graphify-out/
+
 # CI/CD Secrets
 android/service_account.json
 android/key.properties

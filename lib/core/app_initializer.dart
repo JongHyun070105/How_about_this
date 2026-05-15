@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:review_ai/services/crash_reporting_service.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 import '../firebase_options.dart';
 import 'package:review_ai/config/security_config.dart';
@@ -54,23 +55,23 @@ class AppInitializer {
     // 필수 서비스 초기화 (UI 비차단) - 각 서비스별 에러 캡처로 부분 실패 허용
     await Future.wait([
       SecurityInitializer.initialize().catchError((e) {
-        debugPrint('SecurityInitializer failed: $e');
+        LoggerService.e('SecurityInitializer failed: $e');
       }),
       MobileAds.instance.initialize().catchError((e) {
-        debugPrint('MobileAds initialization failed: $e');
+        LoggerService.e('MobileAds initialization failed: $e');
         return InitializationStatus({});
       }),
       AuthService.initialize().catchError((e) {
-        debugPrint('AuthService initialization failed: $e');
+        LoggerService.e('AuthService initialization failed: $e');
       }),
       RemoteConfigService().initialize().catchError((e) {
-        debugPrint('RemoteConfigService initialization failed: $e');
+        LoggerService.e('RemoteConfigService initialization failed: $e');
       }),
       ServerTimeService.initialize().catchError((e) {
-        debugPrint('ServerTimeService initialization failed: $e');
+        LoggerService.e('ServerTimeService initialization failed: $e');
       }),
       NotificationService().initialize().catchError((e) {
-        debugPrint('NotificationService initialization failed: $e');
+        LoggerService.e('NotificationService initialization failed: $e');
       }),
     ]);
 

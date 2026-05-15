@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:review_ai/services/persistent_storage_service.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 // 사용자 선택 기록 모델
 class FoodSelection {
@@ -117,7 +118,7 @@ class UserPreferenceService {
           .map((json) => FoodSelection.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      debugPrint('선택 기록 로드 오류: $e');
+      LoggerService.e('선택 기록 로드 오류: $e');
       return [];
     }
   }

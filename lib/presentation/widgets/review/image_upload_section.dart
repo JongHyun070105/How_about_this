@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/config/ui_constants.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 final isPickingImageProvider = StateProvider<bool>((ref) => false);
 
@@ -215,7 +216,7 @@ class ImageUploadSection extends ConsumerWidget {
         throw Exception('선택된 이미지 파일이 손상되었습니다.');
       }
 
-      debugPrint(
+      LoggerService.d(
         '선택된 이미지: ${imageFile.path}, 크기: ${(fileSize / 1024 / 1024).toStringAsFixed(2)}MB',
       );
 

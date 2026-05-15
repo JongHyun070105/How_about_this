@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/core/exceptions.dart';
+import 'package:review_ai/utils/gemini_response_parser.dart';
 import 'package:review_ai/services/prompt_builder.dart';
 import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/config/api_config.dart';
@@ -85,7 +86,7 @@ class ApiProxyService {
     } on SocketException {
       throw NetworkException('인터넷 연결을 확인해주세요.');
     } catch (e) {
-      debugPrint('ApiProxyService Error: $e');
+      LoggerService.e('ApiProxyService Error: $e');
       if (e is ApiException) rethrow;
       throw ApiException(ErrorHandler.sanitizeMessage(e));
     }
@@ -151,30 +152,13 @@ class ApiProxyService {
 
       final data = await _callGeminiApi('generateContent', requestBody);
 
-      final candidates = data['candidates'] as List?;
-      if (candidates == null || candidates.isEmpty) {
-        throw ParsingException('API 응답에 후보가 없습니다.');
-      }
-
-      final content =
-          candidates[0]['content']?['parts']?[0]?['text'] as String?;
+      final content = GeminiResponseParser.extractText(data);
       if (content == null) {
         throw ParsingException('리뷰 텍스트를 찾을 수 없습니다.');
       }
 
       try {
-        var cleanedContent = content.trim();
-
-        if (cleanedContent.startsWith('```json')) {
-          cleanedContent = cleanedContent
-              .replaceAll('```json', '')
-              .replaceAll('```', '');
-        } else if (cleanedContent.startsWith('```')) {
-          cleanedContent = cleanedContent.replaceAll('```', '');
-        }
-
-        cleanedContent = cleanedContent.trim();
-
+        final cleanedContent = GeminiResponseParser.cleanMarkdownJson(content);
         final decoded = json.decode(cleanedContent) as List<dynamic>;
         final reviews = decoded.map((e) => e.toString()).toList();
 
@@ -211,30 +195,13 @@ class ApiProxyService {
 
       final data = await _callGeminiApi('generateContent', requestBody);
 
-      final candidates = data['candidates'] as List?;
-      if (candidates == null || candidates.isEmpty) {
-        throw ImageValidationException('모델이 이미지를 분석할 수 없습니다.');
-      }
-
-      final content =
-          candidates[0]['content']?['parts']?[0]?['text'] as String?;
+      final content = GeminiResponseParser.extractText(data);
       if (content == null) {
         throw ImageValidationException('모델의 응답을 파싱할 수 없습니다.');
       }
 
       try {
-        var cleanedContent = content.trim();
-
-        if (cleanedContent.startsWith('```json')) {
-          cleanedContent = cleanedContent
-              .replaceAll('```json', '')
-              .replaceAll('```', '');
-        } else if (cleanedContent.startsWith('```')) {
-          cleanedContent = cleanedContent.replaceAll('```', '');
-        }
-
-        cleanedContent = cleanedContent.trim();
-
+        final cleanedContent = GeminiResponseParser.cleanMarkdownJson(content);
         final decoded = json.decode(cleanedContent) as Map<String, dynamic>;
         final isFood = decoded['is_food'] as bool?;
 

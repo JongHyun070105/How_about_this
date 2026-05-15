@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/data/models/location_models.dart';
 import 'package:review_ai/utils/kakao_api_filter_util.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 export 'package:review_ai/utils/kakao_api_filter_util.dart'; // 추가: RestaurantSortType 등의 참조 유지
 import 'auth_service.dart';
 import 'package:review_ai/utils/error_handler.dart';
@@ -44,7 +45,7 @@ class KakaoApiService {
       final cachedResult = _searchCache[cacheKey];
 
       if (cachedResult != null && !cachedResult.isExpired) {
-        debugPrint('Serving restaurant search from cache: $cacheKey');
+        LoggerService.d('Serving restaurant search from cache: $cacheKey');
         return cachedResult.response;
       }
 
@@ -74,7 +75,7 @@ class KakaoApiService {
           response: searchResponse,
           timestamp: DateTime.now(),
         );
-        debugPrint('Cached restaurant search result: $cacheKey');
+        LoggerService.d('Cached restaurant search result: $cacheKey');
 
         return searchResponse;
       } else {

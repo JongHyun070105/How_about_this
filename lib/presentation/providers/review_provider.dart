@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/presentation/providers/review_state.dart';
@@ -146,13 +147,13 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
 
   Future<void> loadHistory() async {
     try {
-      debugPrint('📂 리뷰 히스토리 로드 시작');
+      LoggerService.d('📂 리뷰 히스토리 로드 시작');
       final historyJson = await _storageService.getValue<List<dynamic>>(
         _historyFile,
         'history',
       );
       if (historyJson == null) {
-        debugPrint('📂 리뷰 히스토리 없음 (처음 실행 또는 삭제됨)');
+        LoggerService.d('📂 리뷰 히스토리 없음 (처음 실행 또는 삭제됨)');
         state = [];
         return;
       }
@@ -162,10 +163,10 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
             (data) => ReviewHistoryEntry.fromJson(data as Map<String, dynamic>),
           )
           .toList();
-      debugPrint('📂 리뷰 히스토리 로드 완료: ${entries.length}개');
+      LoggerService.i('📂 리뷰 히스토리 로드 완료: ${entries.length}개');
       state = entries;
     } catch (e) {
-      debugPrint('리뷰 히스토리 로드 오류: $e');
+      LoggerService.e('리뷰 히스토리 로드 오류: $e');
       await clearHistory();
     }
   }
@@ -192,15 +193,15 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
             .map((entry) => entry.toJson())
             .toList();
         await _storageService.setValue(_historyFile, 'history', historyJson);
-        debugPrint(
+        LoggerService.i(
           '💾 리뷰 저장 완료: ${newEntry.foodName} (총 ${currentHistory.length}개)',
         );
         state = currentHistory;
       } else {
-        debugPrint('중복 리뷰 감지, 저장하지 않음');
+        LoggerService.d('중복 리뷰 감지, 저장하지 않음');
       }
     } catch (e) {
-      debugPrint('리뷰 저장 오류: $e');
+      LoggerService.e('리뷰 저장 오류: $e');
     }
   }
 
@@ -215,7 +216,7 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
       await _storageService.setValue(_historyFile, 'history', historyJson);
       state = currentHistory;
     } catch (e) {
-      debugPrint('Error deleting review from history: $e');
+      LoggerService.e('Error deleting review from history: $e');
     }
   }
 
@@ -224,7 +225,7 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
       await _storageService.clearFile(_historyFile);
       state = [];
     } catch (e) {
-      debugPrint('Error clearing review history: $e');
+      LoggerService.e('Error clearing review history: $e');
     }
   }
 }

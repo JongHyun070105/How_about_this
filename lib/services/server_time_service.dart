@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/services/auth_service.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 /// 서버 시간 서비스 (시스템 시간 조작 방지)
 class ServerTimeService {
@@ -21,13 +22,13 @@ class ServerTimeService {
         if (cacheAge < _cacheExpiry) {
           // 캐시된 시간 + 경과 시간
           final serverTime = _cachedServerTime!.add(cacheAge);
-          debugPrint('Using cached server time: $serverTime');
+          LoggerService.d('Using cached server time: $serverTime');
           return serverTime;
         }
       }
 
       // 서버에서 시간 가져오기
-      debugPrint('Fetching server time from API');
+      LoggerService.d('Fetching server time from API');
       final token = await AuthService.getValidAccessToken();
 
       final response = await http
@@ -52,18 +53,18 @@ class ServerTimeService {
         _cachedServerTime = serverTime;
         _cacheTimestamp = localTime;
 
-        debugPrint('Server time fetched: $serverTime');
-        debugPrint('Time offset: ${_timeOffset}ms');
+        LoggerService.d('Server time fetched: $serverTime');
+        LoggerService.d('Time offset: ${_timeOffset}ms');
 
         return serverTime;
       } else {
         throw Exception('Failed to fetch server time: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('ServerTimeService error: $e');
+      LoggerService.e('ServerTimeService error: $e');
 
       // 에러 발생 시 로컬 시간 사용 (폴백)
-      debugPrint('Falling back to local time');
+      LoggerService.d('Falling back to local time');
       return DateTime.now();
     }
   }
@@ -91,7 +92,7 @@ class ServerTimeService {
       // 오프셋 변화가 5분 이상이면 시간 조작 의심
       final offsetDiff = (currentOffset - _timeOffset!).abs();
       if (offsetDiff > Duration(minutes: 5).inMilliseconds) {
-        debugPrint(
+        LoggerService.d(
           'Time manipulation detected! Offset changed by ${offsetDiff}ms',
         );
         return true;
@@ -99,7 +100,7 @@ class ServerTimeService {
 
       return false;
     } catch (e) {
-      debugPrint('Error detecting time manipulation: $e');
+      LoggerService.e('Error detecting time manipulation: $e');
       return false;
     }
   }
@@ -109,17 +110,17 @@ class ServerTimeService {
     _cachedServerTime = null;
     _cacheTimestamp = null;
     _timeOffset = null;
-    debugPrint('ServerTimeService cache cleared');
+    LoggerService.d('ServerTimeService cache cleared');
   }
 
   /// 초기화 (앱 시작 시 호출)
   static Future<void> initialize() async {
     try {
-      debugPrint('ServerTimeService initializing...');
+      LoggerService.d('ServerTimeService initializing...');
       await getServerTime();
-      debugPrint('ServerTimeService initialized');
+      LoggerService.i('ServerTimeService initialized');
     } catch (e) {
-      debugPrint('ServerTimeService initialization failed: $e');
+      LoggerService.e('ServerTimeService initialization failed: $e');
     }
   }
 }

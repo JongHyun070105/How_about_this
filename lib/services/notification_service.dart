@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -75,7 +76,7 @@ class NotificationService {
 
   /// 알림 탭 시 처리
   void _onNotificationTapped(NotificationResponse response) {
-    debugPrint('알림 탭됨: ${response.payload}');
+    LoggerService.d('알림 탭됨: ${response.payload}');
     // 앱이 열리면 자동으로 메인 화면으로 이동
   }
 
@@ -246,7 +247,7 @@ class NotificationService {
       matchDateTimeComponents: DateTimeComponents.time, // 매일 반복
     );
 
-    debugPrint('알림 예약됨: $title at $hour:$minute');
+    LoggerService.d('알림 예약됨: $title at $hour:$minute');
   }
 
   /// 다음 알림 시간 계산

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 class NetworkUtils {
   static Future<bool> checkInternetConnectivity() async {
@@ -24,7 +25,7 @@ class NetworkUtils {
     } on SocketException catch (_) {
       return false; // 인터넷 접근 불가
     } catch (e) {
-      debugPrint('Error checking internet connectivity: $e');
+      LoggerService.e('Error checking internet connectivity: $e');
       return false;
     }
   }

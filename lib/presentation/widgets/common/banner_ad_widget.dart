@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 class BannerAdWidget extends StatefulWidget {
   final String adUnitId;
@@ -37,7 +38,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
           });
         },
         onAdFailedToLoad: (ad, error) {
-          debugPrint('BannerAd failed to load: $error');
+          LoggerService.e('BannerAd failed to load: $error');
           ad.dispose();
           if (mounted) {
             setState(() {
