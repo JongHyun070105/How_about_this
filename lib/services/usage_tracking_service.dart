@@ -2,6 +2,7 @@ import 'package:review_ai/services/persistent_storage_service.dart';
 import 'package:review_ai/services/server_time_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:review_ai/services/remote_config_service.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 class UsageTrackingService {
   final RemoteConfigService _remoteConfigService;
@@ -40,7 +41,7 @@ class UsageTrackingService {
       if (lastAccessTimestamp != null &&
           serverTimestamp < lastAccessTimestamp) {
         final diff = lastAccessTimestamp - serverTimestamp;
-        debugPrint(
+        LoggerService.d(
           'Time manipulation detected! Last access was ${diff}ms in the future',
         );
       }
@@ -79,11 +80,11 @@ class UsageTrackingService {
         serverTimestamp,
       );
 
-      debugPrint(
+      LoggerService.d(
         'Usage counts reset for new day: ${serverDate.toIso8601String()}',
       );
     } catch (e) {
-      debugPrint('Error in _resetCountsIfNewDay: $e');
+      LoggerService.e('Error in _resetCountsIfNewDay: $e');
       // 에러 발생 시 로컬 시간 사용 (폴백)
       final now = DateTime.now();
       final lastResetDateStr = await _storageService.getValue<String>(

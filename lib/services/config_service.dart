@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 /// 동적 설정 서비스 (AdMob ID, Clarity ID, Firebase 키 등)
 class ConfigService {
@@ -20,7 +21,7 @@ class ConfigService {
     try {
       // 캐시된 설정 확인
       if (_cachedConfig != null) {
-        debugPrint('Using cached AdMob config');
+        LoggerService.d('Using cached AdMob config');
         return _cachedConfig!;
       }
 
@@ -36,16 +37,16 @@ class ConfigService {
           // firebase 블록이 없다면 구버전 캐시이므로 무시하고 다시 가져옴
           if (decodedCache['firebase'] != null) {
             _cachedConfig = decodedCache;
-            debugPrint('Loaded AdMob config from local cache');
+            LoggerService.i('Loaded AdMob config from local cache');
             return _cachedConfig!;
           } else {
-            debugPrint('Cache ignored: missing firebase config');
+            LoggerService.w('Cache ignored: missing firebase config');
           }
         }
       }
 
       // 서버에서 새 설정 가져오기
-      debugPrint('Fetching AdMob config from server');
+      LoggerService.d('Fetching AdMob config from server');
       final response = await http
           .get(Uri.parse('${ApiConfig.proxyUrl}/api/config'))
           .timeout(const Duration(seconds: 10));
@@ -61,19 +62,19 @@ class ConfigService {
         );
 
         _cachedConfig = config;
-        debugPrint('AdMob config fetched and cached');
+        LoggerService.d('AdMob config fetched and cached');
         return config;
       } else {
         throw Exception('Failed to fetch config: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('ConfigService error: $e');
+      LoggerService.e('ConfigService error: $e');
 
       // 에러 발생 시 로컬 캐시 사용 (만료되었어도)
       final prefs = await SharedPreferences.getInstance();
       final cachedData = prefs.getString(_cacheKey);
       if (cachedData != null) {
-        debugPrint('Using expired cache due to error');
+        LoggerService.e('Using expired cache due to error');
         return jsonDecode(cachedData);
       }
 
@@ -97,24 +98,24 @@ class ConfigService {
       final adMobConfig = config['adMob'] as Map<String, dynamic>?;
 
       if (adMobConfig == null) {
-        debugPrint('AdMob config not found');
+        LoggerService.d('AdMob config not found');
         return '';
       }
 
       final platformConfig = adMobConfig[platform] as Map<String, dynamic>?;
       if (platformConfig == null) {
-        debugPrint('Platform config not found for $platform');
+        LoggerService.d('Platform config not found for $platform');
         return '';
       }
 
       final adUnitId = platformConfig[adType] as String? ?? '';
-      debugPrint(
+      LoggerService.i(
         'AdMob $platform $adType ID: ${adUnitId.isEmpty ? "empty" : "loaded"}',
       );
 
       return adUnitId;
     } catch (e) {
-      debugPrint('Error getting AdMob ID: $e');
+      LoggerService.e('Error getting AdMob ID: $e');
       return '';
     }
   }
@@ -122,18 +123,18 @@ class ConfigService {
   /// 캐시 초기화 (앱 시작 시 백그라운드에서 실행)
   static Future<void> initialize() async {
     try {
-      debugPrint('ConfigService initializing...');
+      LoggerService.d('ConfigService initializing...');
 
       // 백그라운드에서 설정 가져오기
       getAdMobConfig()
           .then((_) {
-            debugPrint('ConfigService initialized');
+            LoggerService.i('ConfigService initialized');
           })
           .catchError((e) {
-            debugPrint('ConfigService initialization failed: $e');
+            LoggerService.e('ConfigService initialization failed: $e');
           });
     } catch (e) {
-      debugPrint('ConfigService initialization error: $e');
+      LoggerService.e('ConfigService initialization error: $e');
     }
   }
 
@@ -143,7 +144,7 @@ class ConfigService {
       final config = await getAdMobConfig();
       return (config['clarityProjectId'] as String?) ?? _defaultClarityId;
     } catch (e) {
-      debugPrint('Error getting Clarity ID: $e');
+      LoggerService.e('Error getting Clarity ID: $e');
       return _defaultClarityId;
     }
   }
@@ -157,7 +158,7 @@ class ConfigService {
       return firebaseConfig['apiKey${platform == 'android' ? 'Android' : 'Ios'}']
           as String?;
     } catch (e) {
-      debugPrint('Error getting Firebase API key: $e');
+      LoggerService.e('Error getting Firebase API key: $e');
       return null;
     }
   }
@@ -168,6 +169,6 @@ class ConfigService {
     await prefs.remove(_cacheKey);
     await prefs.remove(_cacheTimeKey);
     _cachedConfig = null;
-    debugPrint('ConfigService cache cleared');
+    LoggerService.d('ConfigService cache cleared');
   }
 }

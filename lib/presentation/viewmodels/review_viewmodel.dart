@@ -9,6 +9,7 @@ import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/presentation/providers/dependency_injection.dart';
 import 'package:review_ai/presentation/widgets/common/app_dialogs.dart';
 import 'package:review_ai/presentation/providers/app_providers.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 class ReviewViewModel extends StateNotifier<ReviewState> {
   final Ref _ref;
@@ -80,21 +81,21 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
 
     final adShown = await adServiceNotifier.showAdWithRetry(
       onUserEarnedReward: () {
-        debugPrint('보상 획득 콜백 실행됨');
+        LoggerService.d('보상 획득 콜백 실행됨');
         _rewardEarned = true;
       },
       onAdFailedToLoad: (message) {
-        debugPrint('광고 로딩 실패: $message');
+        LoggerService.e('광고 로딩 실패: $message');
       },
     );
 
     if (!context.mounted) return;
 
     if (adShown && _rewardEarned) {
-      debugPrint('광고 시청 완료 - 리뷰 생성 시작');
+      LoggerService.i('광고 시청 완료 - 리뷰 생성 시작');
       await _generateReviewsAfterAd(context);
     } else {
-      debugPrint('광고 실패 또는 보상 미획득 - 리뷰 생성 중단');
+      LoggerService.e('광고 실패 또는 보상 미획득 - 리뷰 생성 중단');
       if (!context.mounted) return;
 
       showAppDialog(
@@ -114,7 +115,7 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
     if (!context.mounted) return;
 
     try {
-      debugPrint('리뷰 생성 시작');
+      LoggerService.d('리뷰 생성 시작');
 
       // ReviewProvider에서 상태 가져오기
       final reviewState = _ref.read(reviewProvider);
@@ -129,13 +130,13 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
         foodImage: reviewState.image,
       );
 
-      debugPrint('생성된 리뷰 개수: ${reviews.length}');
+      LoggerService.d('생성된 리뷰 개수: ${reviews.length}');
 
       _ref.read(reviewProvider.notifier).setGeneratedReviews(reviews);
 
       if (_isSuccessfulGeneration(reviews)) {
         await _updateUsageTracking();
-        debugPrint('리뷰 생성 성공 - 화면 전환 준비');
+        LoggerService.i('리뷰 생성 성공 - 화면 전환 준비');
       } else {
         if (!context.mounted) return;
         showAppDialog(
@@ -145,7 +146,7 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
         );
       }
     } catch (e) {
-      debugPrint('리뷰 생성 중 오류: $e');
+      LoggerService.e('리뷰 생성 중 오류: $e');
       if (context.mounted) {
         _handleGenerationError(context, e);
       }
@@ -158,7 +159,7 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
     try {
       return await _generateReviewUseCase.repository.validateImage(image);
     } catch (e) {
-      debugPrint('Image validation error: $e');
+      LoggerService.e('Image validation error: $e');
       return false;
     }
   }
@@ -167,12 +168,12 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
     try {
       final usageTrackingService = _ref.read(usageTrackingServiceProvider);
       await usageTrackingService.incrementReviewCount();
-      debugPrint('사용량 추적 업데이트 완료');
+      LoggerService.i('사용량 추적 업데이트 완료');
 
       // AI 리뷰 생성이 성공했을 때 인앱 리뷰 요청 로직 트리거
       await _ref.read(appReviewServiceProvider).onReviewGenerated();
     } catch (e) {
-      debugPrint('사용량 추적 업데이트 오류: $e');
+      LoggerService.e('사용량 추적 업데이트 오류: $e');
     }
   }
 
@@ -205,7 +206,7 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
     if (!context.mounted) return;
 
     final errorString = error.toString().toLowerCase();
-    debugPrint("리뷰 생성 오류 상세: $error");
+    LoggerService.e("리뷰 생성 오류 상세: $error");
 
     String userMessage;
     if (error is NetworkException ||

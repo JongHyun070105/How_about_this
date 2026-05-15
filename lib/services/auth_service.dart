@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -13,7 +14,7 @@ import 'package:uuid/uuid.dart';
 
 void _debugLog(String message) {
   if (kDebugMode) {
-    debugPrint(message);
+    LoggerService.d(message);
   }
 }
 

@@ -1,39 +1,40 @@
-import 'dart:convert';
 import 'package:review_ai/utils/gemini_response_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/core/exceptions.dart';
 import 'package:review_ai/services/api_proxy_service.dart';
 import 'package:review_ai/config/api_config.dart';
+import 'package:review_ai/data/datasources/recommendation_local_data_source.dart';
 import 'user_preference_service.dart';
 import 'dart:math';
+import 'package:review_ai/core/utils/logger_service.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/services/weather_service.dart';
 
 class RecommendationService {
-  static const String _cacheKeyPrefix = 'recommendation_cache_';
-  static const Duration _cacheExpiration = Duration(hours: 1);
-
   // HTTP Client 싱글톤 (재사용)
   static final http.Client _httpClient = http.Client();
+  static final RecommendationLocalDataSource _localDataSource =
+      RecommendationLocalDataSourceImpl();
 
   static Future<List<FoodRecommendation>> getFoodRecommendations({
     required String category,
   }) async {
     final normalizedCategory = category.trim();
-    final cacheKey = '$_cacheKeyPrefix$normalizedCategory';
 
-    final cachedData = await _getFromCache(cacheKey);
+    // 캐시 확인 (RecommendationLocalDataSource에 위임)
+    final cachedData = await _localDataSource.getCachedRecommendations(
+      normalizedCategory,
+    );
     if (cachedData != null) {
-      debugPrint(
+      LoggerService.d(
         'Serving recommendation from cache for category: [$normalizedCategory]',
       );
       return cachedData;
     }
 
-    debugPrint(
+    LoggerService.d(
       'Cache miss for category: [$normalizedCategory]. Fetching from API.',
     );
 
@@ -48,7 +49,7 @@ class RecommendationService {
         .toSet() // 중복 제거
         .toList();
 
-    debugPrint('Recent foods (last 7 days): ${recentFoods.length} items');
+    LoggerService.d('Recent foods (last 7 days): ${recentFoods.length} items');
 
     // 개인화 추천 사용 (타 카테고리 혼동 방지)
     final prompt = await apiProxyService.buildPersonalizedRecommendationPrompt(
@@ -64,12 +65,16 @@ class RecommendationService {
         response,
       );
 
-      await _saveToCache(cacheKey, recommendations);
+      // 캐시 저장 (RecommendationLocalDataSource에 위임)
+      await _localDataSource.cacheRecommendations(
+        normalizedCategory,
+        recommendations,
+      );
 
       return recommendations;
     } catch (e, stackTrace) {
-      debugPrint('Gemini API 호출 또는 파싱 오류: $e');
-      debugPrint('Stack trace: $stackTrace');
+      LoggerService.e('Gemini API 호출 또는 파싱 오류: $e');
+      LoggerService.d('Stack trace: $stackTrace');
 
       if (e is NetworkException) {
         throw NetworkException('네트워크 연결을 확인해주세요.');
@@ -79,86 +84,6 @@ class RecommendationService {
         rethrow; // 이미 적절한 메시지가 있으므로 그대로 전달
       }
       throw ApiException('음식 추천을 받아오는 데 실패했습니다.');
-    }
-  }
-
-  static Future<void> _saveToCache(
-    String key,
-    List<FoodRecommendation> data,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // 카테고리 정보를 포함한 캐시 데이터 구조
-    final cacheData = {
-      'category': key.replaceFirst(_cacheKeyPrefix, ''),
-      'data': data.map((e) => e.toJson()).toList(),
-      'cachedAt': DateTime.now().toIso8601String(),
-    };
-
-    final encodedData = jsonEncode(cacheData);
-    final expirationTime = DateTime.now()
-        .add(_cacheExpiration)
-        .toIso8601String();
-
-    await prefs.setString(key, encodedData);
-    await prefs.setString('${key}_expiry', expirationTime);
-
-    debugPrint('Cache saved for category: ${cacheData['category']}');
-  }
-
-  static Future<List<FoodRecommendation>?> _getFromCache(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    final encodedData = prefs.getString(key);
-    final expiryTimeStr = prefs.getString('${key}_expiry');
-
-    if (encodedData == null || expiryTimeStr == null) {
-      return null;
-    }
-
-    final expiryTime = DateTime.parse(expiryTimeStr);
-    if (DateTime.now().isAfter(expiryTime)) {
-      await prefs.remove(key);
-      await prefs.remove('${key}_expiry');
-      return null;
-    }
-
-    try {
-      final decoded = jsonDecode(encodedData);
-
-      // 새로운 캐시 구조 (카테고리 정보 포함)
-      if (decoded is Map<String, dynamic> && decoded.containsKey('category')) {
-        final cachedCategory = decoded['category'] as String;
-        final requestedCategory = key.replaceFirst(_cacheKeyPrefix, '');
-
-        // 카테고리 불일치 검증
-        if (cachedCategory != requestedCategory) {
-          debugPrint(
-            'Cache category mismatch! Cached: $cachedCategory, Requested: $requestedCategory',
-          );
-          await prefs.remove(key);
-          await prefs.remove('${key}_expiry');
-          return null;
-        }
-
-        final dataList = decoded['data'] as List;
-        debugPrint(
-          'Cache hit for category: $cachedCategory (${dataList.length} items)',
-        );
-        return dataList
-            .map((item) => FoodRecommendation.fromJson(item))
-            .toList();
-      }
-
-      // 구버전 캐시 구조 (하위 호환성) - 삭제하고 새로 가져오기
-      debugPrint('Old cache format detected, clearing...');
-      await prefs.remove(key);
-      await prefs.remove('${key}_expiry');
-      return null;
-    } catch (e) {
-      debugPrint('Error decoding cached data: $e');
-      await prefs.remove(key);
-      await prefs.remove('${key}_expiry');
-      return null;
     }
   }
 
@@ -185,7 +110,7 @@ class RecommendationService {
 
     // 필터링 후 남은 음식이 없으면 단계적으로 완화
     if (available.isEmpty) {
-      debugPrint(
+      LoggerService.d(
         'No foods after filtering recent and disliked. Relaxing filters...',
       );
       // 1단계: 최근 음식만 제외하고 다시 시도
@@ -195,7 +120,9 @@ class RecommendationService {
 
       // 2단계: 그래도 없으면 모든 필터 제거
       if (available.isEmpty) {
-        debugPrint('No foods after removing disliked filter. Using all foods.');
+        LoggerService.d(
+          'No foods after removing disliked filter. Using all foods.',
+        );
         available = List.from(foods);
       }
     }

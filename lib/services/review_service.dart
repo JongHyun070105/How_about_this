@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,14 +24,14 @@ class ReviewService {
     if (imageFile == null || !await imageFile.exists()) return null;
 
     try {
-      debugPrint('이미지 최적화 시작: ${imageFile.path}');
+      LoggerService.d('이미지 최적화 시작: ${imageFile.path}');
 
       // 파일 읽기는 메인 isolate에서, 무거운 디코드/리사이즈/인코드는 background isolate에서 처리
       final bytes = await imageFile.readAsBytes();
       final optimizedBytes = await optimizeUploadedImageBytes(bytes);
 
       if (optimizedBytes == null) {
-        debugPrint('이미지 최적화 불필요 (크기 적절함 또는 디코딩 실패)');
+        LoggerService.e('이미지 최적화 불필요 (크기 적절함 또는 디코딩 실패)');
         return imageFile;
       }
 
@@ -40,10 +41,10 @@ class ReviewService {
       );
       await tempFile.writeAsBytes(optimizedBytes, flush: true);
 
-      debugPrint('이미지 최적화 완료: ${imageFile.path} -> ${tempFile.path}');
+      LoggerService.i('이미지 최적화 완료: ${imageFile.path} -> ${tempFile.path}');
       return tempFile;
     } catch (e) {
-      debugPrint('이미지 최적화 실패: $e');
+      LoggerService.e('이미지 최적화 실패: $e');
       return imageFile; // 최적화 실패시 원본 반환
     }
   }
@@ -54,7 +55,7 @@ class ReviewService {
   }) async {
     try {
       onProgress?.call('리뷰 생성 준비 중...');
-      debugPrint('리뷰 생성 시작');
+      LoggerService.d('리뷰 생성 시작');
 
       final apiProxyService = _ref.read(geminiServiceProvider);
       final reviewState = _ref.read(reviewProvider);
@@ -83,7 +84,7 @@ class ReviewService {
       }
 
       onProgress?.call('AI 분석 중... (최대 45초 소요)');
-      debugPrint('Gemini API 호출 시작');
+      LoggerService.d('Gemini API 호출 시작');
 
       // 타임아웃 설정된 API 호출 (.timeout() 사용으로 미완료 Future 방지)
       const timeoutDuration = Duration(seconds: 45);
@@ -108,17 +109,17 @@ class ReviewService {
       if (optimizedImage != null && optimizedImage != reviewState.image) {
         try {
           await optimizedImage.delete();
-          debugPrint('임시 최적화 이미지 파일 삭제 완료');
+          LoggerService.i('임시 최적화 이미지 파일 삭제 완료');
         } catch (e) {
-          debugPrint('임시 파일 삭제 실패: $e');
+          LoggerService.e('임시 파일 삭제 실패: $e');
         }
       }
 
-      debugPrint('리뷰 생성 완료: ${reviews.length}개');
+      LoggerService.i('리뷰 생성 완료: ${reviews.length}개');
       onProgress?.call('리뷰 생성 완료!');
       return reviews;
     } catch (e) {
-      debugPrint('리뷰 생성 오류: $e');
+      LoggerService.e('리뷰 생성 오류: $e');
       rethrow;
     }
   }

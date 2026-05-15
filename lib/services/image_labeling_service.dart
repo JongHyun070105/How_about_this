@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/services/api_proxy_service.dart';
 import 'package:review_ai/config/api_config.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 class ImageLabelingService {
   final ApiProxyService _apiProxyService;
@@ -21,7 +22,7 @@ class ImageLabelingService {
       }
       return [foodName];
     } catch (e) {
-      debugPrint('Vision AI Error: $e');
+      LoggerService.e('Vision AI Error: $e');
       return [];
     }
   }

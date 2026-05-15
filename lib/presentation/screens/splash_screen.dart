@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 import '../../core/app_initializer.dart';
 import '../../config/security_config.dart';
@@ -122,7 +123,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         );
       }
     } catch (e) {
-      debugPrint(
+      LoggerService.e(
         '초기화 중 오류: ${SecurityConfig.sanitizeErrorMessage(e.toString())}',
       );
       if (mounted) {
@@ -192,7 +193,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           await NotificationService().updatePersonalizedMessages(history);
         }
       } catch (e) {
-        debugPrint('Notification update failed: $e');
+        LoggerService.e('Notification update failed: $e');
       }
     });
   }
@@ -219,7 +220,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           }
         }
       } catch (e) {
-        debugPrint('Update check error: $e');
+        LoggerService.e('Update check error: $e');
       }
     });
   }

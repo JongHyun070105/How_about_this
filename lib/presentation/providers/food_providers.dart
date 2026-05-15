@@ -4,6 +4,7 @@ import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/services/user_preference_service.dart';
 import 'package:review_ai/presentation/providers/dependency_injection.dart';
 import 'package:flutter/material.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 // =============================================================================
 // StateNotifier 클래스들
@@ -177,7 +178,7 @@ final recommendationProvider = FutureProvider.autoDispose
         return recommendations;
       } catch (e) {
         // 에러 로깅 (배포 시 적절한 로깅 시스템 사용)
-        debugPrint('음식 추천 가져오기 실패: $e');
+        LoggerService.e('음식 추천 가져오기 실패: $e');
         throw Exception('음식 추천을 가져오는데 실패했습니다.');
       }
     });

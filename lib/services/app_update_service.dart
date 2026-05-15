@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_update/in_app_update.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 class AppUpdateService {
   static const String _updateUrl =
@@ -36,10 +37,10 @@ class AppUpdateService {
         }
       } else {
         // 업데이트 정보 가져오기 실패
-        debugPrint('Failed to fetch update info: ${response.statusCode}');
+        LoggerService.e('Failed to fetch update info: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error checking for update: $e');
+      LoggerService.e('Error checking for update: $e');
     }
     return null;
   }
@@ -72,7 +73,7 @@ class AppUpdateService {
 
       // 업데이트가 가능할 때 Flexible 다운로드 시작
       if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
-        debugPrint(
+        LoggerService.d(
           'AppUpdateService: Update available. Starting flexible update.',
         );
         await InAppUpdate.startFlexibleUpdate();
@@ -80,10 +81,10 @@ class AppUpdateService {
         // 다운로드 완료 시 설치 유도
         await InAppUpdate.completeFlexibleUpdate();
       } else {
-        debugPrint('AppUpdateService: No in-app update available.');
+        LoggerService.d('AppUpdateService: No in-app update available.');
       }
     } catch (e) {
-      debugPrint('AppUpdateService: Error checking for in-app update: $e');
+      LoggerService.e('AppUpdateService: Error checking for in-app update: $e');
     }
   }
 }

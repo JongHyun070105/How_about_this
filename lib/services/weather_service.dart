@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:review_ai/config/environment_config.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 enum WeatherCondition {
   clear,
@@ -31,12 +32,12 @@ class WeatherService {
           return _mapWeatherCondition(main);
         }
       } else {
-        debugPrint(
+        LoggerService.e(
           'Weather API Error: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
-      debugPrint('Weather Service Error: $e');
+      LoggerService.e('Weather Service Error: $e');
     }
     return WeatherCondition.unknown;
   }

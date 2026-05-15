@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:review_ai/presentation/screens/security_block_screen.dart';
 import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 // Added url_launcher import
 import 'app_constants.dart';
 import 'environment_config.dart';
@@ -59,11 +60,11 @@ class SecurityConfig {
 
   static void logAdConfiguration() {
     if (shouldLogDetailed) {
-      debugPrint('=== 광고 설정 상태 ===');
-      debugPrint('테스트 모드: 활성');
-      debugPrint('리워드 광고 ID: $rewardedAdUnitId');
-      debugPrint('배너 광고 ID: $bannerAdUnitId');
-      debugPrint('==================');
+      LoggerService.d('=== 광고 설정 상태 ===');
+      LoggerService.d('테스트 모드: 활성');
+      LoggerService.d('리워드 광고 ID: $rewardedAdUnitId');
+      LoggerService.d('배너 광고 ID: $bannerAdUnitId');
+      LoggerService.d('==================');
     }
   }
 
@@ -86,7 +87,7 @@ class SecurityConfig {
   /// flutter_jailbreak_detection 패키지를 활용한 루팅/탈옥 탐지
   static Future<bool> detectRootingOrJailbreak() async {
     if (kDebugMode) {
-      debugPrint(
+      LoggerService.w(
         'SECURITY WARNING: Jailbreak detection is disabled in debug mode.',
       );
       return false;
@@ -95,7 +96,7 @@ class SecurityConfig {
     try {
       return await FlutterJailbreakDetection.jailbroken;
     } catch (e) {
-      debugPrint('Jailbreak detection error: $e');
+      LoggerService.e('Jailbreak detection error: $e');
       return false;
     }
   }
@@ -105,7 +106,7 @@ class SecurityConfig {
       // developerMode는 Android의 경우 개발자 모드나 에뮬레이터 등을 감지하는 데 활용됩니다.
       return await FlutterJailbreakDetection.developerMode;
     } catch (e) {
-      debugPrint('Emulator detection error: $e');
+      LoggerService.e('Emulator detection error: $e');
       return false;
     }
   }
@@ -116,7 +117,7 @@ class SecurityInitializer {
 
   static Future<void> initialize() async {
     // API 키는 이제 서버에서 관리되므로 초기화 로직 제거
-    debugPrint('SecurityConfig initialized - API key managed on server');
+    LoggerService.i('SecurityConfig initialized - API key managed on server');
   }
 
   static Future<SecurityCheckResult> performRuntimeSecurityCheck() async {

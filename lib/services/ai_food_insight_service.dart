@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -55,7 +56,7 @@ class AiFoodInsightService {
         return AiInsightResult(message: insight, isAi: true);
       }
     } catch (e) {
-      debugPrint('AI 인사이트 요청 실패, 로컬 폴백: $e');
+      LoggerService.e('AI 인사이트 요청 실패, 로컬 폴백: $e');
     }
 
     // 폴백: 로컬 템플릿 기반 메시지
@@ -108,13 +109,13 @@ class AiFoodInsightService {
 
       if (insight != null && insight.isNotEmpty) {
         if (kDebugMode) {
-          debugPrint('AI 인사이트 수신 (캐시: ${data['cached']}): $insight');
+          LoggerService.d('AI 인사이트 수신 (캐시: ${data['cached']}): $insight');
         }
         return insight;
       }
     }
 
-    debugPrint('AI 인사이트 응답 실패: ${response.statusCode}');
+    LoggerService.e('AI 인사이트 응답 실패: ${response.statusCode}');
     return null;
   }
 
