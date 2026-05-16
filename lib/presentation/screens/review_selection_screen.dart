@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -112,7 +113,10 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
             SizedBox(height: responsive.verticalSpacing()),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('뒤로 가기', style: TextStyle(fontFamily: 'Do Hyeon')),
+              child: const Text(
+                '뒤로 가기',
+                style: TextStyle(fontFamily: 'Do Hyeon'),
+              ),
             ),
           ],
         ),
@@ -225,7 +229,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
               responsive: responsive,
               textTheme: textTheme,
               onTap: () => setState(() {
-                HapticFeedback.lightImpact();
+                unawaited(HapticFeedback.lightImpact());
                 selectedReviewIndex = isSelected ? null : index;
               }),
               onEdit: () =>
@@ -268,7 +272,7 @@ class _ReviewSelectionScreenState extends ConsumerState<ReviewSelectionScreen> {
 
       await ref.read(reviewHistoryProvider.notifier).addReview(newEntry);
       await Clipboard.setData(ClipboardData(text: selectedReviewText));
-      HapticFeedback.mediumImpact();
+      unawaited(HapticFeedback.mediumImpact());
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

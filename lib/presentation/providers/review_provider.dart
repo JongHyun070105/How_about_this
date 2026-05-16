@@ -72,7 +72,7 @@ class ReviewHistoryEntry {
 }
 
 class ReviewNotifier extends StateNotifier<ReviewState> {
-  ReviewNotifier() : super(ReviewState());
+  ReviewNotifier() : super(const ReviewState());
 
   void setImage(File? image) {
     state = state.copyWith(image: image);
@@ -123,7 +123,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
   }
 
   void reset() {
-    state = ReviewState();
+    state = const ReviewState();
   }
 }
 
@@ -173,10 +173,10 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
 
   Future<void> addReview(ReviewHistoryEntry newEntry) async {
     try {
-      List<ReviewHistoryEntry> currentHistory = [...state];
+      final List<ReviewHistoryEntry> currentHistory = [...state];
 
       final now = DateTime.now();
-      bool isDuplicate = currentHistory.any((entry) {
+      final bool isDuplicate = currentHistory.any((entry) {
         final timeDiff = now.difference(entry.createdAt).inMinutes;
         return timeDiff <= 1 &&
             entry.foodName == newEntry.foodName &&
@@ -207,7 +207,7 @@ class ReviewHistoryNotifier extends StateNotifier<List<ReviewHistoryEntry>> {
 
   Future<void> deleteReview(DateTime createdAt) async {
     try {
-      List<ReviewHistoryEntry> currentHistory = [...state];
+      final List<ReviewHistoryEntry> currentHistory = [...state];
       currentHistory.removeWhere((entry) => entry.createdAt == createdAt);
 
       final historyJson = currentHistory

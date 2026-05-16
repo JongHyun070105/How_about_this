@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/presentation/screens/restaurant_search_screen.dart';
@@ -84,11 +85,13 @@ class RecommendationDialogButtons extends StatelessWidget {
             );
             if (!context.mounted) return;
             Navigator.of(context).pop('search');
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => RestaurantSearchScreen(
-                  foodName: recommended.name,
-                  category: category,
+            unawaited(
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => RestaurantSearchScreen(
+                    foodName: recommended.name,
+                    category: category,
+                  ),
                 ),
               ),
             );

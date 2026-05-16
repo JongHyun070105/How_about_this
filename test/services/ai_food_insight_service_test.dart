@@ -25,14 +25,14 @@ ReviewHistoryEntry _createEntry({
 void main() {
   group('AiInsightResult', () {
     test('AI 인사이트 결과 생성', () {
-      final result = AiInsightResult(message: 'AI가 생성한 인사이트', isAi: true);
+      const result = AiInsightResult(message: 'AI가 생성한 인사이트', isAi: true);
 
       expect(result.message, 'AI가 생성한 인사이트');
       expect(result.isAi, true);
     });
 
     test('로컬 폴백 결과 생성', () {
-      final result = AiInsightResult(message: '로컬 메시지', isAi: false);
+      const result = AiInsightResult(message: '로컬 메시지', isAi: false);
 
       expect(result.message, '로컬 메시지');
       expect(result.isAi, false);

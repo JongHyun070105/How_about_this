@@ -12,7 +12,7 @@ class FakeLocationService implements LocationService {
 
   @override
   Future<UserLocation?> getCurrentLocation() async {
-    if (shouldThrow) throw UserPermissionDeniedException('Denied');
+    if (shouldThrow) throw const UserPermissionDeniedException('Denied');
     return mockLocation;
   }
 

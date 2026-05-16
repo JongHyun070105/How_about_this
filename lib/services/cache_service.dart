@@ -79,9 +79,9 @@ class CacheService {
 
   /// 바이트를 MB 단위 문자열로 변환하는 유틸리티
   String formatBytesToMB(int bytes) {
-    if (bytes <= 0) return "0 MB";
+    if (bytes <= 0) return '0 MB';
     final double mb = bytes / (1024 * 1024);
-    if (mb < 0.1) return "< 0.1 MB"; // 너무 작으면
-    return "${mb.toStringAsFixed(1)} MB";
+    if (mb < 0.1) return '< 0.1 MB'; // 너무 작으면
+    return '${mb.toStringAsFixed(1)} MB';
   }
 }

@@ -148,7 +148,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
           children: [
             CircularProgressIndicator.adaptive(),
             SizedBox(width: 20),
-            Text("불러오는 중...", style: TextStyle(fontFamily: 'Do Hyeon')),
+            Text('불러오는 중...', style: TextStyle(fontFamily: 'Do Hyeon')),
           ],
         ),
       ),
@@ -204,7 +204,7 @@ class _UserStatsDialogState extends ConsumerState<UserStatsDialog> {
                 ),
                 Expanded(
                   child: Text(
-                    _currentPage == 0 ? "통계" : "카테고리별 선호도",
+                    _currentPage == 0 ? '통계' : '카테고리별 선호도',
                     style: TextStyle(
                       fontFamily: 'Do Hyeon',
                       fontSize: 12,

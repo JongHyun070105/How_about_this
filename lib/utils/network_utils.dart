@@ -2,7 +2,6 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
 
 class NetworkUtils {

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:review_ai/core/utils/logger_service.dart';
 
-import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/config/security_config.dart';

@@ -115,7 +115,7 @@ class TodayRecommendationViewModel extends StateNotifier<bool> {
     if (!context.mounted) return;
 
     final errorString = error.toString().toLowerCase();
-    LoggerService.e("음식 추천 오류 발생", error);
+    LoggerService.e('음식 추천 오류 발생', error);
 
     String userMessage;
     if (error is NetworkException ||

@@ -79,7 +79,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           isConnected = await _checkInternetConnectivity();
           retryCount++;
         } else {
-          SystemNavigator.pop();
+          unawaited(SystemNavigator.pop());
         }
       }
 
@@ -108,17 +108,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
 
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                hasSeenOnboarding
-                ? const TodayRecommendationScreen()
-                : const OnboardingScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-            transitionDuration: const Duration(milliseconds: 800),
+        unawaited(
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  hasSeenOnboarding
+                  ? const TodayRecommendationScreen()
+                  : const OnboardingScreen(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+              transitionDuration: const Duration(milliseconds: 800),
+            ),
           ),
         );
       }

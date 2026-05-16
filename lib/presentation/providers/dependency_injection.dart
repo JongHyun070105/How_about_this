@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:http/http.dart' as http;
 import '../../data/datasources/gemini_remote_data_source.dart';
@@ -17,43 +18,37 @@ part 'dependency_injection.g.dart';
 // ── 데이터 소스 ──
 
 @riverpod
-http.Client httpClient(HttpClientRef ref) => http.Client();
+http.Client httpClient(Ref ref) => http.Client();
 
 @riverpod
-ApiProxyService apiProxyService(ApiProxyServiceRef ref) {
+ApiProxyService apiProxyService(Ref ref) {
   return ApiProxyService(ref.read(httpClientProvider), ApiConfig.proxyUrl);
 }
 
 @riverpod
-GeminiRemoteDataSource geminiRemoteDataSource(GeminiRemoteDataSourceRef ref) {
+GeminiRemoteDataSource geminiRemoteDataSource(Ref ref) {
   return GeminiRemoteDataSourceImpl(ref.read(apiProxyServiceProvider));
 }
 
 @riverpod
-RecommendationRemoteDataSource recommendationRemoteDataSource(
-  RecommendationRemoteDataSourceRef ref,
-) {
+RecommendationRemoteDataSource recommendationRemoteDataSource(Ref ref) {
   return RecommendationRemoteDataSourceImpl(ref.read(apiProxyServiceProvider));
 }
 
 @riverpod
-RecommendationLocalDataSource recommendationLocalDataSource(
-  RecommendationLocalDataSourceRef ref,
-) {
+RecommendationLocalDataSource recommendationLocalDataSource(Ref ref) {
   return RecommendationLocalDataSourceImpl();
 }
 
 // ── 리포지토리 ──
 
 @riverpod
-ReviewRepository reviewRepository(ReviewRepositoryRef ref) {
+ReviewRepository reviewRepository(Ref ref) {
   return ReviewRepositoryImpl(ref.read(geminiRemoteDataSourceProvider));
 }
 
 @riverpod
-RecommendationRepository recommendationRepository(
-  RecommendationRepositoryRef ref,
-) {
+RecommendationRepository recommendationRepository(Ref ref) {
   return RecommendationRepositoryImpl(
     remoteDataSource: ref.read(recommendationRemoteDataSourceProvider),
     localDataSource: ref.read(recommendationLocalDataSourceProvider),
@@ -63,13 +58,11 @@ RecommendationRepository recommendationRepository(
 // ── 유스 케이스 ──
 
 @riverpod
-GenerateReviewUseCase generateReviewUseCase(GenerateReviewUseCaseRef ref) {
+GenerateReviewUseCase generateReviewUseCase(Ref ref) {
   return GenerateReviewUseCase(ref.read(reviewRepositoryProvider));
 }
 
 @riverpod
-GetRecommendationsUseCase getRecommendationsUseCase(
-  GetRecommendationsUseCaseRef ref,
-) {
+GetRecommendationsUseCase getRecommendationsUseCase(Ref ref) {
   return GetRecommendationsUseCase(ref.read(recommendationRepositoryProvider));
 }

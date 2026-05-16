@@ -6,7 +6,7 @@ part of 'dependency_injection.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$httpClientHash() => r'514f1fa634105c7b80c084a766e4cf2b3adf45d3';
+String _$httpClientHash() => r'7f0620a393673068316af3b9d3fe7fff063ec774';
 
 /// See also [httpClient].
 @ProviderFor(httpClient)
@@ -23,7 +23,7 @@ final httpClientProvider = AutoDisposeProvider<http.Client>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef HttpClientRef = AutoDisposeProviderRef<http.Client>;
-String _$apiProxyServiceHash() => r'92da5fc2cadc30795eec9fdbbd6a1f5e85121ef5';
+String _$apiProxyServiceHash() => r'664c99079648a9ea5ccd18845a72254efae7c3b4';
 
 /// See also [apiProxyService].
 @ProviderFor(apiProxyService)
@@ -41,7 +41,7 @@ final apiProxyServiceProvider = AutoDisposeProvider<ApiProxyService>.internal(
 // ignore: unused_element
 typedef ApiProxyServiceRef = AutoDisposeProviderRef<ApiProxyService>;
 String _$geminiRemoteDataSourceHash() =>
-    r'39e48d4899297e19a94756ec129dec33f5cb29e9';
+    r'2610979ee4dd7119de982fba7fc0a4d0c2702cc1';
 
 /// See also [geminiRemoteDataSource].
 @ProviderFor(geminiRemoteDataSource)
@@ -61,7 +61,7 @@ final geminiRemoteDataSourceProvider =
 typedef GeminiRemoteDataSourceRef =
     AutoDisposeProviderRef<GeminiRemoteDataSource>;
 String _$recommendationRemoteDataSourceHash() =>
-    r'4b3b73f42c59abc8f878e990449267192653137a';
+    r'1802f2b74c2b330af5594d538b3d0da5a65b0ce5';
 
 /// See also [recommendationRemoteDataSource].
 @ProviderFor(recommendationRemoteDataSource)
@@ -81,7 +81,7 @@ final recommendationRemoteDataSourceProvider =
 typedef RecommendationRemoteDataSourceRef =
     AutoDisposeProviderRef<RecommendationRemoteDataSource>;
 String _$recommendationLocalDataSourceHash() =>
-    r'0dc0f69c8606a21803b7c13644acc6d945cd9376';
+    r'98f145db5d11785b78da806b5914d4c93e6d5ebe';
 
 /// See also [recommendationLocalDataSource].
 @ProviderFor(recommendationLocalDataSource)
@@ -100,7 +100,7 @@ final recommendationLocalDataSourceProvider =
 // ignore: unused_element
 typedef RecommendationLocalDataSourceRef =
     AutoDisposeProviderRef<RecommendationLocalDataSource>;
-String _$reviewRepositoryHash() => r'eb497ad3e65355aa6cfde8daca59e336e861b8f5';
+String _$reviewRepositoryHash() => r'83ea17c37811b4f79fffd055e7baf7fdecd7b068';
 
 /// See also [reviewRepository].
 @ProviderFor(reviewRepository)
@@ -118,7 +118,7 @@ final reviewRepositoryProvider = AutoDisposeProvider<ReviewRepository>.internal(
 // ignore: unused_element
 typedef ReviewRepositoryRef = AutoDisposeProviderRef<ReviewRepository>;
 String _$recommendationRepositoryHash() =>
-    r'a6f33b1814342d0a0a092949367e94114010cb08';
+    r'a9d32ab626a412d720bf9b9422cd4b71a1258512';
 
 /// See also [recommendationRepository].
 @ProviderFor(recommendationRepository)
@@ -138,7 +138,7 @@ final recommendationRepositoryProvider =
 typedef RecommendationRepositoryRef =
     AutoDisposeProviderRef<RecommendationRepository>;
 String _$generateReviewUseCaseHash() =>
-    r'05e66f0ebf30c1d3ce4a2f83c3b74d180c14aa88';
+    r'e02193ce27c678543866fa7c262ba529969d751e';
 
 /// See also [generateReviewUseCase].
 @ProviderFor(generateReviewUseCase)
@@ -158,7 +158,7 @@ final generateReviewUseCaseProvider =
 typedef GenerateReviewUseCaseRef =
     AutoDisposeProviderRef<GenerateReviewUseCase>;
 String _$getRecommendationsUseCaseHash() =>
-    r'9438acfdb7b59fd3cfac9f6a7f280164a7cbe1ca';
+    r'2b2d20047ca31f2979b094271645e3d71ed5b271';
 
 /// See also [getRecommendationsUseCase].
 @ProviderFor(getRecommendationsUseCase)

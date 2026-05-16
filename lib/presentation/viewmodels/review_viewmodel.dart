@@ -206,7 +206,7 @@ class ReviewViewModel extends StateNotifier<ReviewState> {
     if (!context.mounted) return;
 
     final errorString = error.toString().toLowerCase();
-    LoggerService.e("리뷰 생성 오류 상세: $error");
+    LoggerService.e('리뷰 생성 오류 상세: $error');
 
     String userMessage;
     if (error is NetworkException ||

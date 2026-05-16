@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -164,11 +165,13 @@ class SecurityInitializer {
     }
 
     if (message.isNotEmpty) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => SecurityBlockScreen(message: message),
+      unawaited(
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => SecurityBlockScreen(message: message),
+          ),
+          (Route<dynamic> route) => false,
         ),
-        (Route<dynamic> route) => false,
       );
     }
   }

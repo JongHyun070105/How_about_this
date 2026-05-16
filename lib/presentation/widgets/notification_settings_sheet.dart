@@ -30,7 +30,7 @@ class _SettingsSheetState extends State<SettingsSheet> {
   bool _dinnerEnabled = false;
   bool _isLoading = true;
   bool _permissionGranted = false;
-  String _cacheSize = "계산 중...";
+  String _cacheSize = '계산 중...';
 
   @override
   void initState() {

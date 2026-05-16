@@ -21,8 +21,8 @@ void main() {
     const expiryKey = '${key}_expiry';
 
     final recommendations = [
-      FoodRecommendation(name: '김치찌개', imageUrl: 'url1'),
-      FoodRecommendation(name: '불고기', imageUrl: 'url2'),
+      const FoodRecommendation(name: '김치찌개', imageUrl: 'url1'),
+      const FoodRecommendation(name: '불고기', imageUrl: 'url2'),
     ];
 
     test('getCachedRecommendations returns data when cache is valid', () async {

@@ -98,7 +98,7 @@ class TodayRecommendationAppBar extends ConsumerWidget
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ReviewScreen(
+            builder: (_) => const ReviewScreen(
               food: FoodRecommendation(
                 name: AppConstants.defaultFoodName,
                 imageUrl: AppConstants.defaultFoodImage,

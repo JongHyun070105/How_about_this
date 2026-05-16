@@ -30,7 +30,7 @@ void main() {
     const category = '한식';
     final recentFoods = ['비빔밥'];
     final foodModels = [
-      model.FoodRecommendation(name: '김치찌개', imageUrl: 'url1'),
+      const model.FoodRecommendation(name: '김치찌개', imageUrl: 'url1'),
     ];
 
     test('getRecommendations returns cached data when available', () async {

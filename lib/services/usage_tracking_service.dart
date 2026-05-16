@@ -1,6 +1,5 @@
 import 'package:review_ai/services/persistent_storage_service.dart';
 import 'package:review_ai/services/server_time_service.dart';
-import 'package:flutter/foundation.dart';
 import 'package:review_ai/services/remote_config_service.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
 
@@ -118,7 +117,7 @@ class UsageTrackingService {
   /// 리뷰 생성 횟수를 증가시키고 제한을 확인합니다.
   Future<bool> incrementReviewCount() async {
     await _resetCountsIfNewDay();
-    int currentCount = await getReviewCount();
+    final int currentCount = await getReviewCount();
 
     if (currentCount < _maxReviewsPerDay) {
       await _storageService.setValue(
@@ -134,7 +133,7 @@ class UsageTrackingService {
   /// 총 추천 사용 횟수를 증가시키고 제한을 확인합니다.
   Future<bool> incrementTotalRecommendationCount() async {
     await _resetCountsIfNewDay();
-    int currentCount = await getTotalRecommendationCount();
+    final int currentCount = await getTotalRecommendationCount();
 
     if (currentCount < _maxTotalRecommendationsPerDay) {
       await _storageService.setValue(

@@ -133,7 +133,7 @@ class ApiProxyService {
     );
 
     try {
-      Uint8List? imageBytes = foodImage != null
+      final Uint8List? imageBytes = foodImage != null
           ? await foodImage.readAsBytes()
           : null;
       final parts = await _buildParts(prompt, imageBytes);
@@ -183,7 +183,7 @@ class ApiProxyService {
         'Analyze the attached image. Is this a picture of prepared food suitable for a food review? Do not consider raw ingredients like a single raw onion or a piece of raw meat as prepared food. Respond with only a JSON object in the format {"is_food": boolean}.';
 
     try {
-      Uint8List imageBytes = await foodImage.readAsBytes();
+      final Uint8List imageBytes = await foodImage.readAsBytes();
       final parts = await _buildParts(prompt, imageBytes);
 
       final requestBody = {
@@ -228,7 +228,7 @@ class ApiProxyService {
         'Analyze this image. Is it food? If NO, return "NOT_FOOD". If YES, return its name in Korean. Return ONLY the name or "NOT_FOOD". Do not add any punctuation or extra words.';
 
     try {
-      Uint8List imageBytes = await foodImage.readAsBytes();
+      final Uint8List imageBytes = await foodImage.readAsBytes();
       final parts = await _buildParts(prompt, imageBytes);
 
       final requestBody = {
@@ -276,7 +276,7 @@ class ApiProxyService {
     String prompt,
     Uint8List? imageBytes,
   ) async {
-    List<Map<String, dynamic>> parts = [
+    final List<Map<String, dynamic>> parts = [
       {'text': prompt},
     ];
 

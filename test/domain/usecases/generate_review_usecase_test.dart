@@ -17,12 +17,12 @@ void main() {
     usecase = GenerateReviewUseCase(mockRepository);
   });
 
-  final tFoodName = 'pizza';
-  final tDeliveryRating = 4.5;
-  final tTasteRating = 5.0;
-  final tPortionRating = 4.0;
-  final tPriceRating = 3.5;
-  final tReviewStyle = '재미있게';
+  const tFoodName = 'pizza';
+  const tDeliveryRating = 4.5;
+  const tTasteRating = 5.0;
+  const tPortionRating = 4.0;
+  const tPriceRating = 3.5;
+  const tReviewStyle = '재미있게';
   final tFoodImage = File('test.jpg');
   final tGeneratedReviews = ['review 1', 'review 2', 'review 3'];
 
