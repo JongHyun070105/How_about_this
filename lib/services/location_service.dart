@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:review_ai/data/models/location_models.dart';
 import 'package:review_ai/utils/error_handler.dart';
-import 'package:review_ai/core/utils/logger_service.dart';
 
 /// 위치 서비스 클래스
 /// 사용자의 현재 위치를 가져오고 권한을 관리합니다.
@@ -26,12 +25,12 @@ class LocationService {
       if (permission != LocationPermissionStatus.whileInUse &&
           permission != LocationPermissionStatus.always) {
         // debugPrint('위치 권한이 부족합니다. 현재 상태: $permission');
-        throw UserPermissionDeniedException('위치 권한이 필요합니다.');
+        throw const UserPermissionDeniedException('위치 권한이 필요합니다.');
       }
 
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        throw LocationException('위치 서비스가 비활성화되어 있습니다.');
+        throw const LocationException('위치 서비스가 비활성화되어 있습니다.');
       }
 
       // 현재 위치 가져오기

@@ -49,16 +49,24 @@ class AuthService {
             _debugLog('Access token refreshed successfully');
             return newToken;
           }
-        } catch (e) {
-          _debugLog('Token refresh failed: $e');
+        } on AuthException catch (e) {
+          _debugLog('Token refresh auth error: ${e.message}');
+        } on TimeoutException {
+          _debugLog('Token refresh timeout');
+        } on SocketException {
+          _debugLog('Token refresh network error');
+        } catch (e, stack) {
+          LoggerService.e('Token refresh unexpected error', e, stack);
         }
       }
 
       // 새 토큰 발급
       _debugLog('Requesting new access token');
       return await _requestNewToken();
-    } catch (e) {
-      _debugLog('AuthService error: $e');
+    } on AuthException {
+      rethrow;
+    } catch (e, stack) {
+      LoggerService.e('AuthService getValidAccessToken error', e, stack);
       throw AuthException('인증 토큰을 가져올 수 없습니다.');
     }
   }
@@ -70,7 +78,7 @@ class AuthService {
       final appVersion = await _getAppVersion();
       final deviceInfo = await _getDeviceInfo();
 
-      final requestUrl = '${ApiConfig.proxyUrl}/api/auth/token';
+      const requestUrl = '${ApiConfig.proxyUrl}/api/auth/token';
       _debugLog('Requesting token from: $requestUrl');
 
       final response = await http
@@ -111,14 +119,29 @@ class AuthService {
             'Token request failed: ${errorData['message']} (Status: ${response.statusCode})',
           );
           throw AuthException('인증 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
-        } catch (e) {
-          _debugLog('Token request failed with status ${response.statusCode}');
+        } on FormatException {
+          _debugLog(
+            'Token request failed with status ${response.statusCode} (Invalid JSON)',
+          );
+          throw AuthException('인증 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        } catch (e, stack) {
+          LoggerService.e('Error decoding token error response', e, stack);
           throw AuthException('인증 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
         }
       }
-    } catch (e) {
-      _debugLog('AuthService _requestNewToken error: $e');
+    } on TimeoutException {
+      throw AuthException('서버 응답이 지연되고 있습니다.');
+    } on SocketException {
+      throw AuthException('네트워크 연결을 확인해주세요.');
+    } on AuthException {
       rethrow;
+    } catch (e, stack) {
+      LoggerService.e(
+        'AuthService _requestNewToken unexpected error',
+        e,
+        stack,
+      );
+      throw AuthException('알 수 없는 인증 오류가 발생했습니다.');
     }
   }
 
@@ -213,8 +236,8 @@ class AuthService {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       return packageInfo.version;
-    } catch (e) {
-      _debugLog('Failed to get app version: $e');
+    } catch (e, stack) {
+      LoggerService.e('Failed to get app version', e, stack);
       return '1.0.0';
     }
   }
@@ -233,8 +256,8 @@ class AuthService {
       }
 
       return 'Unknown-Platform';
-    } catch (e) {
-      _debugLog('Failed to get device info: $e');
+    } catch (e, stack) {
+      LoggerService.e('Failed to get device info', e, stack);
       return 'Unknown-Device';
     }
   }
@@ -253,8 +276,8 @@ class AuthService {
       _deviceId = await _storage.read(key: _deviceIdKey);
 
       _debugLog('AuthService initialized (Secure Storage)');
-    } catch (e) {
-      _debugLog('AuthService initialization failed: $e');
+    } catch (e, stack) {
+      LoggerService.e('AuthService initialization failed', e, stack);
     }
   }
 

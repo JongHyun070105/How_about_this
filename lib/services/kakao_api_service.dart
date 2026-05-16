@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/data/models/location_models.dart';
 import 'package:review_ai/utils/kakao_api_filter_util.dart';
@@ -51,7 +50,7 @@ class KakaoApiService {
 
       // 네트워크 연결 확인
       if (!await NetworkUtils.checkInternetConnectivity()) {
-        throw KakaoApiException('인터넷 연결을 확인해주세요.');
+        throw const KakaoApiException('인터넷 연결을 확인해주세요.');
       }
 
       // JWT 토큰 가져오기
@@ -65,7 +64,7 @@ class KakaoApiService {
 
       if (response.statusCode == 200) {
         if (response.data == null) {
-          throw KakaoApiException('API 응답 데이터가 없습니다.');
+          throw const KakaoApiException('API 응답 데이터가 없습니다.');
         }
 
         final searchResponse = KakaoSearchResponse.fromJson(response.data);
@@ -87,17 +86,17 @@ class KakaoApiService {
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout) {
-        throw KakaoApiException('네트워크 연결 시간이 초과되었습니다.');
+        throw const KakaoApiException('네트워크 연결 시간이 초과되었습니다.');
       } else if (e.type == DioExceptionType.connectionError) {
-        throw KakaoApiException('네트워크 연결에 실패했습니다.');
+        throw const KakaoApiException('네트워크 연결에 실패했습니다.');
       } else if (e.response?.statusCode == 401) {
-        throw KakaoApiException('인증이 필요합니다. 앱을 다시 시작해주세요.');
+        throw const KakaoApiException('인증이 필요합니다. 앱을 다시 시작해주세요.');
       } else if (e.response?.statusCode == 403) {
-        throw KakaoApiException('API 사용 권한이 없습니다.');
+        throw const KakaoApiException('API 사용 권한이 없습니다.');
       } else if (e.response?.statusCode == 429) {
-        throw KakaoApiException('API 호출 한도를 초과했습니다.');
+        throw const KakaoApiException('API 호출 한도를 초과했습니다.');
       } else {
-        throw KakaoApiException('API 호출 중 오류가 발생했습니다.');
+        throw const KakaoApiException('API 호출 중 오류가 발생했습니다.');
       }
     } catch (e) {
       throw KakaoApiException(ErrorHandler.sanitizeMessage(e));

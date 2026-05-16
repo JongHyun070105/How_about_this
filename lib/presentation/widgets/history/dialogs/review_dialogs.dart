@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 
 import 'package:in_app_review/in_app_review.dart';
@@ -53,7 +54,7 @@ void showReviewPromptDialog(
               Navigator.of(context).pop();
               final InAppReview inAppReview = InAppReview.instance;
               if (await inAppReview.isAvailable()) {
-                inAppReview.requestReview();
+                unawaited(inAppReview.requestReview());
               }
             },
             child: const Text(

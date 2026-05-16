@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:review_ai/services/persistent_storage_service.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
 
@@ -90,7 +89,7 @@ class UserPreferenceService {
     if (!liked) {
       await _addDislikedFood(foodName);
     } else {
-      int count =
+      final int count =
           await _storageService.getValue<int>(
             _userPrefsFile,
             _reviewPromptLikeCountKey,

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/services/auth_service.dart';
@@ -91,7 +90,7 @@ class ServerTimeService {
 
       // 오프셋 변화가 5분 이상이면 시간 조작 의심
       final offsetDiff = (currentOffset - _timeOffset!).abs();
-      if (offsetDiff > Duration(minutes: 5).inMilliseconds) {
+      if (offsetDiff > const Duration(minutes: 5).inMilliseconds) {
         LoggerService.d(
           'Time manipulation detected! Offset changed by ${offsetDiff}ms',
         );

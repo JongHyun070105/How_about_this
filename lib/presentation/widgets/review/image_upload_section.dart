@@ -65,16 +65,16 @@ class ImageUploadSection extends ConsumerWidget {
                       onPressed: () {
                         showDialog(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text("좋은 사진 선택 팁"),
+                          builder: (context) => const AlertDialog(
+                            title: Text('좋은 사진 선택 팁'),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text("✓ 음식 전체가 잘 보이는 사진"),
-                                Text("✓ 조명이 밝고 선명한 사진"),
-                                Text("✓ 접시나 용기까지 포함된 사진"),
-                                Text("✗ 일부만 보이거나 흐린 사진"),
+                              children: [
+                                Text('✓ 음식 전체가 잘 보이는 사진'),
+                                Text('✓ 조명이 밝고 선명한 사진'),
+                                Text('✓ 접시나 용기까지 포함된 사진'),
+                                Text('✗ 일부만 보이거나 흐린 사진'),
                               ],
                             ),
                           ),
@@ -111,7 +111,7 @@ class ImageUploadSection extends ConsumerWidget {
                 color: Theme.of(context).disabledColor,
               ),
             ),
-            SizedBox(height: 4.0),
+            const SizedBox(height: 4.0),
             Text(
               '잠시만 기다려주세요',
               style: TextStyle(
@@ -205,7 +205,7 @@ class ImageUploadSection extends ConsumerWidget {
 
       // 파일 크기 체크
       final fileSize = await imageFile.length();
-      final maxSizeBytes = UiConstants.maxImageSizeMB * 1024 * 1024;
+      const maxSizeBytes = UiConstants.maxImageSizeMB * 1024 * 1024;
       if (fileSize > maxSizeBytes) {
         throw Exception(
           '이미지 파일이 너무 큽니다.\n${UiConstants.maxImageSizeMB}MB 이하의 이미지를 선택해주세요.',

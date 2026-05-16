@@ -1,5 +1,4 @@
 import 'package:review_ai/utils/gemini_response_parser.dart';
-import 'package:flutter/foundation.dart';
 import 'package:review_ai/data/models/food_recommendation.dart';
 import 'package:review_ai/core/exceptions.dart';
 import 'package:review_ai/services/api_proxy_service.dart';
@@ -94,7 +93,7 @@ class RecommendationService {
     WeatherCondition? weather,
   }) {
     if (foods.isEmpty) {
-      throw Exception("추천 가능한 음식이 없습니다.");
+      throw Exception('추천 가능한 음식이 없습니다.');
     }
 
     final random = Random();
@@ -129,7 +128,7 @@ class RecommendationService {
 
     // 2. 가중치 기반 추천 시스템
     // 각 음식에 가중치를 부여 (기본 1.0)
-    Map<FoodRecommendation, double> weightedFoods = {
+    final Map<FoodRecommendation, double> weightedFoods = {
       for (var f in available) f: 1.0,
     };
 
@@ -151,7 +150,11 @@ class RecommendationService {
     final selectedFood = _selectWeightedFood(weightedFoods, random);
 
     // 4. 추천 사유 생성
-    String reason = _generateReason(selectedFood, preferredFoodNames, weather);
+    final String reason = _generateReason(
+      selectedFood,
+      preferredFoodNames,
+      weather,
+    );
 
     return (food: selectedFood, reason: reason);
   }
@@ -247,7 +250,10 @@ class RecommendationService {
     Map<FoodRecommendation, double> weightedFoods,
     Random random,
   ) {
-    double totalWeight = weightedFoods.values.fold(0.0, (sum, w) => sum + w);
+    final double totalWeight = weightedFoods.values.fold(
+      0.0,
+      (sum, w) => sum + w,
+    );
     double randomValue = random.nextDouble() * totalWeight;
 
     for (var entry in weightedFoods.entries) {

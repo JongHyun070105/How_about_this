@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:review_ai/utils/responsive.dart';
@@ -207,10 +208,12 @@ class TodayRecommendationBody extends ConsumerWidget {
 
     if (context.mounted) {
       onStartLoadingRotation();
-      ref
-          .read(todayRecommendationViewModelProvider.notifier)
-          .handleCategoryTap(context, category, onShowRecommendationDialog)
-          .whenComplete(onStopLoadingRotation);
+      unawaited(
+        ref
+            .read(todayRecommendationViewModelProvider.notifier)
+            .handleCategoryTap(context, category, onShowRecommendationDialog)
+            .whenComplete(onStopLoadingRotation),
+      );
     }
   }
 

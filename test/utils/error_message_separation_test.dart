@@ -14,7 +14,7 @@ void main() {
   // ===================================================================
   group('ErrorHandler.sanitizeMessage (사용자 메시지)', () {
     test('SocketException → 사용자 친화적 메시지 반환', () {
-      final error = const SocketException('Connection refused');
+      const error = SocketException('Connection refused');
       final message = ErrorHandler.sanitizeMessage(error);
 
       expect(message, '인터넷 연결을 확인해주세요.');
@@ -139,7 +139,7 @@ void main() {
     });
 
     test('KakaoApiException → 해당 예외 메시지 그대로 전달', () {
-      final error = KakaoApiException('카카오 API 오류가 발생했습니다.');
+      const error = KakaoApiException('카카오 API 오류가 발생했습니다.');
       final message = ErrorHandler.sanitizeMessage(error);
 
       expect(message, '카카오 API 오류가 발생했습니다.');
@@ -156,7 +156,7 @@ void main() {
     });
 
     test('일반 String 에러 → 내부 정보 노출 없음', () {
-      final error = 'Stack trace at line 42 in /home/user/app/main.dart';
+      const error = 'Stack trace at line 42 in /home/user/app/main.dart';
       final message = ErrorHandler.sanitizeMessage(error);
 
       expect(message, contains('알 수 없는 오류'));
@@ -170,7 +170,7 @@ void main() {
   // ===================================================================
   group('SecurityConfig.sanitizeErrorMessage (개발자 로그 마스킹)', () {
     test('API 키가 포함된 에러 메시지 → API_KEY_HIDDEN으로 마스킹', () {
-      final error =
+      const error =
           'Error: Invalid API key AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz123456';
       final sanitized = SecurityConfig.sanitizeErrorMessage(error);
 
@@ -180,7 +180,7 @@ void main() {
 
     test('토큰이 포함된 에러 메시지 → TOKEN_HIDDEN으로 마스킹', () {
       // 패턴: token.*[A-Za-z0-9]{20,}
-      final error =
+      const error =
           'Authorization failed: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9payload';
       final sanitized = SecurityConfig.sanitizeErrorMessage(error);
 
@@ -190,7 +190,7 @@ void main() {
 
     test('파일 경로가 포함된 에러 메시지 → PATH_HIDDEN으로 마스킹', () {
       // 패턴: path.*\/.*\/
-      final error = 'File not found: path=/Users/developer/';
+      const error = 'File not found: path=/Users/developer/';
       final sanitized = SecurityConfig.sanitizeErrorMessage(error);
 
       expect(sanitized, contains('PATH_HIDDEN'));
@@ -198,7 +198,7 @@ void main() {
     });
 
     test('민감 정보가 없는 일반 에러 메시지 → 변경 없음', () {
-      final error = '일반적인 에러 메시지입니다.';
+      const error = '일반적인 에러 메시지입니다.';
       final sanitized = SecurityConfig.sanitizeErrorMessage(error);
 
       expect(sanitized, error);
@@ -206,7 +206,7 @@ void main() {
 
     test('여러 민감 정보가 동시에 포함된 경우 모두 마스킹', () {
       // API key 패턴 + token 패턴 동시 포함
-      final error =
+      const error =
           'API key=AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz123456, '
           'token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9datasig';
       final sanitized = SecurityConfig.sanitizeErrorMessage(error);
@@ -287,7 +287,7 @@ void main() {
     ];
 
     test('SocketException 에러에서 기술 용어 비노출', () {
-      final error = const SocketException('Failed host lookup');
+      const error = SocketException('Failed host lookup');
       final message = ErrorHandler.sanitizeMessage(error);
 
       for (final term in technicalTerms) {
@@ -300,7 +300,7 @@ void main() {
     });
 
     test('알 수 없는 에러에서 기술 용어 비노출', () {
-      final error = FormatException('Unexpected character at line 1, column 5');
+      const error = FormatException('Unexpected character at line 1, column 5');
       final message = ErrorHandler.sanitizeMessage(error);
 
       for (final term in technicalTerms) {

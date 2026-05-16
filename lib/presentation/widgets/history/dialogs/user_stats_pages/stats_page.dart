@@ -89,10 +89,10 @@ class StatsPageWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).dividerColor),
         boxShadow: [
-          BoxShadow(
-            color: const Color(0x05000000), // black.withOpacity(0.02)
+          const BoxShadow(
+            color: Color(0x05000000), // black.withOpacity(0.02)
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -153,7 +153,7 @@ class StatsPageWidget extends StatelessWidget {
         _buildUsageIndicator(
           context,
           screenSize,
-          label: "음식 추천 사용량",
+          label: '음식 추천 사용량',
           used: usedRecommendations,
           max: maxRecommendations,
           color: Theme.of(context).colorScheme.primary,
@@ -163,7 +163,7 @@ class StatsPageWidget extends StatelessWidget {
         _buildUsageIndicator(
           context,
           screenSize,
-          label: "리뷰 작성 사용량",
+          label: '리뷰 작성 사용량',
           used: usedReviews,
           max: maxReviews,
           color: Theme.of(context).disabledColor,
@@ -185,7 +185,7 @@ class StatsPageWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "매일 00:00시에 초기화됩니다",
+            '매일 00:00시에 초기화됩니다',
             style: TextStyle(
               fontFamily: 'Do Hyeon',
               fontSize: 10,
@@ -226,7 +226,7 @@ class StatsPageWidget extends StatelessWidget {
             children: [
               Text(label, style: style),
               Text(
-                "$used / $max",
+                '$used / $max',
                 style: style.copyWith(
                   color: Theme.of(context).disabledColor,
                   fontSize: 10,

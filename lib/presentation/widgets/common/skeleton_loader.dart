@@ -112,13 +112,13 @@ class SkeletonList extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
+        return const Padding(
+          padding: EdgeInsets.only(bottom: 16.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SkeletonLoader(width: 80, height: 80, borderRadius: 8),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,9 +128,9 @@ class SkeletonList extends StatelessWidget {
                       height: 16,
                       borderRadius: 4,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     SkeletonLoader(width: 150, height: 14, borderRadius: 4),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     SkeletonLoader(width: 100, height: 14, borderRadius: 4),
                   ],
                 ),
@@ -171,7 +171,7 @@ class SkeletonGrid extends StatelessWidget {
         childAspectRatio: childAspectRatio,
       ),
       itemBuilder: (context, index) {
-        return SkeletonLoader(
+        return const SkeletonLoader(
           width: double.infinity,
           height: double.infinity,
           borderRadius: 16,
