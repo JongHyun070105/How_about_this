@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
 
 import '../../core/app_initializer.dart';
+import '../../core/splash_helper.dart';
 import '../../config/security_config.dart';
 import '../../services/app_update_service.dart';
 import '../../services/notification_service.dart';
@@ -71,12 +70,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     try {
       // 인터넷 연결 시도 (최대 2회)
       int retryCount = 0;
-      bool isConnected = await _checkInternetConnectivity();
+      bool isConnected = await SplashHelper.checkInternetConnectivity();
       while (!isConnected && retryCount < 2) {
         if (!mounted) return;
         final shouldRetry = await _showConnectionErrorDialog();
         if (shouldRetry) {
-          isConnected = await _checkInternetConnectivity();
+          isConnected = await SplashHelper.checkInternetConnectivity();
           retryCount++;
         } else {
           unawaited(SystemNavigator.pop());
@@ -172,21 +171,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         false;
   }
 
-  Future<bool> _checkInternetConnectivity() async {
-    try {
-      final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult.contains(ConnectivityResult.none)) return false;
-      final result = await InternetAddress.lookup(
-        'google.com',
-      ).timeout(const Duration(seconds: 3));
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // _performSecurityCheckInBackground is removed and done synchronously instead
-
   void _updateNotificationMessages() {
     Future.microtask(() async {
       try {
@@ -209,7 +193,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           // Android: Play Store 공식 인앱 업데이트 수행 (Flexible)
           await appUpdateService.checkForInAppUpdate();
         } else {
-          // iOS: 기존 Gist 기반 커스텀 버전 체크 후 다이얼로그
+          // iOS: Gist 기반 커스텀 버전 체크 후 다이얼로그
           final latestVersion = await appUpdateService.isUpdateAvailable();
           if (latestVersion != null && mounted) {
             showAppDialog(
@@ -217,7 +201,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               title: '업데이트 알림',
               message: '새로운 버전(v$latestVersion)이 출시되었습니다.',
               confirmButtonText: '업데이트',
-              onConfirm: () => _launchStoreUrl(),
+              onConfirm: () => SplashHelper.launchStoreUrl(),
             );
           }
         }
@@ -225,16 +209,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         LoggerService.e('Update check error: $e');
       }
     });
-  }
-
-  void _launchStoreUrl() async {
-    final url = Platform.isIOS
-        ? 'https://itunes.apple.com/app/id6751484486'
-        : 'https://play.google.com/store/apps/details?id=com.jonghyun.reviewai_flutter';
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   void _startBackgroundCaching() {
