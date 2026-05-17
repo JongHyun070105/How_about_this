@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:review_ai/services/notification_service.dart';
 import 'package:review_ai/services/cache_service.dart';
+import 'package:review_ai/presentation/widgets/settings/notification_tile.dart';
+import 'package:review_ai/presentation/widgets/settings/cache_clear_tile.dart';
 
 /// 앱 설정 바텀시트
 ///
@@ -234,7 +236,7 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 child: CupertinoActivityIndicator(),
               )
             else ...[
-              _buildNotificationTile(
+              NotificationTile(
                 icon: Icons.wb_sunny_outlined,
                 iconColor:
                     Theme.of(context).iconTheme.color ?? Colors.grey[800]!,
@@ -243,7 +245,7 @@ class _SettingsSheetState extends State<SettingsSheet> {
                 value: _lunchEnabled,
                 onChanged: _toggleLunch,
               ),
-              _buildNotificationTile(
+              NotificationTile(
                 icon: Icons.nightlight_outlined,
                 iconColor:
                     Theme.of(context).iconTheme.color ?? Colors.grey[800]!,
@@ -255,133 +257,15 @@ class _SettingsSheetState extends State<SettingsSheet> {
 
               const Divider(height: 32),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.cleaning_services_outlined,
-                        color: Colors.redAccent,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            '캐시 지우기',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'SCDream',
-                            ),
-                          ),
-                          Text(
-                            '현재 사용량: $_cacheSize',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color:
-                                  Theme.of(
-                                    context,
-                                  ).textTheme.bodySmall?.color ??
-                                  Colors.grey[600],
-                              fontFamily: 'SCDream',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _confirmAndClearCache,
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.redAccent,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      child: const Text(
-                        '지우기',
-                        style: TextStyle(
-                          fontFamily: 'SCDream',
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              CacheClearTile(
+                cacheSize: _cacheSize,
+                onClearPressed: _confirmAndClearCache,
               ),
             ],
 
             const SizedBox(height: 20),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNotificationTile({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required Function(bool) onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: iconColor, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'SCDream',
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color:
-                        Theme.of(context).textTheme.bodySmall?.color ??
-                        Colors.grey[600],
-                    fontFamily: 'SCDream',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          CupertinoSwitch(
-            value: value,
-            activeTrackColor: Theme.of(
-              context,
-            ).colorScheme.primary.withAlpha(255),
-            onChanged: onChanged,
-          ),
-        ],
       ),
     );
   }

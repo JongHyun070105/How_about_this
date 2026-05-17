@@ -8,10 +8,10 @@ import 'package:review_ai/presentation/screens/review_selection_screen.dart';
 import 'package:review_ai/utils/responsive.dart';
 import 'package:review_ai/presentation/viewmodels/review_viewmodel.dart';
 import 'package:review_ai/presentation/widgets/review/image_upload_section.dart';
-import 'package:review_ai/presentation/widgets/common/primary_action_button.dart';
 import 'package:review_ai/presentation/widgets/common/animated_loading_indicator.dart';
 import 'package:review_ai/presentation/widgets/review/review_style_section.dart';
 import 'package:review_ai/presentation/widgets/review/review_form_widgets.dart';
+import 'package:review_ai/presentation/widgets/review/review_generate_button.dart';
 import 'package:review_ai/services/image_labeling_service.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
@@ -266,7 +266,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               SizedBox(height: responsive.verticalSpacing() * 0.8),
               const ReviewStyleSection(),
               SizedBox(height: responsive.verticalSpacing() * 1.2),
-              _buildGenerateButton(isLoading, isValid),
+              ReviewGenerateButton(
+                isValid: isValid,
+                isLoading: isLoading,
+                onPressed: (isLoading || !isValid)
+                    ? null
+                    : () => ref
+                          .read(reviewViewModelProvider.notifier)
+                          .generateReviews(context),
+              ),
               SizedBox(height: MediaQuery.of(context).padding.bottom + 16.0),
             ],
           ),
@@ -288,36 +296,6 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             fontFamily: 'SCDream',
             color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGenerateButton(bool isLoading, bool isValid) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.0),
-        gradient: isValid
-            ? LinearGradient(
-                colors: [Colors.blue[600]!, Colors.blue[700]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
-        color: isValid ? null : Theme.of(context).disabledColor,
-      ),
-      child: Semantics(
-        label: '입력한 정보를 바탕으로 AI 리뷰 생성하기',
-        button: true,
-        child: PrimaryActionButton(
-          text: '리뷰 생성하기',
-          isEnabled: isValid,
-          onPressed: (isLoading || !isValid)
-              ? null
-              : () => ref
-                    .read(reviewViewModelProvider.notifier)
-                    .generateReviews(context),
-          isLoading: isLoading,
         ),
       ),
     );
