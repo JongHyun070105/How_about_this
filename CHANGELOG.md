@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.0](https://github.com/JongHyun070105/how-about-this/compare/v1.11.0...v1.12.0) (2026-05-17)
+
+
+### Features
+
+* test 파일 추가 및 기타 작업 진행 ([9bb3ec2](https://github.com/JongHyun070105/how-about-this/commit/9bb3ec2592a573caf79a8f1689eeeb7bed673919))
+* test 파일 추가 및 기타 작업 진행 ([3d13d54](https://github.com/JongHyun070105/how-about-this/commit/3d13d54d7811d3c17039ab7d13373f2bee4ff4fe))
+
 ## [1.11.0](https://github.com/JongHyun070105/how-about-this/compare/v1.10.0...v1.11.0) (2026-05-11)
 
 
