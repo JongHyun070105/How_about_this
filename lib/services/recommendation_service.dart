@@ -270,22 +270,23 @@ class RecommendationService {
     final analysis = await UserPreferenceService.analyzeUserPreferences();
 
     final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
-    final recentSelections = history
-        .where((s) => s.selectedAt.isAfter(thirtyDaysAgo))
-        .toList();
 
+    int recentCount = 0;
+    int likedCount = 0;
     final categoryStats = <String, int>{};
-    for (final selection in recentSelections) {
-      categoryStats[selection.category] =
-          (categoryStats[selection.category] ?? 0) + 1;
-    }
-
     final foodFrequency = <String, int>{};
-    final likedSelections = recentSelections.where((s) => s.liked).toList();
 
-    for (final selection in likedSelections) {
-      foodFrequency[selection.foodName] =
-          (foodFrequency[selection.foodName] ?? 0) + 1;
+    for (final selection in history) {
+      if (selection.selectedAt.isAfter(thirtyDaysAgo)) {
+        recentCount++;
+        categoryStats[selection.category] =
+            (categoryStats[selection.category] ?? 0) + 1;
+        if (selection.liked) {
+          likedCount++;
+          foodFrequency[selection.foodName] =
+              (foodFrequency[selection.foodName] ?? 0) + 1;
+        }
+      }
     }
 
     final topFoods = foodFrequency.entries.toList()
@@ -293,12 +294,10 @@ class RecommendationService {
 
     return {
       'totalSelections': history.length,
-      'recentSelections': recentSelections.length,
-      'likedPercentage': recentSelections.isEmpty
+      'recentSelections': recentCount,
+      'likedPercentage': recentCount == 0
           ? 0.0
-          : (recentSelections.where((s) => s.liked).length /
-                recentSelections.length *
-                100),
+          : (likedCount / recentCount * 100),
       'categoryStats': categoryStats,
       'topFoods': topFoods
           .take(5)

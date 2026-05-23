@@ -2,6 +2,15 @@ import 'package:review_ai/data/models/location_models.dart';
 
 /// 카카오 맛집 검색 결과 필터링 및 정렬 유틸리티
 class KakaoApiFilterUtil {
+  static const Map<String, List<String>> _categoryKeywords = {
+    '중식': ['중식', '중국'],
+    '한식': ['한식', '한정식', '백반', '고기', '삼겹살', '갈비', '찌개', '국밥'],
+    '일식': ['일식', '일본', '스시', '초밥', '라멘', '우동'],
+    '양식': ['양식', '이탈리안', '스테이크', '파스타', '피자'],
+    '분식': ['분식'],
+    '아시안': ['아시아', '베트남', '태국', '인도', '동남아'],
+  };
+
   /// 카테고리에 맞는 카카오 카테고리 코드를 반환합니다.
   static String? getCategoryCode(String? category) {
     if (category == null) return 'FD6'; // 기본값: 음식점
@@ -76,69 +85,23 @@ class KakaoApiFilterUtil {
 
       // 카테고리 정확도 필터링 강화
       if (targetCategory != null) {
-        final categoryLower = restaurant.categoryName.toLowerCase();
-
-        switch (targetCategory) {
-          case '중식':
-            if (!categoryLower.contains('중식') &&
-                !categoryLower.contains('중국')) {
-              return false;
-            }
-            break;
-          case '한식':
-            if (!categoryLower.contains('한식') &&
-                !categoryLower.contains('한정식') &&
-                !categoryLower.contains('백반') &&
-                !categoryLower.contains('고기') &&
-                !categoryLower.contains('삼겹살') &&
-                !categoryLower.contains('갈비') &&
-                !categoryLower.contains('찌개') &&
-                !categoryLower.contains('국밥')) {
-              return false;
-            }
-            break;
-          case '일식':
-            if (!categoryLower.contains('일식') &&
-                !categoryLower.contains('일본') &&
-                !categoryLower.contains('스시') &&
-                !categoryLower.contains('초밥') &&
-                !categoryLower.contains('라멘') &&
-                !categoryLower.contains('우동')) {
-              return false;
-            }
-            break;
-          case '양식':
-            if (!categoryLower.contains('양식') &&
-                !categoryLower.contains('이탈리안') &&
-                !categoryLower.contains('스테이크') &&
-                !categoryLower.contains('파스타') &&
-                !categoryLower.contains('피자')) {
-              return false;
-            }
-            break;
-          case '분식':
-            if (!categoryLower.contains('분식')) {
-              return false;
-            }
-            break;
-          case '아시안':
-            if (!categoryLower.contains('아시아') &&
-                !categoryLower.contains('베트남') &&
-                !categoryLower.contains('태국') &&
-                !categoryLower.contains('인도') &&
-                !categoryLower.contains('동남아')) {
-              return false;
-            }
-            break;
+        final keywords = _categoryKeywords[targetCategory];
+        if (keywords != null) {
+          final categoryLower = restaurant.categoryName.toLowerCase();
+          final hasKeyword = keywords.any((kw) => categoryLower.contains(kw));
+          if (!hasKeyword) {
+            return false;
+          }
         }
       }
 
       // 카테고리 제외 필터링
       if (excludeCategories != null && excludeCategories.isNotEmpty) {
-        for (final category in excludeCategories) {
-          if (restaurant.categoryName.contains(category)) {
-            return false;
-          }
+        final hasExclude = excludeCategories.any(
+          (cat) => restaurant.categoryName.contains(cat),
+        );
+        if (hasExclude) {
+          return false;
         }
       }
 
