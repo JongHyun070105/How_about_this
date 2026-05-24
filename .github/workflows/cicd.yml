@@ -123,9 +123,11 @@ jobs:
 
       - name: Deploy to Firebase App Distribution (Develop)
         if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-        uses: w9jds/firebase-action@master
-        with:
-          args: appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" --groups testers
+        run: |
+          echo "$GCP_SA_KEY" > service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
+          npx firebase-tools appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app "${{ secrets.FIREBASE_ANDROID_APP_ID }}" --groups testers
+          rm service-account.json
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
