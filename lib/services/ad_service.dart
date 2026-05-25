@@ -223,6 +223,7 @@ class AdService extends StateNotifier<AdState> {
 
   @override
   void dispose() {
+    _retryTimer?.cancel();
     _adCompleter?.complete(false);
     _adCompleter = null;
     _rewardReceived = false;

@@ -22,7 +22,7 @@ class PromptBuilder {
     required List<String> recentFoods,
   }) async {
     final analysis = await UserPreferenceService.analyzeUserPreferences();
-    final dislikedFoods = await UserPreferenceService.getDislikedFoods();
+    final dislikedFoods = analysis.dislikedFoods;
 
     const basePrompt = '''
 당신은 음식을 무엇을 먹을지 고민하는 사용자를 위한 개인화된 음식 추천 시스템입니다.
