@@ -13,6 +13,14 @@ import 'package:review_ai/core/utils/logger_service.dart';
 
 /// Cloudflare Workers API 프록시 서버를 통한 Gemini API 호출 서비스
 class ApiProxyService {
+  // 이미지 파일 캐시 (파일 경로 -> {bytes, base64})
+  static final Map<String, ({Uint8List bytes, String base64})>
+  _imageMemoryCache = {};
+
+  // 캐시 상태 초기화 기능 (테스트 및 벤치마크용)
+  @visibleForTesting
+  static void clearImageCache() => _imageMemoryCache.clear();
+
   final http.Client _client;
   final String _proxyUrl;
   final Future<String?> Function()? _tokenProvider;
@@ -133,10 +141,7 @@ class ApiProxyService {
     );
 
     try {
-      final Uint8List? imageBytes = foodImage != null
-          ? await foodImage.readAsBytes()
-          : null;
-      final parts = await _buildParts(prompt, imageBytes);
+      final parts = await _buildParts(prompt, foodImage);
 
       final requestBody = {
         'contents': [
@@ -183,8 +188,7 @@ class ApiProxyService {
         'Analyze the attached image. Is this a picture of prepared food suitable for a food review? Do not consider raw ingredients like a single raw onion or a piece of raw meat as prepared food. Respond with only a JSON object in the format {"is_food": boolean}.';
 
     try {
-      final Uint8List imageBytes = await foodImage.readAsBytes();
-      final parts = await _buildParts(prompt, imageBytes);
+      final parts = await _buildParts(prompt, foodImage);
 
       final requestBody = {
         'contents': [
@@ -228,8 +232,7 @@ class ApiProxyService {
         'Analyze this image. Is it food? If NO, return "NOT_FOOD". If YES, return its name in Korean. Return ONLY the name or "NOT_FOOD". Do not add any punctuation or extra words.';
 
     try {
-      final Uint8List imageBytes = await foodImage.readAsBytes();
-      final parts = await _buildParts(prompt, imageBytes);
+      final parts = await _buildParts(prompt, foodImage);
 
       final requestBody = {
         'contents': [
@@ -271,22 +274,41 @@ class ApiProxyService {
     );
   }
 
+  static Future<({Uint8List bytes, String base64})> _getOrCacheImage(
+    File file,
+  ) async {
+    final path = file.path;
+    final cached = _imageMemoryCache[path];
+    if (cached != null) {
+      LoggerService.d(
+        'Serving base64 image encoding from memory cache for path: $path',
+      );
+      return cached;
+    }
+
+    final bytes = await file.readAsBytes();
+    if (bytes.length > 4 * 1024 * 1024) {
+      throw ImageValidationException('이미지 크기가 너무 큽니다 (최대 4MB).');
+    }
+    final base64 = base64Encode(bytes);
+    final result = (bytes: bytes, base64: base64);
+    _imageMemoryCache[path] = result;
+    return result;
+  }
+
   /// 이미지 파트 구성
   Future<List<Map<String, dynamic>>> _buildParts(
     String prompt,
-    Uint8List? imageBytes,
+    File? foodImage,
   ) async {
     final List<Map<String, dynamic>> parts = [
       {'text': prompt},
     ];
 
-    if (imageBytes != null) {
-      if (imageBytes.length > 4 * 1024 * 1024) {
-        throw ImageValidationException('이미지 크기가 너무 큽니다 (최대 4MB).');
-      }
-      final base64Image = base64Encode(imageBytes);
+    if (foodImage != null) {
+      final imgData = await _getOrCacheImage(foodImage);
       parts.add({
-        'inline_data': {'mime_type': 'image/jpeg', 'data': base64Image},
+        'inline_data': {'mime_type': 'image/jpeg', 'data': imgData.base64},
       });
     }
     return parts;
