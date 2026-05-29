@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/JongHyun070105/how-about-this/compare/v1.12.0...v1.12.1) (2026-05-26)
+
+
+### Bug Fixes
+
+* cicd.yml Firebase App Distribution 배포 CLI 전환 ([2982c5a](https://github.com/JongHyun070105/how-about-this/commit/2982c5a7e7acddf234e914d1697a13a8cca5ed93))
+
 ## [1.12.0](https://github.com/JongHyun070105/how-about-this/compare/v1.11.0...v1.12.0) (2026-05-17)
 
 
