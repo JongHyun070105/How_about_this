@@ -18,8 +18,8 @@ class CacheService {
     try {
       // 1. 임시 디렉토리 용량 (이미지 피커 등이 주로 사용하는 공간)
       final tempDir = await getTemporaryDirectory();
-      if (tempDir.existsSync()) {
-        totalSize += _calculateDirectorySize(tempDir);
+      if (await tempDir.exists()) {
+        totalSize += await _calculateDirectorySize(tempDir);
       }
 
       // 2. CacheManager가 관리하는 캐시 디렉토리 확인 (필요에 따라)
@@ -40,11 +40,11 @@ class CacheService {
 
       // 2. 임시 디렉토리 비우기 (카메라/갤러리 임시 이미지 등)
       final tempDir = await getTemporaryDirectory();
-      if (tempDir.existsSync()) {
-        final List<FileSystemEntity> children = tempDir.listSync(
+      if (await tempDir.exists()) {
+        final Stream<FileSystemEntity> children = tempDir.list(
           recursive: false,
         );
-        for (final FileSystemEntity child in children) {
+        await for (final FileSystemEntity child in children) {
           try {
             await child.delete(recursive: true);
           } catch (e) {
@@ -61,13 +61,20 @@ class CacheService {
   }
 
   /// 특정 폴더의 내부 용량 재귀적 합산
-  int _calculateDirectorySize(Directory dir) {
+  Future<int> _calculateDirectorySize(Directory dir) async {
     int size = 0;
     try {
-      if (dir.existsSync()) {
-        for (var entity in dir.listSync(recursive: true, followLinks: false)) {
+      if (await dir.exists()) {
+        await for (var entity in dir.list(
+          recursive: true,
+          followLinks: false,
+        )) {
           if (entity is File) {
-            size += entity.lengthSync();
+            try {
+              size += await entity.length();
+            } catch (_) {
+              // 개별 파일 크기를 읽지 못한 경우 무시
+            }
           }
         }
       }
