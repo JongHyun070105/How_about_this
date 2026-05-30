@@ -20,6 +20,10 @@ class AiFoodInsightService {
 
   final http.Client _client = http.Client();
 
+  // 상수 정의
+  static const List<int> _cacheTimePoints = [8, 12, 19];
+  static const Duration _httpTimeout = Duration(seconds: 10);
+
   /// 마지막 AI 인사이트 캐시 (앱 내 메모리 캐시)
   String? _cachedInsight;
   DateTime? _cachedAt;
@@ -39,7 +43,7 @@ class AiFoodInsightService {
       );
     }
 
-    // 캐시 만료 로직 (알림 시간대 8, 12, 19시 기준)
+    // 캐시 만료 로직 (알림 시간대 8, 12, 19시 기준 및 자정 기준)
     if (!forceRefresh && _cachedInsight != null && _cachedAt != null) {
       if (!_isCacheExpiredByTimePoints(_cachedAt!)) {
         return AiInsightResult(message: _cachedInsight!, isAi: true);
@@ -101,7 +105,7 @@ class AiFoodInsightService {
             },
           }),
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(_httpTimeout);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -122,9 +126,15 @@ class AiFoodInsightService {
   /// 알림 시간대(8, 12, 19시)를 기준으로 캐시 만료 여부 확인
   bool _isCacheExpiredByTimePoints(DateTime cachedAt) {
     final now = DateTime.now();
-    final timePoints = [8, 12, 19];
 
-    for (final hour in timePoints) {
+    // 날짜가 바뀐 경우(자정 이후) 무조건 캐시 만료
+    if (cachedAt.year != now.year ||
+        cachedAt.month != now.month ||
+        cachedAt.day != now.day) {
+      return true;
+    }
+
+    for (final hour in _cacheTimePoints) {
       final point = DateTime(now.year, now.month, now.day, hour);
       // 캐시된 시점이 특정 시간 포인트 이전이고, 현재가 그 포인트를 지났다면 만료
       if (cachedAt.isBefore(point) && now.isAfter(point)) {
@@ -132,6 +142,11 @@ class AiFoodInsightService {
       }
     }
     return false;
+  }
+
+  /// 클라이언트 자원 해제
+  void dispose() {
+    _client.close();
   }
 }
 

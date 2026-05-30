@@ -26,10 +26,12 @@ class FoodSelection {
 
   factory FoodSelection.fromJson(Map<String, dynamic> json) {
     return FoodSelection(
-      foodName: json['foodName'],
-      category: json['category'],
-      selectedAt: DateTime.parse(json['selectedAt']),
-      liked: json['liked'],
+      foodName: json['foodName'] as String? ?? '',
+      category: json['category'] as String? ?? '',
+      selectedAt: json['selectedAt'] != null
+          ? DateTime.tryParse(json['selectedAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      liked: json['liked'] as bool? ?? false,
     );
   }
 }
@@ -58,6 +60,13 @@ class UserPreferenceService {
   static const String _dislikedFoodsKey = 'disliked_foods';
   static const int _maxHistorySize = 100; // 최대 기록 수
   static const String _reviewPromptLikeCountKey = 'review_prompt_like_count';
+
+  // 선호도 및 분석 상수
+  static const int _recentPeriodDays = 30;
+  static const int _previousPeriodDays = 60;
+  static const double _preferenceThreshold = 0.6;
+  static const double _trendThreshold = 0.05;
+  static const double _frequencyBonusWeight = 0.3;
 
   // 음식 선택 기록 저장
   static Future<void> recordFoodSelection({
@@ -142,7 +151,8 @@ class UserPreferenceService {
       _userPrefsFile,
       _dislikedFoodsKey,
     );
-    return dislikedList?.cast<String>() ?? [];
+    if (dislikedList == null) return [];
+    return dislikedList.whereType<String>().toList();
   }
 
   // 싫어하는 음식에서 제거
@@ -170,7 +180,9 @@ class UserPreferenceService {
       );
     }
 
-    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+    final thirtyDaysAgo = DateTime.now().subtract(
+      const Duration(days: _recentPeriodDays),
+    );
     final recentHistory = history
         .where((s) => s.selectedAt.isAfter(thirtyDaysAgo))
         .toList();
@@ -184,7 +196,7 @@ class UserPreferenceService {
     final categoryScores = _calculateCategoryScores(recentHistory);
 
     final preferredCategories = categoryScores.entries
-        .where((e) => e.value >= 0.6)
+        .where((e) => e.value >= _preferenceThreshold)
         .map((e) => e.key)
         .toList();
 
@@ -221,7 +233,8 @@ class UserPreferenceService {
       final category = entry.key;
       final stats = entry.value;
       final likeRatio = stats['liked']! / stats['total']!;
-      final frequencyBonus = (stats['total']! / history.length) * 0.3;
+      final frequencyBonus =
+          (stats['total']! / history.length) * _frequencyBonusWeight;
 
       categoryScores[category] = likeRatio + frequencyBonus;
     }
@@ -236,8 +249,12 @@ class UserPreferenceService {
     }
 
     final now = DateTime.now();
-    final currentPeriodStart = now.subtract(const Duration(days: 30));
-    final previousPeriodStart = now.subtract(const Duration(days: 60));
+    final currentPeriodStart = now.subtract(
+      const Duration(days: _recentPeriodDays),
+    );
+    final previousPeriodStart = now.subtract(
+      const Duration(days: _previousPeriodDays),
+    );
 
     final currentPeriodHistory = history
         .where((s) => s.selectedAt.isAfter(currentPeriodStart))
@@ -263,9 +280,9 @@ class UserPreferenceService {
         trends[category] = '신규';
       } else {
         final diff = currentScore - previousScore;
-        if (diff > 0.05) {
+        if (diff > _trendThreshold) {
           trends[category] = '상승';
-        } else if (diff < -0.05) {
+        } else if (diff < -_trendThreshold) {
           trends[category] = '하락';
         } else {
           trends[category] = '유지';

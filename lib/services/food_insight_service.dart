@@ -5,6 +5,8 @@ import 'package:review_ai/data/constants/food_category_data.dart';
 import 'package:review_ai/presentation/providers/review_provider.dart';
 import 'package:review_ai/services/api_proxy_service.dart';
 import 'package:review_ai/services/food_stats_service.dart';
+import 'package:review_ai/utils/gemini_response_parser.dart';
+import 'package:review_ai/core/utils/logger_service.dart';
 
 export 'package:review_ai/data/constants/food_category_data.dart'
     show FoodCategoryData;
@@ -21,6 +23,28 @@ class FoodInsightService {
       FoodCategoryData.categoryEmojis;
   static Map<String, Color> get categoryColors =>
       FoodCategoryData.categoryColors;
+
+  // 캐싱된 카테고리 목록
+  static final List<String> _cachedCategories = FoodCategoryData
+      .categoryEmojis
+      .keys
+      .where((c) => c != '기타')
+      .toList();
+
+  // 사전 정규화(정리)된 키워드 맵 캐싱
+  static Map<String, List<String>>? _normalizedKeywords;
+
+  static Map<String, List<String>> get _getNormalizedKeywords {
+    if (_normalizedKeywords != null) return _normalizedKeywords!;
+    final map = <String, List<String>>{};
+    for (final entry in FoodCategoryData.categoryKeywords.entries) {
+      map[entry.key] = entry.value
+          .map((kw) => kw.toLowerCase().replaceAll(' ', ''))
+          .toList();
+    }
+    _normalizedKeywords = map;
+    return _normalizedKeywords!;
+  }
 
   // ── 하위 호환성 위임 메서드 ──────────────────────────────────────
   // 기존 코드가 FoodInsightService를 통해 접근하므로 FoodStatsService에 위임합니다.
@@ -60,8 +84,8 @@ class FoodInsightService {
     try {
       final result = await _inferCategoryWithAI(foodName);
       if (result != null) return result;
-    } catch (_) {
-      // AI 실패 시 키워드 폴백으로 진행
+    } catch (e, stack) {
+      LoggerService.w('AI 카테고리 추론 실패 (키워드 폴백 적용): $e', e, stack);
     }
 
     return _inferCategoryByKeyword(foodName);
@@ -69,28 +93,27 @@ class FoodInsightService {
 
   /// Gemini API를 사용한 카테고리 분류
   static Future<String?> _inferCategoryWithAI(String foodName) async {
-    final apiService = ApiProxyService(http.Client(), ApiConfig.proxyUrl);
-    final categories = FoodCategoryData.categoryEmojis.keys
-        .where((c) => c != '기타')
-        .toList();
+    final client = http.Client();
+    try {
+      final apiService = ApiProxyService(client, ApiConfig.proxyUrl);
+      final categories = _cachedCategories;
 
-    final prompt =
-        '다음 음식명이 어떤 카테고리에 해당하는지 분류해주세요.\n'
-        '음식명: $foodName\n'
-        '카테고리 목록: ${categories.join(', ')}\n'
-        '반드시 위 카테고리 목록 중 하나만 정확히 출력하세요. 다른 설명은 하지 마세요.';
+      final prompt =
+          '다음 음식명이 어떤 카테고리에 해당하는지 분류해주세요.\n'
+          '음식명: $foodName\n'
+          '카테고리 목록: ${categories.join(', ')}\n'
+          '반드시 위 카테고리 목록 중 하나만 정확히 출력하세요. 다른 설명은 하지 마세요.';
 
-    final response = await apiService.generateContent(prompt);
-    final candidates = response['candidates'] as List?;
-
-    if (candidates != null && candidates.isNotEmpty) {
-      final text = candidates[0]['content']['parts'][0]['text'] as String?;
+      final response = await apiService.generateContent(prompt);
+      final text = GeminiResponseParser.extractText(response);
       if (text != null) {
         final trimmed = text.trim();
         for (final category in categories) {
           if (trimmed.contains(category)) return category;
         }
       }
+    } finally {
+      client.close(); // 소켓 리소스 누수 방지
     }
     return null;
   }
@@ -102,10 +125,13 @@ class FoodInsightService {
     String bestCategory = '기타';
     int bestScore = 0;
 
-    for (final entry in FoodCategoryData.categoryKeywords.entries) {
+    final keywordMap = _getNormalizedKeywords;
+
+    for (final entry in keywordMap.entries) {
       int score = 0;
-      for (final keyword in entry.value) {
-        if (normalized.contains(keyword.toLowerCase().replaceAll(' ', ''))) {
+      final keywords = entry.value;
+      for (final keyword in keywords) {
+        if (normalized.contains(keyword)) {
           score += keyword.length;
         }
       }
