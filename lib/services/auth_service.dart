@@ -30,6 +30,8 @@ class AuthService {
   static String? _cachedRefreshToken;
   static DateTime? _tokenExpiry;
   static String? _deviceId;
+  static String? _cachedAppVersion;
+  static String? _cachedDeviceInfo;
 
   /// 유효한 액세스 토큰을 반환 (자동 갱신 포함)
   static Future<String> getValidAccessToken() async {
@@ -231,31 +233,37 @@ class AuthService {
     return _deviceId!;
   }
 
-  /// 앱 버전 가져오기
+  /// 앱 버전 가져오기 (캐싱 적용)
   static Future<String> _getAppVersion() async {
+    if (_cachedAppVersion != null) return _cachedAppVersion!;
     try {
       final packageInfo = await PackageInfo.fromPlatform();
-      return packageInfo.version;
+      _cachedAppVersion = packageInfo.version;
+      return _cachedAppVersion!;
     } catch (e, stack) {
       LoggerService.e('Failed to get app version', e, stack);
       return '1.0.0';
     }
   }
 
-  /// 디바이스 정보 가져오기
+  /// 디바이스 정보 가져오기 (캐싱 적용)
   static Future<String> _getDeviceInfo() async {
+    if (_cachedDeviceInfo != null) return _cachedDeviceInfo!;
     try {
       final deviceInfo = DeviceInfoPlugin();
 
       if (Platform.isAndroid) {
         final androidInfo = await deviceInfo.androidInfo;
-        return 'Android-${androidInfo.version.release}-${androidInfo.model}';
+        _cachedDeviceInfo =
+            'Android-${androidInfo.version.release}-${androidInfo.model}';
       } else if (Platform.isIOS) {
         final iosInfo = await deviceInfo.iosInfo;
-        return 'iOS-${iosInfo.systemVersion}-${iosInfo.model}';
+        _cachedDeviceInfo = 'iOS-${iosInfo.systemVersion}-${iosInfo.model}';
+      } else {
+        _cachedDeviceInfo = 'Unknown-Platform';
       }
 
-      return 'Unknown-Platform';
+      return _cachedDeviceInfo!;
     } catch (e, stack) {
       LoggerService.e('Failed to get device info', e, stack);
       return 'Unknown-Device';

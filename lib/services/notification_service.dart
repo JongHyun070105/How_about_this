@@ -27,6 +27,14 @@ class NotificationService {
   /// 권한 요청 중복 방지 플래그
   bool _isRequestingPermission = false;
 
+  /// SharedPreferences 캐시
+  SharedPreferences? _prefs;
+
+  Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
   // 알림 ID
   static const int _lunchNotificationId = 1001;
   static const int _dinnerNotificationId = 1002;
@@ -44,8 +52,12 @@ class NotificationService {
   /// 알림 서비스 초기화
   Future<void> initialize() async {
     // 타임존 초기화
-    tz_data.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
+    try {
+      tz_data.initializeTimeZones();
+      tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
+    } catch (e, stack) {
+      LoggerService.e('타임존 초기화 실패', e, stack);
+    }
 
     // Android 설정
     const androidSettings = AndroidInitializationSettings(
@@ -128,7 +140,7 @@ class NotificationService {
 
   /// 저장된 설정에 따라 알림 복원
   Future<void> _restoreNotifications() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
 
     final lunchEnabled = prefs.getBool(_lunchEnabledKey) ?? false;
     final dinnerEnabled = prefs.getBool(_dinnerEnabledKey) ?? false;
@@ -143,7 +155,7 @@ class NotificationService {
 
   /// 점심 알림 활성화/비활성화
   Future<void> toggleLunchNotification(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setBool(_lunchEnabledKey, enabled);
 
     if (enabled) {
@@ -155,7 +167,7 @@ class NotificationService {
 
   /// 저녁 알림 활성화/비활성화
   Future<void> toggleDinnerNotification(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setBool(_dinnerEnabledKey, enabled);
 
     if (enabled) {
@@ -171,7 +183,7 @@ class NotificationService {
   Future<void> updatePersonalizedMessages(
     List<ReviewHistoryEntry> history,
   ) async {
-    _history = history;
+    _history = List.unmodifiable(history);
     // 활성화된 알림이 있으면 개인화 메시지로 재예약
     await _restoreNotifications();
   }
@@ -271,13 +283,13 @@ class NotificationService {
 
   /// 점심 알림 활성화 상태
   Future<bool> isLunchNotificationEnabled() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return prefs.getBool(_lunchEnabledKey) ?? false;
   }
 
   /// 저녁 알림 활성화 상태
   Future<bool> isDinnerNotificationEnabled() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return prefs.getBool(_dinnerEnabledKey) ?? false;
   }
 
@@ -285,7 +297,7 @@ class NotificationService {
   Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setBool(_lunchEnabledKey, false);
     await prefs.setBool(_dinnerEnabledKey, false);
   }
