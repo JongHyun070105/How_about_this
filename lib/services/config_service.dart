@@ -12,9 +12,16 @@ class ConfigService {
   static const Duration _cacheExpiry = Duration(hours: 24);
 
   static Map<String, dynamic>? _cachedConfig;
+  static SharedPreferences? _prefs;
 
   // 기본 Clarity ID (서버에서 가져오기 전 폴백)
   static const String _defaultClarityId = 'sy9cat27ff';
+
+  /// SharedPreferences 인스턴스 캐시
+  static Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
 
   /// AdMob 설정 가져오기
   static Future<Map<String, dynamic>> getAdMobConfig() async {
@@ -26,7 +33,7 @@ class ConfigService {
       }
 
       // 로컬 캐시 확인
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await _getPrefs();
       final cachedData = prefs.getString(_cacheKey);
       final cachedTime = prefs.getInt(_cacheTimeKey);
 
@@ -67,15 +74,19 @@ class ConfigService {
       } else {
         throw Exception('Failed to fetch config: ${response.statusCode}');
       }
-    } catch (e) {
-      LoggerService.e('ConfigService error: $e');
+    } catch (e, stack) {
+      LoggerService.e('ConfigService error: $e', e, stack);
 
       // 에러 발생 시 로컬 캐시 사용 (만료되었어도)
-      final prefs = await SharedPreferences.getInstance();
-      final cachedData = prefs.getString(_cacheKey);
-      if (cachedData != null) {
-        LoggerService.e('Using expired cache due to error');
-        return jsonDecode(cachedData);
+      try {
+        final prefs = await _getPrefs();
+        final cachedData = prefs.getString(_cacheKey);
+        if (cachedData != null) {
+          LoggerService.e('Using expired cache due to error');
+          return jsonDecode(cachedData);
+        }
+      } catch (cacheError, cacheStack) {
+        LoggerService.e('ConfigService failback cache load error: $cacheError', cacheError, cacheStack);
       }
 
       // 기본값 반환
@@ -102,7 +113,8 @@ class ConfigService {
         return '';
       }
 
-      final platformConfig = adMobConfig[platform] as Map<String, dynamic>?;
+      final platformKey = platform.toLowerCase();
+      final platformConfig = adMobConfig[platformKey] as Map<String, dynamic>?;
       if (platformConfig == null) {
         LoggerService.d('Platform config not found for $platform');
         return '';
@@ -114,8 +126,8 @@ class ConfigService {
       );
 
       return adUnitId;
-    } catch (e) {
-      LoggerService.e('Error getting AdMob ID: $e');
+    } catch (e, stack) {
+      LoggerService.e('Error getting AdMob ID: $e', e, stack);
       return '';
     }
   }
@@ -131,12 +143,12 @@ class ConfigService {
             .then((_) {
               LoggerService.i('ConfigService initialized');
             })
-            .catchError((e) {
-              LoggerService.e('ConfigService initialization failed: $e');
+            .catchError((e, stack) {
+              LoggerService.e('ConfigService initialization failed: $e', e, stack);
             }),
       );
-    } catch (e) {
-      LoggerService.e('ConfigService initialization error: $e');
+    } catch (e, stack) {
+      LoggerService.e('ConfigService initialization error: $e', e, stack);
     }
   }
 
@@ -145,8 +157,8 @@ class ConfigService {
     try {
       final config = await getAdMobConfig();
       return (config['clarityProjectId'] as String?) ?? _defaultClarityId;
-    } catch (e) {
-      LoggerService.e('Error getting Clarity ID: $e');
+    } catch (e, stack) {
+      LoggerService.e('Error getting Clarity ID: $e', e, stack);
       return _defaultClarityId;
     }
   }
@@ -157,20 +169,24 @@ class ConfigService {
       final config = await getAdMobConfig();
       final firebaseConfig = config['firebase'] as Map<String, dynamic>?;
       if (firebaseConfig == null) return null;
-      return firebaseConfig['apiKey${platform == 'android' ? 'Android' : 'Ios'}']
-          as String?;
-    } catch (e) {
-      LoggerService.e('Error getting Firebase API key: $e');
+      final key = platform.toLowerCase() == 'android' ? 'apiKeyAndroid' : 'apiKeyIos';
+      return firebaseConfig[key] as String?;
+    } catch (e, stack) {
+      LoggerService.e('Error getting Firebase API key: $e', e, stack);
       return null;
     }
   }
 
   /// 캐시 클리어
   static Future<void> clearCache() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_cacheKey);
-    await prefs.remove(_cacheTimeKey);
-    _cachedConfig = null;
-    LoggerService.d('ConfigService cache cleared');
+    try {
+      final prefs = await _getPrefs();
+      await prefs.remove(_cacheKey);
+      await prefs.remove(_cacheTimeKey);
+      _cachedConfig = null;
+      LoggerService.d('ConfigService cache cleared');
+    } catch (e, stack) {
+      LoggerService.e('Error clearing config cache: $e', e, stack);
+    }
   }
 }

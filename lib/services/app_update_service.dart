@@ -8,6 +8,7 @@ import 'package:review_ai/core/utils/logger_service.dart';
 class AppUpdateService {
   static const String _updateUrl =
       'https://gist.github.com/JongHyun070105/ba8200acae9b3375efe284ce43b0e519/raw/467c41ced067c0ccd2ec32a7e0a27aa40c4ff1ae/latest_version.json';
+  static const Duration _httpTimeout = Duration(seconds: 5);
 
   /// 새 버전의 앱이 사용 가능한지 확인합니다.
   /// 업데이트가 사용 가능하면 최신 버전 문자열을 반환하고, 그렇지 않으면 null을 반환합니다.
@@ -20,7 +21,7 @@ class AppUpdateService {
       // 2. 서버에서 최신 버전 가져오기 (타임아웃 설정됨)
       final response = await http
           .get(Uri.parse(_updateUrl))
-          .timeout(const Duration(seconds: 5));
+          .timeout(_httpTimeout);
 
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
@@ -31,24 +32,31 @@ class AppUpdateService {
         }
 
         // 3. Compare versions
-        if (_isVersionGreater(latestVersion, currentVersion)) {
+        if (isVersionGreater(latestVersion, currentVersion)) {
           return latestVersion;
         }
       } else {
         // 업데이트 정보 가져오기 실패
         LoggerService.e('Failed to fetch update info: ${response.statusCode}');
       }
-    } catch (e) {
-      LoggerService.e('Error checking for update: $e');
+    } catch (e, stack) {
+      LoggerService.e('Error checking for update: $e', e, stack);
     }
     return null;
   }
 
-  /// 두 버전 문자열을 비교합니다 (예: "1.0.2" > "1.0.1").
+  /// 두 버전 문자열을 비교합니다 (예: "1.0.2-beta" > "1.0.1").
   /// version1이 version2보다 크면 true를 반환합니다.
-  bool _isVersionGreater(String version1, String version2) {
-    final v1 = version1.split('.').map(int.parse).toList();
-    final v2 = version2.split('.').map(int.parse).toList();
+  bool isVersionGreater(String version1, String version2) {
+    int safeParsePart(String part) {
+      // 문자열에서 숫자 부분만 필터링 (예: "2-beta" -> "2", "2+1" -> "21" 또는 "2")
+      // 단순화를 위해 첫 숫자 시퀀스만 가져오거나 모든 비숫자를 제거합니다.
+      final cleanDigits = part.replaceAll(RegExp(r'[^0-9]'), '');
+      return int.tryParse(cleanDigits) ?? 0;
+    }
+
+    final v1 = version1.split('.').map(safeParsePart).toList();
+    final v2 = version2.split('.').map(safeParsePart).toList();
 
     final len = v1.length > v2.length ? v1.length : v2.length;
 
@@ -82,8 +90,8 @@ class AppUpdateService {
       } else {
         LoggerService.d('AppUpdateService: No in-app update available.');
       }
-    } catch (e) {
-      LoggerService.e('AppUpdateService: Error checking for in-app update: $e');
+    } catch (e, stack) {
+      LoggerService.e('AppUpdateService: Error checking for in-app update: $e', e, stack);
     }
   }
 }
