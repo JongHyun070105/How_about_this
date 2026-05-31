@@ -21,10 +21,8 @@ class LocationService {
       }
 
       final permission = await _checkLocationPermission();
-      // debugPrint('현재 위치 권한 상태: $permission');
       if (permission != LocationPermissionStatus.whileInUse &&
           permission != LocationPermissionStatus.always) {
-        // debugPrint('위치 권한이 부족합니다. 현재 상태: $permission');
         throw const UserPermissionDeniedException('위치 권한이 필요합니다.');
       }
 
@@ -39,14 +37,15 @@ class LocationService {
         timeLimit: _locationTimeout,
       );
 
+      final now = DateTime.now();
       // 위치 정보 캐싱
       _cachedLocation = UserLocation(
         latitude: position.latitude,
         longitude: position.longitude,
         accuracy: position.accuracy,
-        timestamp: DateTime.now(),
+        timestamp: now,
       );
-      _lastLocationUpdate = DateTime.now();
+      _lastLocationUpdate = now;
 
       return _cachedLocation;
     } on UserPermissionDeniedException {
@@ -56,10 +55,8 @@ class LocationService {
     }
   }
 
-  /// 위치 권한 상태를 확인합니다.
-  Future<LocationPermissionStatus> _checkLocationPermission() async {
-    final permission = await Geolocator.checkPermission();
-
+  /// Geolocator 권한을 앱 고유 상태 권한으로 매핑해주는 공통 헬퍼
+  LocationPermissionStatus _mapPermission(LocationPermission permission) {
     switch (permission) {
       case LocationPermission.denied:
         return LocationPermissionStatus.denied;
@@ -74,22 +71,16 @@ class LocationService {
     }
   }
 
+  /// 위치 권한 상태를 확인합니다.
+  Future<LocationPermissionStatus> _checkLocationPermission() async {
+    final permission = await Geolocator.checkPermission();
+    return _mapPermission(permission);
+  }
+
   /// 위치 권한을 요청합니다.
   Future<LocationPermissionStatus> requestLocationPermission() async {
     final permission = await Geolocator.requestPermission();
-
-    switch (permission) {
-      case LocationPermission.denied:
-        return LocationPermissionStatus.denied;
-      case LocationPermission.deniedForever:
-        return LocationPermissionStatus.deniedForever;
-      case LocationPermission.whileInUse:
-        return LocationPermissionStatus.whileInUse;
-      case LocationPermission.always:
-        return LocationPermissionStatus.always;
-      case LocationPermission.unableToDetermine:
-        return LocationPermissionStatus.unableToDetermine;
-    }
+    return _mapPermission(permission);
   }
 
   /// 위치 서비스가 활성화되어 있는지 확인합니다.
@@ -143,14 +134,4 @@ class LocationService {
         longitude >= -180 &&
         longitude <= 180;
   }
-}
-
-/// 위치 관련 예외 클래스
-class LocationException implements Exception {
-  final String message;
-
-  const LocationException(this.message);
-
-  @override
-  String toString() => 'LocationException: $message';
 }

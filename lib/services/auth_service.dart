@@ -38,7 +38,7 @@ class AuthService {
     try {
       if (_cachedAccessToken != null &&
           _tokenExpiry != null &&
-          DateTime.now().isBefore(_tokenExpiry!)) {
+          DateTime.now().isBefore(_tokenExpiry!.subtract(const Duration(minutes: 1)))) {
         _debugLog('Using cached access token');
         return _cachedAccessToken!;
       }
@@ -184,9 +184,11 @@ class AuthService {
   ) async {
     final expiry = DateTime.now().add(Duration(seconds: expiresIn));
 
-    await _storage.write(key: _tokenKey, value: accessToken);
-    await _storage.write(key: _refreshTokenKey, value: refreshToken);
-    await _storage.write(key: _tokenExpiryKey, value: expiry.toIso8601String());
+    await Future.wait([
+      _storage.write(key: _tokenKey, value: accessToken),
+      _storage.write(key: _refreshTokenKey, value: refreshToken),
+      _storage.write(key: _tokenExpiryKey, value: expiry.toIso8601String()),
+    ]);
 
     _cachedAccessToken = accessToken;
     _cachedRefreshToken = refreshToken;
@@ -200,8 +202,10 @@ class AuthService {
   ) async {
     final expiry = DateTime.now().add(Duration(seconds: expiresIn));
 
-    await _storage.write(key: _tokenKey, value: accessToken);
-    await _storage.write(key: _tokenExpiryKey, value: expiry.toIso8601String());
+    await Future.wait([
+      _storage.write(key: _tokenKey, value: accessToken),
+      _storage.write(key: _tokenExpiryKey, value: expiry.toIso8601String()),
+    ]);
 
     _cachedAccessToken = accessToken;
     _tokenExpiry = expiry;
@@ -209,9 +213,11 @@ class AuthService {
 
   /// 토큰 캐시 클리어 (deviceId는 보존)
   static Future<void> _clearTokens() async {
-    await _storage.delete(key: _tokenKey);
-    await _storage.delete(key: _refreshTokenKey);
-    await _storage.delete(key: _tokenExpiryKey);
+    await Future.wait([
+      _storage.delete(key: _tokenKey),
+      _storage.delete(key: _refreshTokenKey),
+      _storage.delete(key: _tokenExpiryKey),
+    ]);
 
     _cachedAccessToken = null;
     _cachedRefreshToken = null;
