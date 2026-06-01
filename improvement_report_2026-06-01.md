@@ -11,7 +11,7 @@
 `graphify update .`로 그래프를 새로 생성했고, 변경 후 한 번 더 갱신했다.
 
 - 파일: 1,299개
-- 그래프: 5,726 nodes / 5,703 edges / 1,161 communities
+- 그래프: 5,729 nodes / 5,706 edges / 1,158 communities
 - 리포트: `graphify-out/GRAPH_REPORT.md`
 - 비고: iOS Pods까지 포함되어 그래프가 큰 편이며, 앱 레이어 분석은 Flutter/Dart 커뮤니티를 우선했다.
 - 비고: `graph.html`은 노드 수가 5,000개 제한을 넘어 생략됐지만 `graph.json`과 `GRAPH_REPORT.md`는 정상 갱신됐다.
@@ -77,6 +77,7 @@ flutter test test/config/security_config_test.dart --reporter expanded
 dart format lib/config/security_config.dart test/config/security_config_test.dart
 flutter test test/config/security_config_test.dart --reporter expanded
 flutter analyze && flutter test
+flutter pub get && dart format --output=none --set-exit-if-changed . && (flutter analyze --no-fatal-infos > flutter_analyze.log || true) && flutter test --coverage
 ```
 
 결과:
@@ -89,6 +90,12 @@ flutter analyze && flutter test
   - `All tests passed!`
 - `flutter analyze`: No issues found
 - `flutter test`: `+156: All tests passed!`
+- GitHub Actions QA 로컬 재현:
+  - `flutter pub get`: 성공
+  - `dart format --output=none --set-exit-if-changed .`: `Formatted 155 files (0 changed)`
+  - `flutter test --coverage`: `+156: All tests passed!`
+  - `coverage/lcov.info`: 생성 확인, 2,034 lines
+- 후속 보정: CI formatter가 요구한 `lib/services/app_update_service.dart`, `lib/services/auth_service.dart`, `lib/services/config_service.dart` 포맷 반영
 
 ## 4. 보안/논리 검토
 
