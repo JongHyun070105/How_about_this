@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.2](https://github.com/JongHyun070105/how-about-this/compare/v1.12.1...v1.12.2) (2026-06-01)
+
+
+### Bug Fixes
+
+* satisfy CI QA formatting ([9e2d357](https://github.com/JongHyun070105/how-about-this/commit/9e2d357d41242f2da78d14f537ac6579438a7e9a))
+* satisfy CI QA formatting ([028074a](https://github.com/JongHyun070105/how-about-this/commit/028074a8b4ac183b580919f3cfb002ce6e0a140b))
+
 ## [1.12.1](https://github.com/JongHyun070105/how-about-this/compare/v1.12.0...v1.12.1) (2026-05-26)
 
 
