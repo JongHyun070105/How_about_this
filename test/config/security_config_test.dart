@@ -55,6 +55,11 @@ void main() {
         final result = await SecurityConfig.detectRootingOrJailbreak();
         expect(result, isFalse);
       });
+
+      test('에뮬레이터 감지가 바인딩 미초기화 환경에서 false 반환', () async {
+        final result = await SecurityConfig.detectEmulator();
+        expect(result, isFalse);
+      });
     });
   });
 
@@ -72,6 +77,8 @@ void main() {
       expect(result.isRootedOrJailbroken, isFalse);
       // 디버그 모드에서는 디버거 감지됨
       expect(result.isDebuggerAttached, isTrue);
+      expect(result.isEmulator, isFalse);
+      expect(result.error, isNull);
     });
 
     test('개발 환경에서 디버거 연결돼도 보안 상태 true', () async {
