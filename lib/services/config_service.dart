@@ -86,7 +86,11 @@ class ConfigService {
           return jsonDecode(cachedData);
         }
       } catch (cacheError, cacheStack) {
-        LoggerService.e('ConfigService failback cache load error: $cacheError', cacheError, cacheStack);
+        LoggerService.e(
+          'ConfigService failback cache load error: $cacheError',
+          cacheError,
+          cacheStack,
+        );
       }
 
       // 기본값 반환
@@ -144,7 +148,11 @@ class ConfigService {
               LoggerService.i('ConfigService initialized');
             })
             .catchError((e, stack) {
-              LoggerService.e('ConfigService initialization failed: $e', e, stack);
+              LoggerService.e(
+                'ConfigService initialization failed: $e',
+                e,
+                stack,
+              );
             }),
       );
     } catch (e, stack) {
@@ -169,7 +177,9 @@ class ConfigService {
       final config = await getAdMobConfig();
       final firebaseConfig = config['firebase'] as Map<String, dynamic>?;
       if (firebaseConfig == null) return null;
-      final key = platform.toLowerCase() == 'android' ? 'apiKeyAndroid' : 'apiKeyIos';
+      final key = platform.toLowerCase() == 'android'
+          ? 'apiKeyAndroid'
+          : 'apiKeyIos';
       return firebaseConfig[key] as String?;
     } catch (e, stack) {
       LoggerService.e('Error getting Firebase API key: $e', e, stack);

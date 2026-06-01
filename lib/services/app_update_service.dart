@@ -91,7 +91,11 @@ class AppUpdateService {
         LoggerService.d('AppUpdateService: No in-app update available.');
       }
     } catch (e, stack) {
-      LoggerService.e('AppUpdateService: Error checking for in-app update: $e', e, stack);
+      LoggerService.e(
+        'AppUpdateService: Error checking for in-app update: $e',
+        e,
+        stack,
+      );
     }
   }
 }

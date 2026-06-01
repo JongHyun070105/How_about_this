@@ -38,7 +38,9 @@ class AuthService {
     try {
       if (_cachedAccessToken != null &&
           _tokenExpiry != null &&
-          DateTime.now().isBefore(_tokenExpiry!.subtract(const Duration(minutes: 1)))) {
+          DateTime.now().isBefore(
+            _tokenExpiry!.subtract(const Duration(minutes: 1)),
+          )) {
         _debugLog('Using cached access token');
         return _cachedAccessToken!;
       }
