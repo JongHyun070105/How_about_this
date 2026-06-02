@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:review_ai/services/config_service.dart';
@@ -45,6 +47,26 @@ void main() {
         expect(result, isNotEmpty);
         // 기본값 'sy9cat27ff'
         expect(result, 'sy9cat27ff');
+      });
+    });
+
+    group('fallback logging', () {
+      test('서버 설정 조회 실패 fallback은 error 로그로 분류하지 않음', () async {
+        final printedLogs = <String>[];
+
+        await runZoned(
+          () async {
+            await ConfigService.clearCache();
+            await ConfigService.getAdMobConfig();
+          },
+          zoneSpecification: ZoneSpecification(
+            print: (_, __, ___, line) => printedLogs.add(line),
+          ),
+        );
+
+        final output = printedLogs.join('\n');
+        expect(output, isNot(contains('ConfigService error')));
+        expect(output, isNot(contains('Failed to fetch config')));
       });
     });
 
