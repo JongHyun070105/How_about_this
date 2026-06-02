@@ -71,36 +71,51 @@ class ConfigService {
         _cachedConfig = config;
         LoggerService.d('AdMob config fetched and cached');
         return config;
-      } else {
-        throw Exception('Failed to fetch config: ${response.statusCode}');
       }
+
+      // 서버가 설정 엔드포인트를 거부하거나 아직 제공하지 않는 경우는
+      // 앱 기본값/만료 캐시로 복구 가능한 fallback 경로이므로 error로 분류하지 않는다.
+      LoggerService.w(
+        'ConfigService fallback: server returned ${response.statusCode}',
+      );
+      return _fallbackConfig(prefs);
     } catch (e, stack) {
       LoggerService.e('ConfigService error: $e', e, stack);
 
-      // 에러 발생 시 로컬 캐시 사용 (만료되었어도)
+      // 네트워크/파싱 예외 발생 시 로컬 캐시 사용 (만료되었어도)
       try {
         final prefs = await _getPrefs();
-        final cachedData = prefs.getString(_cacheKey);
-        if (cachedData != null) {
-          LoggerService.e('Using expired cache due to error');
-          return jsonDecode(cachedData);
-        }
+        return _fallbackConfig(prefs);
       } catch (cacheError, cacheStack) {
         LoggerService.e(
-          'ConfigService failback cache load error: $cacheError',
+          'ConfigService fallback cache load error: $cacheError',
           cacheError,
           cacheStack,
         );
       }
 
-      // 기본값 반환
-      return {
-        'adMob': {
-          'ios': {'rewarded': '', 'banner': ''},
-          'android': {'rewarded': '', 'banner': ''},
-        },
-      };
+      return _defaultConfig();
     }
+  }
+
+  static Map<String, dynamic> _fallbackConfig(SharedPreferences prefs) {
+    final cachedData = prefs.getString(_cacheKey);
+    if (cachedData != null) {
+      LoggerService.i('Using expired config cache as fallback');
+      return jsonDecode(cachedData);
+    }
+
+    LoggerService.i('Using default config fallback');
+    return _defaultConfig();
+  }
+
+  static Map<String, dynamic> _defaultConfig() {
+    return {
+      'adMob': {
+        'ios': {'rewarded': '', 'banner': ''},
+        'android': {'rewarded': '', 'banner': ''},
+      },
+    };
   }
 
   /// AdMob Ad Unit ID 가져오기
