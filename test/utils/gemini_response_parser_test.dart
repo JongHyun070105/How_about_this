@@ -58,6 +58,18 @@ void main() {
         expect(result, '[{"name": "피자"}]');
       });
 
+      test('대문자 JSON 언어 태그 코드 블록을 제거한다', () {
+        const input = '```JSON\n[{"name": "초밥"}]\n```';
+        final result = GeminiResponseParser.cleanMarkdownJson(input);
+        expect(result, '[{"name": "초밥"}]');
+      });
+
+      test('공백이 포함된 json 언어 태그 코드 블록을 제거한다', () {
+        const input = '``` json\n[{"name": "쌀국수"}]\n```';
+        final result = GeminiResponseParser.cleanMarkdownJson(input);
+        expect(result, '[{"name": "쌀국수"}]');
+      });
+
       test('코드 블록이 없으면 그대로 반환한다', () {
         const input = '[{"name": "김밥"}]';
         final result = GeminiResponseParser.cleanMarkdownJson(input);
@@ -131,6 +143,24 @@ void main() {
         final result = GeminiResponseParser.parseRecommendations(response);
         expect(result.length, 1);
         expect(result[0].name, '우동');
+      });
+
+      test('대문자 JSON 코드 블록으로 감싼 응답을 파싱한다', () {
+        final response = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {'text': '```JSON\n[{"name": "초밥", "imageUrl": ""}]\n```'},
+                ],
+              },
+            },
+          ],
+        };
+
+        final result = GeminiResponseParser.parseRecommendations(response);
+        expect(result.length, 1);
+        expect(result[0].name, '초밥');
       });
 
       test('텍스트가 없는 응답은 예외를 던진다', () {

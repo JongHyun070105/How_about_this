@@ -5,8 +5,11 @@ import 'package:review_ai/core/utils/logger_service.dart';
 /// Gemini API 응답에서 음식 추천 목록을 파싱하는 공통 유틸리티
 class GeminiResponseParser {
   // 정규식 객체 캐싱
-  static final RegExp _markdownJsonRegex = RegExp(r'```json?');
-  static final RegExp _markdownGeneralRegex = RegExp(r'```');
+  static final RegExp _openingMarkdownFenceRegex = RegExp(
+    r'^```\s*[A-Za-z0-9_-]*\s*\r?\n?',
+    caseSensitive: false,
+  );
+  static final RegExp _closingMarkdownFenceRegex = RegExp(r'\r?\n?```\s*$');
   static final RegExp _numberPrefixRegex = RegExp(r'^\d+\.\s*');
 
   /// Gemini API 응답 Map에서 텍스트를 추출합니다.
@@ -27,12 +30,10 @@ class GeminiResponseParser {
   static String cleanMarkdownJson(String jsonString) {
     var cleaned = jsonString.trim();
 
-    if (cleaned.startsWith('```json')) {
+    if (cleaned.startsWith('```')) {
       cleaned = cleaned
-          .replaceAll(_markdownJsonRegex, '')
-          .replaceAll(_markdownGeneralRegex, '');
-    } else if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replaceAll(_markdownGeneralRegex, '');
+          .replaceFirst(_openingMarkdownFenceRegex, '')
+          .replaceFirst(_closingMarkdownFenceRegex, '');
     }
 
     return cleaned.trim();
