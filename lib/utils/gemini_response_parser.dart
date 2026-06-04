@@ -26,7 +26,7 @@ class GeminiResponseParser {
     return parts[0]['text'] as String?;
   }
 
-  /// JSON 문자열에서 마크다운 코드 블록을 제거합니다.
+  /// JSON 문자열에서 마크다운 코드 블록과 앞뒤 설명 문장을 제거합니다.
   static String cleanMarkdownJson(String jsonString) {
     var cleaned = jsonString.trim();
 
@@ -36,7 +36,59 @@ class GeminiResponseParser {
           .replaceFirst(_closingMarkdownFenceRegex, '');
     }
 
-    return cleaned.trim();
+    cleaned = cleaned.trim();
+    return _extractJsonPayload(cleaned).trim();
+  }
+
+  static String _extractJsonPayload(String value) {
+    for (var i = 0; i < value.length; i++) {
+      final char = value[i];
+      if (char != '[' && char != '{') continue;
+
+      final payload = _balancedJsonSubstring(value, i);
+      if (payload != null) return payload;
+    }
+
+    return value;
+  }
+
+  static String? _balancedJsonSubstring(String value, int start) {
+    final expectedClosings = <String>[];
+    var inString = false;
+    var escaped = false;
+
+    for (var i = start; i < value.length; i++) {
+      final char = value[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (char == '\\') {
+          escaped = true;
+        } else if (char == '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (char == '"') {
+        inString = true;
+      } else if (char == '[') {
+        expectedClosings.add(']');
+      } else if (char == '{') {
+        expectedClosings.add('}');
+      } else if (char == ']' || char == '}') {
+        if (expectedClosings.isEmpty || expectedClosings.last != char) {
+          return null;
+        }
+        expectedClosings.removeLast();
+        if (expectedClosings.isEmpty) {
+          return value.substring(start, i + 1);
+        }
+      }
+    }
+
+    return null;
   }
 
   /// Gemini API 응답을 FoodRecommendation 리스트로 파싱합니다.
