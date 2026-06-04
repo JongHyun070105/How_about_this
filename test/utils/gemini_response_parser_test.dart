@@ -81,6 +81,18 @@ void main() {
         final result = GeminiResponseParser.cleanMarkdownJson(input);
         expect(result, '[{"name": "라면"}]');
       });
+
+      test('설명 문장이 앞뒤에 있어도 JSON 배열만 추출한다', () {
+        const input = '''
+추천 메뉴는 아래와 같습니다.
+[{"name": "칼국수"}]
+맛있게 드세요!
+''';
+
+        final result = GeminiResponseParser.cleanMarkdownJson(input);
+
+        expect(result, '[{"name": "칼국수"}]');
+      });
     });
 
     group('parseRecommendations', () {
@@ -161,6 +173,31 @@ void main() {
         final result = GeminiResponseParser.parseRecommendations(response);
         expect(result.length, 1);
         expect(result[0].name, '초밥');
+      });
+
+      test('설명 문장으로 감싼 추천 응답을 파싱한다', () {
+        final response = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {
+                    'text': '''
+아래 추천 메뉴를 확인해 주세요.
+[{"name": "칼국수", "imageUrl": ""}]
+추천 이유: 비 오는 날에 잘 어울립니다.
+''',
+                  },
+                ],
+              },
+            },
+          ],
+        };
+
+        final result = GeminiResponseParser.parseRecommendations(response);
+
+        expect(result.length, 1);
+        expect(result[0].name, '칼국수');
       });
 
       test('텍스트가 없는 응답은 예외를 던진다', () {
