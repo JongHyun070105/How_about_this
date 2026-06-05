@@ -91,6 +91,22 @@ class GeminiResponseParser {
     return null;
   }
 
+  static List<dynamic> _extractRecommendationItems(dynamic decodedJson) {
+    if (decodedJson is List) {
+      return List<dynamic>.from(decodedJson);
+    }
+
+    if (decodedJson is Map) {
+      const candidateKeys = ['recommendations', 'items', 'foods', 'results'];
+      for (final key in candidateKeys) {
+        final value = decodedJson[key];
+        if (value is List) return List<dynamic>.from(value);
+      }
+    }
+
+    throw const FormatException('추천 JSON 배열을 찾을 수 없습니다.');
+  }
+
   /// Gemini API 응답을 FoodRecommendation 리스트로 파싱합니다.
   ///
   /// 마크다운 코드 블록 제거, 숫자 접두사 제거 등을 포함합니다.
@@ -116,7 +132,8 @@ class GeminiResponseParser {
 
     List<dynamic> decodedList;
     try {
-      decodedList = jsonDecode(cleanedJson);
+      final decodedJson = jsonDecode(cleanedJson);
+      decodedList = _extractRecommendationItems(decodedJson);
     } catch (e, stack) {
       LoggerService.e('JSON 파싱 실패: $e\nRaw: $cleanedJson', e, stack);
       throw Exception('추천 데이터를 분석하는 중 문제가 발생했습니다. 다시 시도해 주세요.');

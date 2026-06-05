@@ -200,6 +200,28 @@ void main() {
         expect(result[0].name, '칼국수');
       });
 
+      test('recommendations 키로 감싼 JSON 객체 응답을 파싱한다', () {
+        final response = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {
+                    'text':
+                        '{"recommendations": [{"name": "쌀국수", "imageUrl": ""}]}',
+                  },
+                ],
+              },
+            },
+          ],
+        };
+
+        final result = GeminiResponseParser.parseRecommendations(response);
+
+        expect(result.length, 1);
+        expect(result[0].name, '쌀국수');
+      });
+
       test('텍스트가 없는 응답은 예외를 던진다', () {
         final response = {
           'candidates': [
