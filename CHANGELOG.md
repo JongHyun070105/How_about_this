@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.3](https://github.com/JongHyun070105/how-about-this/compare/v1.12.2...v1.12.3) (2026-06-04)
+
+
+### Bug Fixes
+
+* classify config fallback as non-error ([8104f15](https://github.com/JongHyun070105/how-about-this/commit/8104f15b6e6ca3e59a5f07dab17ab16cbc13bf4b))
+* classify config fallback as non-error ([a695922](https://github.com/JongHyun070105/how-about-this/commit/a6959220ec01b5868d15ef4719ede851df1ab827))
+* handle Gemini markdown fence variants ([7538f79](https://github.com/JongHyun070105/how-about-this/commit/7538f7949db6f3194fab689803aba1e025102c89))
+* handle Gemini markdown fence variants ([38ca9ff](https://github.com/JongHyun070105/how-about-this/commit/38ca9ff8dcdb9695dc941fd88a256ed8cb5c4797))
+* parse Gemini JSON wrapped in prose ([c253960](https://github.com/JongHyun070105/how-about-this/commit/c2539604df501419441a8264e03f2129d2c66028))
+* parse Gemini JSON wrapped in prose ([3e9ee99](https://github.com/JongHyun070105/how-about-this/commit/3e9ee99993bca7fbb05ca3dd47c5a3798666724e))
+
 ## [1.12.2](https://github.com/JongHyun070105/how-about-this/compare/v1.12.1...v1.12.2) (2026-06-01)
 
 
