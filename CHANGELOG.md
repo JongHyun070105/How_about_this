@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.4](https://github.com/JongHyun070105/how-about-this/compare/v1.12.3...v1.12.4) (2026-06-06)
+
+
+### Bug Fixes
+
+* tolerate trailing commas in Gemini JSON ([e216e25](https://github.com/JongHyun070105/how-about-this/commit/e216e251af6fd128dcfdf3ca0335a3883a405fa4))
+* tolerate trailing commas in Gemini JSON ([38bf934](https://github.com/JongHyun070105/how-about-this/commit/38bf934c60305713f23c2ab2281d4cf91124e6c5))
+
 ## [1.12.3](https://github.com/JongHyun070105/how-about-this/compare/v1.12.2...v1.12.3) (2026-06-04)
 
 
