@@ -222,6 +222,31 @@ void main() {
         expect(result[0].name, '쌀국수');
       });
 
+      test('객체와 배열의 trailing comma가 있어도 추천 응답을 파싱한다', () {
+        final response = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {
+                    'text': '''
+[
+  {"name": "참치,김밥", "imageUrl": "",},
+]
+''',
+                  },
+                ],
+              },
+            },
+          ],
+        };
+
+        final result = GeminiResponseParser.parseRecommendations(response);
+
+        expect(result.length, 1);
+        expect(result[0].name, '참치,김밥');
+      });
+
       test('텍스트가 없는 응답은 예외를 던진다', () {
         final response = {
           'candidates': [

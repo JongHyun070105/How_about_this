@@ -91,6 +91,48 @@ class GeminiResponseParser {
     return null;
   }
 
+  static String _removeTrailingCommas(String value) {
+    final buffer = StringBuffer();
+    var inString = false;
+    var escaped = false;
+
+    for (var i = 0; i < value.length; i++) {
+      final char = value[i];
+
+      if (inString) {
+        buffer.write(char);
+        if (escaped) {
+          escaped = false;
+        } else if (char == '\\') {
+          escaped = true;
+        } else if (char == '"') {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (char == '"') {
+        inString = true;
+        buffer.write(char);
+        continue;
+      }
+
+      if (char == ',') {
+        var next = i + 1;
+        while (next < value.length && value[next].trim().isEmpty) {
+          next++;
+        }
+        if (next < value.length && (value[next] == ']' || value[next] == '}')) {
+          continue;
+        }
+      }
+
+      buffer.write(char);
+    }
+
+    return buffer.toString();
+  }
+
   static List<dynamic> _extractRecommendationItems(dynamic decodedJson) {
     if (decodedJson is List) {
       return List<dynamic>.from(decodedJson);
@@ -124,7 +166,7 @@ class GeminiResponseParser {
       'Raw Gemini response (first 200 chars): ${jsonString.substring(0, jsonString.length > 200 ? 200 : jsonString.length)}',
     );
 
-    final cleanedJson = cleanMarkdownJson(jsonString);
+    final cleanedJson = _removeTrailingCommas(cleanMarkdownJson(jsonString));
 
     LoggerService.d(
       'Cleaned JSON for parsing (first 200 chars): ${cleanedJson.substring(0, cleanedJson.length > 200 ? 200 : cleanedJson.length)}',
