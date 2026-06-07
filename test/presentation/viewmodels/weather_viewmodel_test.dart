@@ -54,6 +54,12 @@ class FakeWeatherService implements WeatherService {
     if (shouldThrow) throw Exception('Weather API failed');
     return mockCondition;
   }
+
+  @override
+  void clearCache() {}
+
+  @override
+  void dispose() {}
 }
 
 void main() {

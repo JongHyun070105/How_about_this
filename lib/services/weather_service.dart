@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:review_ai/config/environment_config.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
 
 enum WeatherCondition {
@@ -15,30 +16,111 @@ enum WeatherCondition {
 }
 
 class WeatherService {
-  Future<WeatherCondition> getCurrentWeather(double lat, double lng) async {
-    try {
-      // Cloudflare Worker 프록시를 통해 날씨 정보 조회
-      final backendUrl = EnvironmentConfig.apiBaseUrl;
-      final url = Uri.parse('$backendUrl/weather?lat=$lat&lon=$lng');
+  final http.Client _client;
 
-      final response = await http.get(url).timeout(const Duration(seconds: 10));
+  // 캐시 필드
+  WeatherCondition? _cachedCondition;
+  DateTime? _cachedAt;
+  double? _cachedLat;
+  double? _cachedLng;
+
+  // 캐시 정책 상수
+  static const Duration _cacheDuration = Duration(minutes: 15);
+  static const double _distanceThresholdMeters = 500.0;
+
+  WeatherService({http.Client? client}) : _client = client ?? http.Client();
+
+  /// 현재 날씨를 가져옵니다 (로컬 캐싱 적용).
+  Future<WeatherCondition> getCurrentWeather(double lat, double lng) async {
+    // 1. 캐시가 존재하고 유효한지 확인 (15분 이내 & 500m 이내 동일 위치)
+    if (_isCacheValid(lat, lng)) {
+      LoggerService.d(
+        'WeatherService: Using cached weather condition: $_cachedCondition',
+      );
+      return _cachedCondition!;
+    }
+
+    try {
+      // Cloudflare Worker 프록시를 통해 날씨 정보 조회 (ApiConfig.proxyUrl 활용)
+      final url = Uri.parse('${ApiConfig.proxyUrl}/weather?lat=$lat&lon=$lng');
+
+      final response = await _client
+          .get(url)
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final weatherList = data['weather'] as List;
-        if (weatherList.isNotEmpty) {
-          final main = weatherList[0]['main'].toString().toLowerCase();
-          return _mapWeatherCondition(main);
+        final data = json.decode(response.body) as Map<String, dynamic>?;
+        if (data != null && data['weather'] is List) {
+          final weatherList = data['weather'] as List;
+          if (weatherList.isNotEmpty && weatherList[0] is Map) {
+            final mainVal = weatherList[0]['main'];
+            if (mainVal != null) {
+              final main = mainVal.toString().toLowerCase();
+              final condition = _mapWeatherCondition(main);
+
+              // 날씨 캐시 업데이트
+              _cachedCondition = condition;
+              _cachedAt = DateTime.now();
+              _cachedLat = lat;
+              _cachedLng = lng;
+
+              return condition;
+            }
+          }
         }
+        LoggerService.w('WeatherService: Unexpected weather response format');
       } else {
         LoggerService.e(
           'Weather API Error: ${response.statusCode} - ${response.body}',
         );
       }
-    } catch (e) {
-      LoggerService.e('Weather Service Error: $e');
+    } catch (e, stack) {
+      LoggerService.e('Weather Service Error: $e', e, stack);
     }
     return WeatherCondition.unknown;
+  }
+
+  /// 캐시 유효성 판단
+  bool _isCacheValid(double lat, double lng) {
+    if (_cachedCondition == null ||
+        _cachedAt == null ||
+        _cachedLat == null ||
+        _cachedLng == null) {
+      return false;
+    }
+
+    // 시간 만료 검증
+    final timeDiff = DateTime.now().difference(_cachedAt!);
+    if (timeDiff >= _cacheDuration) {
+      return false;
+    }
+
+    // 위치 오차 검증 (500m 이내)
+    try {
+      final distance = Geolocator.distanceBetween(
+        _cachedLat!,
+        _cachedLng!,
+        lat,
+        lng,
+      );
+      return distance <= _distanceThresholdMeters;
+    } catch (e) {
+      // Geolocator 계산 실패 시 안전하게 캐시 무효화
+      return false;
+    }
+  }
+
+  /// 날씨 캐시 초기화
+  void clearCache() {
+    _cachedCondition = null;
+    _cachedAt = null;
+    _cachedLat = null;
+    _cachedLng = null;
+  }
+
+  /// 클라이언트 자원 해제
+  void dispose() {
+    _client.close();
   }
 
   WeatherCondition _mapWeatherCondition(String main) {
