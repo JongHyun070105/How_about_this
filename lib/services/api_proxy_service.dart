@@ -120,6 +120,22 @@ class ApiProxyService {
     return await _callGeminiApi('generateContent', requestBody);
   }
 
+  static List<dynamic> _extractReviewItems(dynamic decodedJson) {
+    if (decodedJson is List) {
+      return List<dynamic>.from(decodedJson);
+    }
+
+    if (decodedJson is Map) {
+      const candidateKeys = ['reviews', 'items', 'results', 'recommendations'];
+      for (final key in candidateKeys) {
+        final value = decodedJson[key];
+        if (value is List) return List<dynamic>.from(value);
+      }
+    }
+
+    throw const FormatException('리뷰 JSON 배열을 찾을 수 없습니다.');
+  }
+
   /// 리뷰 생성
   Future<List<String>> generateReviews({
     required String foodName,
@@ -164,7 +180,8 @@ class ApiProxyService {
 
       try {
         final cleanedContent = GeminiResponseParser.cleanMarkdownJson(content);
-        final decoded = json.decode(cleanedContent) as List<dynamic>;
+        final decodedJson = json.decode(cleanedContent);
+        final decoded = _extractReviewItems(decodedJson);
         final reviews = decoded.map((e) => e.toString()).toList();
 
         if (reviews.isEmpty) {
