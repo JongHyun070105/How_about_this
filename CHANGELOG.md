@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.12.4](https://github.com/JongHyun070105/how-about-this/compare/v1.12.3...v1.12.4) (2026-06-08)
+
+
+### Bug Fixes
+
+* handle wrapped review JSON responses ([9b26567](https://github.com/JongHyun070105/how-about-this/commit/9b2656719a389fc172242b78d0bb44bb602a8794))
+* handle wrapped review JSON responses ([d7ee84b](https://github.com/JongHyun070105/how-about-this/commit/d7ee84b96aaef6e2824115a7b1867e5c42b918cf))
+* tolerate trailing commas in Gemini JSON ([e216e25](https://github.com/JongHyun070105/how-about-this/commit/e216e251af6fd128dcfdf3ca0335a3883a405fa4))
+* tolerate trailing commas in Gemini JSON ([38bf934](https://github.com/JongHyun070105/how-about-this/commit/38bf934c60305713f23c2ab2281d4cf91124e6c5))
+
 ## [1.12.4](https://github.com/JongHyun070105/how-about-this/compare/v1.12.3...v1.12.4) (2026-06-06)
 
 
