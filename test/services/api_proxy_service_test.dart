@@ -231,6 +231,44 @@ void main() {
 
         expect(reviews.length, 3);
       });
+
+      test('객체 래핑 응답도 정상 파싱', () async {
+        final mockClient = http_testing.MockClient((request) async {
+          final responseJson = jsonEncode({
+            'candidates': [
+              {
+                'content': {
+                  'parts': [
+                    {'text': '{"reviews": ["R1", "R2", "R3"]}'},
+                  ],
+                },
+              },
+            ],
+          });
+          return http.Response.bytes(
+            utf8.encode(responseJson),
+            200,
+            headers: {'content-type': 'application/json; charset=utf-8'},
+          );
+        });
+
+        final service = ApiProxyService(
+          mockClient,
+          'https://test-proxy.example.com',
+          tokenProvider: () async => 'test-token-123',
+        );
+
+        final reviews = await service.generateReviews(
+          foodName: 'food',
+          deliveryRating: 4.0,
+          tasteRating: 4.0,
+          portionRating: 4.0,
+          priceRating: 4.0,
+          reviewStyle: 'humorous',
+        );
+
+        expect(reviews, ['R1', 'R2', 'R3']);
+      });
     });
 
     group('프록시 URL 검증', () {
