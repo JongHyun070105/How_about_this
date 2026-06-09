@@ -41,15 +41,50 @@ class GeminiResponseParser {
   }
 
   static String _extractJsonPayload(String value) {
+    String? firstValidPayload;
+
     for (var i = 0; i < value.length; i++) {
       final char = value[i];
       if (char != '[' && char != '{') continue;
 
       final payload = _balancedJsonSubstring(value, i);
-      if (payload != null) return payload;
+      if (payload == null) continue;
+
+      final cleanedPayload = _removeTrailingCommas(payload.trim());
+      try {
+        final decodedJson = jsonDecode(cleanedPayload);
+        firstValidPayload ??= payload;
+
+        if (decodedJson is List) {
+          return payload;
+        }
+
+        if (decodedJson is Map && _hasRecognizedWrapperKey(decodedJson)) {
+          return payload;
+        }
+      } catch (_) {
+        // Not a usable JSON payload, keep scanning for the next candidate.
+      }
+
+      i += payload.length - 1;
     }
 
-    return value;
+    return firstValidPayload ?? value;
+  }
+
+  static bool _hasRecognizedWrapperKey(Map<dynamic, dynamic> decodedJson) {
+    const candidateKeys = [
+      'recommendations',
+      'items',
+      'foods',
+      'results',
+      'reviews',
+    ];
+    for (final key in candidateKeys) {
+      final value = decodedJson[key];
+      if (value is List) return true;
+    }
+    return false;
   }
 
   static String? _balancedJsonSubstring(String value, int start) {
