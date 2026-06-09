@@ -222,6 +222,34 @@ void main() {
         expect(result[0].name, '쌀국수');
       });
 
+      test('설명용 JSON 객체보다 실제 JSON 배열을 우선 파싱한다', () {
+        final response = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {
+                    'text': '''
+아래는 예시 설명입니다.
+{"example": "ignore me"}
+실제 추천 응답:
+[
+  {"name": "비빔밥", "imageUrl": ""}
+]
+''',
+                  },
+                ],
+              },
+            },
+          ],
+        };
+
+        final result = GeminiResponseParser.parseRecommendations(response);
+
+        expect(result.length, 1);
+        expect(result[0].name, '비빔밥');
+      });
+
       test('객체와 배열의 trailing comma가 있어도 추천 응답을 파싱한다', () {
         final response = {
           'candidates': [
