@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:review_ai/services/persistent_storage_service.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
 
@@ -52,8 +53,25 @@ class UserPreferenceAnalysis {
 }
 
 class UserPreferenceService {
-  static final PersistentStorageService _storageService =
-      PersistentStorageService();
+  static PersistentStorageService _storageService = PersistentStorageService();
+
+  @visibleForTesting
+  static void setStorageServiceForTesting(PersistentStorageService service) {
+    _storageService = service;
+  }
+
+  // 메모리 캐시 변수
+  static List<FoodSelection>? _cachedHistory;
+  static List<String>? _cachedDislikedFoods;
+
+  /// 캐시 초기화
+  @visibleForTesting
+  static void clearCache() {
+    _cachedHistory = null;
+    _cachedDislikedFoods = null;
+    LoggerService.d('UserPreferenceService: Cache cleared');
+  }
+
   static const String _userPrefsFile = 'user_preferences.json';
 
   static const String _selectionHistoryKey = 'food_selection_history';
@@ -88,6 +106,9 @@ class UserPreferenceService {
       history.removeAt(0);
     }
 
+    // 메모리 캐시 즉시 업데이트
+    _cachedHistory = List<FoodSelection>.from(history);
+
     final jsonList = history.map((s) => s.toJson()).toList();
     await _storageService.setValue(
       _userPrefsFile,
@@ -114,19 +135,29 @@ class UserPreferenceService {
 
   // 음식 선택 기록 조회
   static Future<List<FoodSelection>> getFoodSelectionHistory() async {
+    if (_cachedHistory != null) {
+      return List<FoodSelection>.from(_cachedHistory!);
+    }
+
     final jsonList = await _storageService.getValue<List<dynamic>>(
       _userPrefsFile,
       _selectionHistoryKey,
     );
 
-    if (jsonList == null) return [];
+    if (jsonList == null) {
+      _cachedHistory = [];
+      return [];
+    }
 
     try {
-      return jsonList
+      final history = jsonList
           .map((json) => FoodSelection.fromJson(json as Map<String, dynamic>))
           .toList();
+      _cachedHistory = history;
+      return List<FoodSelection>.from(history);
     } catch (e) {
       LoggerService.e('선택 기록 로드 오류: $e');
+      _cachedHistory = [];
       return [];
     }
   }
@@ -137,6 +168,10 @@ class UserPreferenceService {
 
     if (!dislikedFoods.contains(foodName)) {
       dislikedFoods.add(foodName);
+
+      // 메모리 캐시 즉시 업데이트
+      _cachedDislikedFoods = List<String>.from(dislikedFoods);
+
       await _storageService.setValue(
         _userPrefsFile,
         _dislikedFoodsKey,
@@ -147,18 +182,32 @@ class UserPreferenceService {
 
   // 싫어하는 음식 목록 조회
   static Future<List<String>> getDislikedFoods() async {
+    if (_cachedDislikedFoods != null) {
+      return List<String>.from(_cachedDislikedFoods!);
+    }
+
     final dislikedList = await _storageService.getValue<List<dynamic>>(
       _userPrefsFile,
       _dislikedFoodsKey,
     );
-    if (dislikedList == null) return [];
-    return dislikedList.whereType<String>().toList();
+    if (dislikedList == null) {
+      _cachedDislikedFoods = [];
+      return [];
+    }
+
+    final list = dislikedList.whereType<String>().toList();
+    _cachedDislikedFoods = list;
+    return List<String>.from(list);
   }
 
   // 싫어하는 음식에서 제거
   static Future<void> removeFromDislikedFoods(String foodName) async {
     final dislikedFoods = await getDislikedFoods();
     dislikedFoods.remove(foodName);
+
+    // 메모리 캐시 즉시 업데이트
+    _cachedDislikedFoods = List<String>.from(dislikedFoods);
+
     await _storageService.setValue(
       _userPrefsFile,
       _dislikedFoodsKey,

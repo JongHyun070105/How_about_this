@@ -292,6 +292,38 @@ void main() {
         );
       });
     });
+
+    group('extractListFromWrappedJson', () {
+      test('일반 List를 그대로 반환한다', () {
+        final input = ['a', 'b', 'c'];
+        final result = GeminiResponseParser.extractListFromWrappedJson(input);
+        expect(result, ['a', 'b', 'c']);
+      });
+
+      test('recommendations 키를 가진 Map에서 List를 추출한다', () {
+        final input = {
+          'recommendations': ['x', 'y'],
+        };
+        final result = GeminiResponseParser.extractListFromWrappedJson(input);
+        expect(result, ['x', 'y']);
+      });
+
+      test('reviews 키를 가진 Map에서 List를 추출한다', () {
+        final input = {
+          'reviews': ['r1', 'r2'],
+        };
+        final result = GeminiResponseParser.extractListFromWrappedJson(input);
+        expect(result, ['r1', 'r2']);
+      });
+
+      test('유효한 키가 없거나 List가 아니면 FormatException을 던진다', () {
+        final input = {'invalid': 'value'};
+        expect(
+          () => GeminiResponseParser.extractListFromWrappedJson(input),
+          throwsA(isA<FormatException>()),
+        );
+      });
+    });
   });
 
   group('FoodRecommendation', () {

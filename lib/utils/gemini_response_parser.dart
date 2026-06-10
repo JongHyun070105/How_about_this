@@ -168,20 +168,35 @@ class GeminiResponseParser {
     return buffer.toString();
   }
 
-  static List<dynamic> _extractRecommendationItems(dynamic decodedJson) {
+  /// JSON 디코딩 객체에서 리스트를 안전하게 추출합니다. (List이거나 특정 래핑 키를 가진 Map인 경우)
+  static List<dynamic> extractListFromWrappedJson(dynamic decodedJson) {
     if (decodedJson is List) {
       return List<dynamic>.from(decodedJson);
     }
 
     if (decodedJson is Map) {
-      const candidateKeys = ['recommendations', 'items', 'foods', 'results'];
+      const candidateKeys = [
+        'recommendations',
+        'items',
+        'foods',
+        'results',
+        'reviews',
+      ];
       for (final key in candidateKeys) {
         final value = decodedJson[key];
         if (value is List) return List<dynamic>.from(value);
       }
     }
 
-    throw const FormatException('추천 JSON 배열을 찾을 수 없습니다.');
+    throw const FormatException('JSON에서 유효한 배열을 찾을 수 없습니다.');
+  }
+
+  static List<dynamic> _extractRecommendationItems(dynamic decodedJson) {
+    try {
+      return extractListFromWrappedJson(decodedJson);
+    } catch (_) {
+      throw const FormatException('추천 JSON 배열을 찾을 수 없습니다.');
+    }
   }
 
   /// Gemini API 응답을 FoodRecommendation 리스트로 파싱합니다.
