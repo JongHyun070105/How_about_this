@@ -16,6 +16,9 @@ final reviewServiceProvider = Provider((ref) => ReviewService(ref));
 class ReviewService {
   final Ref _ref;
 
+  // 임시 경로 캐시
+  static String? _cachedTempDirPath;
+
   ReviewService(this._ref);
 
   /// 이미지를 최적화하여 API 호출 속도 향상
@@ -34,9 +37,12 @@ class ReviewService {
         return imageFile;
       }
 
-      final tempDir = await getTemporaryDirectory();
+      if (_cachedTempDirPath == null) {
+        final tempDir = await getTemporaryDirectory();
+        _cachedTempDirPath = tempDir.path;
+      }
       final tempFile = File(
-        '${tempDir.path}/optimized_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        '$_cachedTempDirPath/optimized_${DateTime.now().millisecondsSinceEpoch}.jpg',
       );
       await tempFile.writeAsBytes(optimizedBytes, flush: true);
 
@@ -52,6 +58,7 @@ class ReviewService {
   Future<List<String>> generateReviewsFromState({
     Function(String)? onProgress,
   }) async {
+    File? optimizedImage;
     try {
       onProgress?.call('리뷰 생성 준비 중...');
       LoggerService.d('리뷰 생성 시작');
@@ -76,7 +83,6 @@ class ReviewService {
       }
 
       // 이미지 최적화 (시간이 오래 걸리는 부분)
-      File? optimizedImage;
       if (reviewState.image != null) {
         onProgress?.call('이미지 처리 중...');
         optimizedImage = await _optimizeImage(reviewState.image);
@@ -105,21 +111,24 @@ class ReviewService {
             ),
           );
 
-      if (optimizedImage != null && optimizedImage != reviewState.image) {
-        try {
-          await optimizedImage.delete();
-          LoggerService.i('임시 최적화 이미지 파일 삭제 완료');
-        } catch (e) {
-          LoggerService.e('임시 파일 삭제 실패: $e');
-        }
-      }
-
       LoggerService.i('리뷰 생성 완료: ${reviews.length}개');
       onProgress?.call('리뷰 생성 완료!');
       return reviews;
     } catch (e) {
       LoggerService.e('리뷰 생성 오류: $e');
       rethrow;
+    } finally {
+      final reviewState = _ref.read(reviewProvider);
+      if (optimizedImage != null && optimizedImage != reviewState.image) {
+        try {
+          if (await optimizedImage.exists()) {
+            await optimizedImage.delete();
+            LoggerService.i('임시 최적화 이미지 파일 삭제 완료');
+          }
+        } catch (e) {
+          LoggerService.e('임시 파일 삭제 실패: $e');
+        }
+      }
     }
   }
 
