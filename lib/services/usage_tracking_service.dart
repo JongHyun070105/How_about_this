@@ -5,9 +5,18 @@ import 'package:review_ai/core/utils/logger_service.dart';
 
 class UsageTrackingService {
   final RemoteConfigService _remoteConfigService;
-  final PersistentStorageService _storageService = PersistentStorageService();
+  final PersistentStorageService _storageService;
 
-  UsageTrackingService(this._remoteConfigService);
+  // 메모리 캐시 변수
+  int? _cachedReviewCount;
+  int? _cachedTotalRecommendationCount;
+  String? _cachedLastResetDate;
+  int? _cachedLastAccessTimestamp;
+
+  UsageTrackingService(
+    this._remoteConfigService, {
+    PersistentStorageService? storageService,
+  }) : _storageService = storageService ?? PersistentStorageService();
   static const String _usageDataFile = 'usage_data.json';
 
   static const String _lastResetDateKey = 'last_reset_date';
@@ -23,9 +32,45 @@ class UsageTrackingService {
   int get _maxTotalRecommendationsPerDay =>
       _remoteConfigService.maxDailyRecommendations;
 
+  Future<void> _ensureCached() async {
+    if (_cachedReviewCount != null &&
+        _cachedTotalRecommendationCount != null &&
+        _cachedLastResetDate != null &&
+        _cachedLastAccessTimestamp != null) {
+      return;
+    }
+
+    _cachedReviewCount =
+        await _storageService.getValue<int>(_usageDataFile, _reviewCountKey) ??
+        0;
+
+    _cachedTotalRecommendationCount =
+        await _storageService.getValue<int>(
+          _usageDataFile,
+          _totalRecommendationCountKey,
+        ) ??
+        0;
+
+    _cachedLastResetDate =
+        await _storageService.getValue<String>(
+          _usageDataFile,
+          _lastResetDateKey,
+        ) ??
+        '';
+
+    _cachedLastAccessTimestamp =
+        await _storageService.getValue<int>(
+          _usageDataFile,
+          _lastAccessTimestampKey,
+        ) ??
+        0;
+  }
+
   /// 사용량 카운터를 초기화합니다 (서버 시간 기준).
   Future<void> _resetCountsIfNewDay() async {
     try {
+      await _ensureCached();
+
       // 서버 시간 가져오기
       final serverDate = await ServerTimeService.getCurrentDate();
       final serverDateStr = serverDate.toIso8601String().substring(0, 10);
@@ -36,12 +81,10 @@ class UsageTrackingService {
         return;
       }
 
-      final lastAccessTimestamp = await _storageService.getValue<int>(
-        _usageDataFile,
-        _lastAccessTimestampKey,
-      );
+      final lastAccessTimestamp = _cachedLastAccessTimestamp;
 
       if (lastAccessTimestamp != null &&
+          lastAccessTimestamp > 0 &&
           serverTimestamp < lastAccessTimestamp) {
         final diff = lastAccessTimestamp - serverTimestamp;
         LoggerService.d(
@@ -49,14 +92,12 @@ class UsageTrackingService {
         );
       }
 
-      final lastResetDateStr = await _storageService.getValue<String>(
-        _usageDataFile,
-        _lastResetDateKey,
-      );
+      final lastResetDateStr = _cachedLastResetDate;
 
       if (lastResetDateStr != null && lastResetDateStr == serverDateStr) {
         // 같은 날이면 초기화하지 않음, 캐시 업데이트 후 리턴
         _lastCheckedDate = serverDateStr;
+        _cachedLastAccessTimestamp = serverTimestamp;
         await _storageService.setValue(
           _usageDataFile,
           _lastAccessTimestampKey,
@@ -66,6 +107,11 @@ class UsageTrackingService {
       }
 
       // 새 날이거나 첫 실행이면 모든 카운트 초기화
+      _cachedReviewCount = 0;
+      _cachedTotalRecommendationCount = 0;
+      _cachedLastResetDate = serverDateStr;
+      _cachedLastAccessTimestamp = serverTimestamp;
+
       await _storageService.setValue(_usageDataFile, _reviewCountKey, 0);
       await _storageService.setValue(
         _usageDataFile,
@@ -94,15 +140,17 @@ class UsageTrackingService {
       final now = DateTime.now();
       final nowDateStr = now.toIso8601String().substring(0, 10);
 
-      final lastResetDateStr = await _storageService.getValue<String>(
-        _usageDataFile,
-        _lastResetDateKey,
-      );
+      await _ensureCached();
+      final lastResetDateStr = _cachedLastResetDate;
 
       if (lastResetDateStr != null && lastResetDateStr == nowDateStr) {
         _lastCheckedDate = nowDateStr;
         return;
       }
+
+      _cachedReviewCount = 0;
+      _cachedTotalRecommendationCount = 0;
+      _cachedLastResetDate = nowDateStr;
 
       await _storageService.setValue(_usageDataFile, _reviewCountKey, 0);
       await _storageService.setValue(
@@ -122,15 +170,15 @@ class UsageTrackingService {
   /// 리뷰 생성 횟수를 증가시키고 제한을 확인합니다.
   Future<bool> incrementReviewCount() async {
     await _resetCountsIfNewDay();
-    final int currentCount =
-        await _storageService.getValue<int>(_usageDataFile, _reviewCountKey) ??
-        0;
+    final int currentCount = _cachedReviewCount ?? 0;
 
     if (currentCount < _maxReviewsPerDay) {
+      final nextCount = currentCount + 1;
+      _cachedReviewCount = nextCount;
       await _storageService.setValue(
         _usageDataFile,
         _reviewCountKey,
-        currentCount + 1,
+        nextCount,
       );
       return true;
     }
@@ -140,18 +188,15 @@ class UsageTrackingService {
   /// 총 추천 사용 횟수를 증가시키고 제한을 확인합니다.
   Future<bool> incrementTotalRecommendationCount() async {
     await _resetCountsIfNewDay();
-    final int currentCount =
-        await _storageService.getValue<int>(
-          _usageDataFile,
-          _totalRecommendationCountKey,
-        ) ??
-        0;
+    final int currentCount = _cachedTotalRecommendationCount ?? 0;
 
     if (currentCount < _maxTotalRecommendationsPerDay) {
+      final nextCount = currentCount + 1;
+      _cachedTotalRecommendationCount = nextCount;
       await _storageService.setValue(
         _usageDataFile,
         _totalRecommendationCountKey,
-        currentCount + 1,
+        nextCount,
       );
       return true;
     }
@@ -161,21 +206,13 @@ class UsageTrackingService {
   /// 현재 리뷰 생성 횟수를 가져옵니다.
   Future<int> getReviewCount() async {
     await _resetCountsIfNewDay();
-    return await _storageService.getValue<int>(
-          _usageDataFile,
-          _reviewCountKey,
-        ) ??
-        0;
+    return _cachedReviewCount ?? 0;
   }
 
   /// 총 추천 사용 횟수를 가져옵니다.
   Future<int> getTotalRecommendationCount() async {
     await _resetCountsIfNewDay();
-    return await _storageService.getValue<int>(
-          _usageDataFile,
-          _totalRecommendationCountKey,
-        ) ??
-        0;
+    return _cachedTotalRecommendationCount ?? 0;
   }
 
   /// 남은 추천 사용 가능 횟수를 반환합니다.
@@ -213,6 +250,15 @@ class UsageTrackingService {
   /// 모든 사용량 카운트를 강제로 초기화합니다 (테스트 또는 디버그용).
   Future<void> forceResetAllCounts() async {
     _lastCheckedDate = null;
+    clearCache();
     await _storageService.clearFile(_usageDataFile);
+  }
+
+  /// 캐시 초기화 (테스트 및 초기화 용도)
+  void clearCache() {
+    _cachedReviewCount = null;
+    _cachedTotalRecommendationCount = null;
+    _cachedLastResetDate = null;
+    _cachedLastAccessTimestamp = null;
   }
 }
