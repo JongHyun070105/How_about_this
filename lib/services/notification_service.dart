@@ -18,8 +18,12 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications =
+  final FlutterLocalNotificationsPlugin _defaultNotifications =
       FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin? _notificationsOverride;
+
+  FlutterLocalNotificationsPlugin get _notifications =>
+      _notificationsOverride ?? _defaultNotifications;
 
   /// 개인화 메시지용 히스토리 데이터
   List<ReviewHistoryEntry> _history = [];
@@ -29,6 +33,35 @@ class NotificationService {
 
   /// SharedPreferences 캐시
   SharedPreferences? _prefs;
+
+  // 메모리 캐시 변수
+  bool? _lunchEnabledCached;
+  bool? _dinnerEnabledCached;
+
+  /// SharedPreferences 데이터를 메모리 캐시로 최초 1회 로드
+  Future<void> _ensureCached() async {
+    if (_lunchEnabledCached != null && _dinnerEnabledCached != null) {
+      return;
+    }
+    final prefs = await _getPrefs();
+    _lunchEnabledCached ??= prefs.getBool(_lunchEnabledKey) ?? false;
+    _dinnerEnabledCached ??= prefs.getBool(_dinnerEnabledKey) ?? false;
+  }
+
+  /// 테스트 시 SharedPreferences 및 FlutterLocalNotificationsPlugin을 주입하기 위한 메서드
+  void configure({
+    FlutterLocalNotificationsPlugin? notifications,
+    SharedPreferences? prefs,
+  }) {
+    _notificationsOverride = notifications;
+    _prefs = prefs;
+  }
+
+  /// 캐시 초기화 (단위 테스트 등에서 활용)
+  void clearCache() {
+    _lunchEnabledCached = null;
+    _dinnerEnabledCached = null;
+  }
 
   Future<SharedPreferences> _getPrefs() async {
     _prefs ??= await SharedPreferences.getInstance();
@@ -140,15 +173,12 @@ class NotificationService {
 
   /// 저장된 설정에 따라 알림 복원
   Future<void> _restoreNotifications() async {
-    final prefs = await _getPrefs();
+    await _ensureCached();
 
-    final lunchEnabled = prefs.getBool(_lunchEnabledKey) ?? false;
-    final dinnerEnabled = prefs.getBool(_dinnerEnabledKey) ?? false;
-
-    if (lunchEnabled) {
+    if (_lunchEnabledCached == true) {
       await _scheduleLunchNotification();
     }
-    if (dinnerEnabled) {
+    if (_dinnerEnabledCached == true) {
       await _scheduleDinnerNotification();
     }
   }
@@ -157,6 +187,7 @@ class NotificationService {
   Future<void> toggleLunchNotification(bool enabled) async {
     final prefs = await _getPrefs();
     await prefs.setBool(_lunchEnabledKey, enabled);
+    _lunchEnabledCached = enabled;
 
     if (enabled) {
       await _scheduleLunchNotification();
@@ -169,6 +200,7 @@ class NotificationService {
   Future<void> toggleDinnerNotification(bool enabled) async {
     final prefs = await _getPrefs();
     await prefs.setBool(_dinnerEnabledKey, enabled);
+    _dinnerEnabledCached = enabled;
 
     if (enabled) {
       await _scheduleDinnerNotification();
@@ -283,14 +315,14 @@ class NotificationService {
 
   /// 점심 알림 활성화 상태
   Future<bool> isLunchNotificationEnabled() async {
-    final prefs = await _getPrefs();
-    return prefs.getBool(_lunchEnabledKey) ?? false;
+    await _ensureCached();
+    return _lunchEnabledCached!;
   }
 
   /// 저녁 알림 활성화 상태
   Future<bool> isDinnerNotificationEnabled() async {
-    final prefs = await _getPrefs();
-    return prefs.getBool(_dinnerEnabledKey) ?? false;
+    await _ensureCached();
+    return _dinnerEnabledCached!;
   }
 
   /// 모든 알림 취소
@@ -300,5 +332,8 @@ class NotificationService {
     final prefs = await _getPrefs();
     await prefs.setBool(_lunchEnabledKey, false);
     await prefs.setBool(_dinnerEnabledKey, false);
+
+    _lunchEnabledCached = false;
+    _dinnerEnabledCached = false;
   }
 }
