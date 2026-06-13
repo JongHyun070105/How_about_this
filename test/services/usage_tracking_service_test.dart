@@ -46,9 +46,10 @@ void main() {
 
   group('UsageTrackingService 캐싱 및 기능 검증', () {
     test('최초 사용량 조회 시 디스크 I/O가 발생하고 이후 캐시를 사용한다', () async {
+      final todayStr = DateTime.now().toIso8601String().substring(0, 10);
       mockStorage.store['usage_data.json:review_count'] = 3;
       mockStorage.store['usage_data.json:total_recommendation_count'] = 5;
-      mockStorage.store['usage_data.json:last_reset_date'] = '2026-06-12';
+      mockStorage.store['usage_data.json:last_reset_date'] = todayStr;
 
       final reviewCount1 = await trackingService.getReviewCount();
       expect(reviewCount1, 3);
@@ -62,9 +63,10 @@ void main() {
     });
 
     test('카운트 증가 시 캐시가 즉시 반영되며 추가적인 읽기 I/O는 0회다', () async {
+      final todayStr = DateTime.now().toIso8601String().substring(0, 10);
       mockStorage.store['usage_data.json:review_count'] = 2;
       mockStorage.store['usage_data.json:total_recommendation_count'] = 1;
-      mockStorage.store['usage_data.json:last_reset_date'] = '2026-06-12';
+      mockStorage.store['usage_data.json:last_reset_date'] = todayStr;
 
       await trackingService.getReviewCount();
       mockStorage.getCallCount = 0;
@@ -81,9 +83,13 @@ void main() {
     });
 
     test('새로운 날짜가 도래하면 일일 카운터가 초기화된다', () async {
+      final yesterdayStr = DateTime.now()
+          .subtract(const Duration(days: 1))
+          .toIso8601String()
+          .substring(0, 10);
       mockStorage.store['usage_data.json:review_count'] = 5;
       mockStorage.store['usage_data.json:total_recommendation_count'] = 10;
-      mockStorage.store['usage_data.json:last_reset_date'] = '2026-06-11';
+      mockStorage.store['usage_data.json:last_reset_date'] = yesterdayStr;
 
       final count = await trackingService.getReviewCount();
       expect(count, 0); // 날짜 바뀜에 따라 0으로 초기화
