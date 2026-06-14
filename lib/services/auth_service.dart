@@ -302,6 +302,18 @@ class AuthService {
     await _clearTokens();
     _debugLog('User logged out');
   }
+
+  /// 테스트 환경에서 가짜 토큰을 설정하기 위한 헬퍼 메서드
+  @visibleForTesting
+  static void setMockToken({
+    String? accessToken,
+    String? refreshToken,
+    DateTime? expiry,
+  }) {
+    _cachedAccessToken = accessToken;
+    _cachedRefreshToken = refreshToken;
+    _tokenExpiry = expiry;
+  }
 }
 
 /// 인증 관련 예외 클래스

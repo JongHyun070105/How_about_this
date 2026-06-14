@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/data/models/location_models.dart';
 import 'package:review_ai/utils/kakao_api_filter_util.dart';
@@ -13,21 +14,22 @@ import 'package:review_ai/utils/network_utils.dart';
 class KakaoApiService {
   static const Duration _timeout = Duration(seconds: 10);
 
-  late final Dio _dio;
+  final Dio _dio;
 
   // 검색 결과 캐시
-  final Map<String, _CachedSearchResult> _searchCache = {};
+  @visibleForTesting
+  final Map<String, CachedSearchResult> searchCache = {};
 
-  KakaoApiService() {
-    _dio = Dio(
-      BaseOptions(
-        baseUrl: ApiConfig.proxyUrl,
-        connectTimeout: _timeout,
-        receiveTimeout: _timeout,
-        headers: {'Content-Type': 'application/json'},
-      ),
-    );
-  }
+  KakaoApiService({Dio? dio})
+      : _dio = dio ??
+            Dio(
+              BaseOptions(
+                baseUrl: ApiConfig.proxyUrl,
+                connectTimeout: _timeout,
+                receiveTimeout: _timeout,
+                headers: {'Content-Type': 'application/json'},
+              ),
+            );
 
   /// 캐시 키 생성
   String _getCacheKey(RestaurantSearchParams params) {
@@ -41,7 +43,7 @@ class KakaoApiService {
     try {
       // 캐시 확인
       final cacheKey = _getCacheKey(params);
-      final cachedResult = _searchCache[cacheKey];
+      final cachedResult = searchCache[cacheKey];
 
       if (cachedResult != null && !cachedResult.isExpired) {
         LoggerService.d('Serving restaurant search from cache: $cacheKey');
@@ -70,7 +72,7 @@ class KakaoApiService {
         final searchResponse = KakaoSearchResponse.fromJson(response.data);
 
         // 캐시 저장
-        _searchCache[cacheKey] = _CachedSearchResult(
+        searchCache[cacheKey] = CachedSearchResult(
           response: searchResponse,
           timestamp: DateTime.now(),
         );
@@ -164,6 +166,12 @@ class KakaoApiService {
   }) {
     return KakaoApiFilterUtil.sortRestaurants(restaurants, sortType: sortType);
   }
+
+  /// 검색 결과 캐시 초기화 (테스트 및 메모리 관리용)
+  void clearCache() {
+    searchCache.clear();
+    LoggerService.d('KakaoApiService search cache cleared');
+  }
 }
 
 /// 카카오 API 예외 클래스
@@ -183,11 +191,11 @@ class KakaoApiException implements Exception {
 }
 
 /// 검색 결과 캐시
-class _CachedSearchResult {
+class CachedSearchResult {
   final KakaoSearchResponse response;
   final DateTime timestamp;
 
-  _CachedSearchResult({required this.response, required this.timestamp});
+  CachedSearchResult({required this.response, required this.timestamp});
 
   bool get isExpired {
     return DateTime.now().difference(timestamp) > const Duration(minutes: 5);

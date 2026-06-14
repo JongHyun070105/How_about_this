@@ -2,10 +2,17 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:review_ai/core/utils/logger_service.dart';
 
 class NetworkUtils {
+  @visibleForTesting
+  static bool? mockConnectivityResult;
+
   static Future<bool> checkInternetConnectivity() async {
+    if (mockConnectivityResult != null) {
+      return mockConnectivityResult!;
+    }
     try {
       final connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult.contains(ConnectivityResult.none)) {
