@@ -67,14 +67,10 @@ void main() {
         'category_name': '음식점 > 중식 > 중화요리',
         'x': '127.027610',
         'y': '37.497942',
-        'place_url': 'http://place.map.kakao.com/123456'
-      }
+        'place_url': 'http://place.map.kakao.com/123456',
+      },
     ],
-    'meta': {
-      'is_end': true,
-      'pageable_count': 1,
-      'total_count': 1
-    }
+    'meta': {'is_end': true, 'pageable_count': 1, 'total_count': 1},
   };
 
   setUp(() {
@@ -192,11 +188,13 @@ void main() {
 
       expect(
         () => kakaoApiService.searchPlaces(params),
-        throwsA(isA<KakaoApiException>().having(
-          (e) => e.message,
-          'message',
-          contains('시간이 초과되었습니다'),
-        )),
+        throwsA(
+          isA<KakaoApiException>().having(
+            (e) => e.message,
+            'message',
+            contains('시간이 초과되었습니다'),
+          ),
+        ),
       );
     });
 
@@ -218,11 +216,13 @@ void main() {
 
       expect(
         () => kakaoApiService.searchPlaces(params),
-        throwsA(isA<KakaoApiException>().having(
-          (e) => e.message,
-          'message',
-          contains('인증이 필요합니다'),
-        )),
+        throwsA(
+          isA<KakaoApiException>().having(
+            (e) => e.message,
+            'message',
+            contains('인증이 필요합니다'),
+          ),
+        ),
       );
     });
   });
