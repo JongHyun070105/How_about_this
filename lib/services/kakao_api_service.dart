@@ -21,15 +21,16 @@ class KakaoApiService {
   final Map<String, CachedSearchResult> searchCache = {};
 
   KakaoApiService({Dio? dio})
-      : _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: ApiConfig.proxyUrl,
-                connectTimeout: _timeout,
-                receiveTimeout: _timeout,
-                headers: {'Content-Type': 'application/json'},
-              ),
-            );
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: ApiConfig.proxyUrl,
+              connectTimeout: _timeout,
+              receiveTimeout: _timeout,
+              headers: {'Content-Type': 'application/json'},
+            ),
+          );
 
   /// 캐시 키 생성
   String _getCacheKey(RestaurantSearchParams params) {
