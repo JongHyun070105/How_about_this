@@ -2,14 +2,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:review_ai/presentation/providers/location_providers.dart';
 import 'package:review_ai/services/weather_service.dart';
+import 'package:review_ai/data/models/location_models.dart';
 
 part 'weather_viewmodel.g.dart';
 
 class WeatherInfo {
   final WeatherCondition condition;
   final String message;
+  final String? errorMessage;
 
-  WeatherInfo({required this.condition, required this.message});
+  WeatherInfo({
+    required this.condition,
+    required this.message,
+    this.errorMessage,
+  });
 }
 
 @riverpod
@@ -28,18 +34,32 @@ class WeatherViewModel extends _$WeatherViewModel {
     final weatherService = ref.watch(weatherServiceProvider);
     final locationService = ref.watch(locationServiceProvider);
 
-    final position = await locationService.getCurrentLocation();
-    if (position == null) {
-      return null;
+    try {
+      final position = await locationService.getCurrentLocation();
+      if (position == null) {
+        return null;
+      }
+
+      final weather = await weatherService.getCurrentWeather(
+        position.latitude,
+        position.longitude,
+      );
+
+      final message = _getWeatherMessage(weather);
+      return WeatherInfo(condition: weather, message: message);
+    } on UserPermissionDeniedException catch (e) {
+      return WeatherInfo(
+        condition: WeatherCondition.unknown,
+        message: '위치 권한이 필요해요.',
+        errorMessage: e.message,
+      );
+    } catch (e) {
+      return WeatherInfo(
+        condition: WeatherCondition.unknown,
+        message: '날씨 정보를 불러오지 못했어요.',
+        errorMessage: e.toString(),
+      );
     }
-
-    final weather = await weatherService.getCurrentWeather(
-      position.latitude,
-      position.longitude,
-    );
-
-    final message = _getWeatherMessage(weather);
-    return WeatherInfo(condition: weather, message: message);
   }
 
   Future<void> refreshWeather() async {

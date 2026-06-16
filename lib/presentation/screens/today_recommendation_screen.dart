@@ -14,6 +14,7 @@ import 'package:review_ai/services/recommendation_service.dart';
 import 'package:review_ai/services/user_preference_service.dart';
 import 'package:review_ai/presentation/viewmodels/weather_viewmodel.dart';
 import 'package:review_ai/utils/responsive.dart';
+import 'package:review_ai/data/models/location_models.dart';
 
 class TodayRecommendationScreen extends ConsumerStatefulWidget {
   const TodayRecommendationScreen({super.key});
