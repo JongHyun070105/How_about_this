@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.13.0](https://github.com/JongHyun070105/how-about-this/compare/v1.12.4...v1.13.0) (2026-06-16)
+
+
+### Features
+
+* **permission:** 메인 진입 후 위치/알림 권한 요청하도록 변경 ([212487c](https://github.com/JongHyun070105/how-about-this/commit/212487cb28222cf36f4838187f1d0d8e16f681b2))
+* **permission:** 메인 진입 후 위치/알림 권한 요청하도록 변경 ([39c47d8](https://github.com/JongHyun070105/how-about-this/commit/39c47d87e17c3f6388dbcd833bdf34a655463384))
+* show permissions on main screen after onboarding ([5c2a6d9](https://github.com/JongHyun070105/how-about-this/commit/5c2a6d9e814cb5f6e815b0b50cb2cf9e875d6ce7))
+
+
+### Bug Fixes
+
+* **test:** weather_viewmodel tests align with error-state handling ([a46f52f](https://github.com/JongHyun070105/how-about-this/commit/a46f52fad1bda05f76f4d901c125a33e71a28d4f))
+
 ## [1.12.4](https://github.com/JongHyun070105/how-about-this/compare/v1.12.3...v1.12.4) (2026-06-08)
 
 
