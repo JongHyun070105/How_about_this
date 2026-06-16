@@ -106,13 +106,14 @@ void main() {
     fakeLocationService.shouldThrow = true;
 
     final container = createContainer();
-
-    try {
-      await container.read(weatherViewModelProvider.future);
-    } catch (_) {}
+    await container.read(weatherViewModelProvider.future);
 
     final state = container.read(weatherViewModelProvider);
-    expect(state, isA<AsyncError>());
+    expect(state, isA<AsyncData>());
+    final data = state.value!;
+    expect(data.condition, WeatherCondition.unknown);
+    expect(data.message, '위치 권한이 필요해요.');
+    expect(data.errorMessage, 'Denied');
   });
 
   test('build handles weather API error', () async {
@@ -125,13 +126,14 @@ void main() {
     fakeWeatherService.shouldThrow = true;
 
     final container = createContainer();
-
-    try {
-      await container.read(weatherViewModelProvider.future);
-    } catch (_) {}
+    await container.read(weatherViewModelProvider.future);
 
     final state = container.read(weatherViewModelProvider);
-    expect(state, isA<AsyncError>());
+    expect(state, isA<AsyncData>());
+    final data = state.value!;
+    expect(data.condition, WeatherCondition.unknown);
+    expect(data.message, '날씨 정보를 불러오지 못했어요.');
+    expect(data.errorMessage, 'Exception: Weather API failed');
   });
 
   test('build handles null location (e.g. timeout fallback)', () async {
