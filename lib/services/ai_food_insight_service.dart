@@ -18,7 +18,22 @@ class AiFoodInsightService {
   factory AiFoodInsightService() => _instance;
   AiFoodInsightService._internal();
 
-  final http.Client _client = http.Client();
+  http.Client? _innerClient;
+  http.Client? _customClient;
+
+  @visibleForTesting
+  void setClientForTesting(http.Client? client) {
+    _customClient = client;
+  }
+
+  http.Client get _client {
+    if (_customClient != null) {
+      return _customClient!;
+    }
+    _innerClient ??= http.Client();
+    return _innerClient!;
+  }
+
 
   // 상수 정의
   static const List<int> _cacheTimePoints = [8, 12, 19];
@@ -146,7 +161,8 @@ class AiFoodInsightService {
 
   /// 클라이언트 자원 해제
   void dispose() {
-    _client.close();
+    _innerClient?.close();
+    _innerClient = null;
   }
 }
 

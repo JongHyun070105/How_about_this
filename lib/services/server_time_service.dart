@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/config/api_config.dart';
 import 'package:review_ai/services/auth_service.dart';
@@ -10,7 +11,16 @@ class ServerTimeService {
   static DateTime? _cacheTimestamp;
   static int? _timeOffset; // 서버 시간 - 로컬 시간 (밀리초)
 
-  static const Duration _cacheExpiry = Duration(minutes: 5);
+  static http.Client? _customClient;
+
+  @visibleForTesting
+  static void setClientForTesting(http.Client? client) {
+    _customClient = client;
+  }
+
+  @visibleForTesting
+  static Duration cacheExpiry = const Duration(minutes: 5);
+
 
   /// 서버 시간 가져오기 (5분 캐싱)
   static Future<DateTime> getServerTime() async {
@@ -18,7 +28,7 @@ class ServerTimeService {
       // 캐시 확인
       if (_cachedServerTime != null && _cacheTimestamp != null) {
         final cacheAge = DateTime.now().difference(_cacheTimestamp!);
-        if (cacheAge < _cacheExpiry) {
+        if (cacheAge < cacheExpiry) {
           // 캐시된 시간 + 경과 시간
           final serverTime = _cachedServerTime!.add(cacheAge);
           LoggerService.d('Using cached server time: $serverTime');
@@ -30,12 +40,20 @@ class ServerTimeService {
       LoggerService.d('Fetching server time from API');
       final token = await AuthService.getValidAccessToken();
 
-      final response = await http
-          .get(
-            Uri.parse('${ApiConfig.proxyUrl}/api/server-time'),
-            headers: {'Authorization': 'Bearer $token'},
-          )
-          .timeout(const Duration(seconds: 10));
+      final client = _customClient ?? http.Client();
+      final http.Response response;
+      try {
+        response = await client
+            .get(
+              Uri.parse('${ApiConfig.proxyUrl}/api/server-time'),
+              headers: {'Authorization': 'Bearer $token'},
+            )
+            .timeout(const Duration(seconds: 10));
+      } finally {
+        if (_customClient == null) {
+          client.close();
+        }
+      }
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -83,13 +101,14 @@ class ServerTimeService {
         return false;
       }
 
+      final previousOffset = _timeOffset;
       final serverTime = await getServerTime();
       final localTime = DateTime.now();
       final currentOffset =
           serverTime.millisecondsSinceEpoch - localTime.millisecondsSinceEpoch;
 
       // 오프셋 변화가 5분 이상이면 시간 조작 의심
-      final offsetDiff = (currentOffset - _timeOffset!).abs();
+      final offsetDiff = (currentOffset - previousOffset!).abs();
       if (offsetDiff > const Duration(minutes: 5).inMilliseconds) {
         LoggerService.d(
           'Time manipulation detected! Offset changed by ${offsetDiff}ms',

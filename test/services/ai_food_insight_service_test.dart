@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/services/food_insight_service.dart';
 import 'package:review_ai/services/ai_food_insight_service.dart';
 import 'package:review_ai/presentation/providers/review_provider.dart';
@@ -23,6 +27,17 @@ ReviewHistoryEntry _createEntry({
 }
 
 void main() {
+  setUpAll(() {
+    AuthService.setMockToken(
+      accessToken: 'test_mock_jwt_token',
+      expiry: DateTime.now().add(const Duration(days: 1)),
+    );
+  });
+
+  tearDown(() {
+    AiFoodInsightService().setClientForTesting(null);
+  });
+
   group('AiInsightResult', () {
     test('AI 인사이트 결과 생성', () {
       const result = AiInsightResult(message: 'AI가 생성한 인사이트', isAi: true);
@@ -50,7 +65,12 @@ void main() {
     });
 
     test('네트워크 실패 시 로컬 폴백 반환', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Server Error', 500);
+      });
+
       final service = AiFoodInsightService();
+      service.setClientForTesting(mockClient);
 
       final history = <ReviewHistoryEntry>[
         _createEntry(foodName: '김치찌개', category: '한식'),
@@ -61,11 +81,117 @@ void main() {
         ),
       ];
 
-      final result = await service.getInsight(history);
+      final result = await service.getInsight(history, forceRefresh: true);
 
-      // 인증 실패 → 로컬 폴백
+      // 500 에러 → 로컬 폴백
       expect(result.isAi, false);
       expect(result.message, isNotEmpty);
+    });
+  });
+
+  group('AiFoodInsightService - 모킹 성공 및 생명주기 검증', () {
+    test('성공적인 AI 인사이트 반환 및 캐싱 검증', () async {
+      int apiCallCount = 0;
+      final mockClient = MockClient((request) async {
+        apiCallCount++;
+        return http.Response(
+          json.encode({
+            'insight': '오늘 점심은 가벼운 한식 어떠신가요?',
+            'cached': false,
+          }),
+          200,
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+          },
+        );
+      });
+
+      final service = AiFoodInsightService();
+      service.setClientForTesting(mockClient);
+
+      final history = <ReviewHistoryEntry>[
+        _createEntry(foodName: '된장찌개', category: '한식'),
+      ];
+
+      // 1. 첫 호출 - API를 타고 가져와야 함
+      final result1 = await service.getInsight(history, forceRefresh: true);
+      expect(result1.isAi, isTrue);
+      expect(result1.message, '오늘 점심은 가벼운 한식 어떠신가요?');
+      expect(apiCallCount, 1);
+
+      // 2. 두 번째 호출 (forceRefresh: false) - 캐시가 반환되므로 API 호출이 늘어나면 안 됨
+      final result2 = await service.getInsight(history, forceRefresh: false);
+      expect(result2.isAi, isTrue);
+      expect(result2.message, '오늘 점심은 가벼운 한식 어떠신가요?');
+      expect(apiCallCount, 1);
+    });
+
+    test('forceRefresh가 true이면 캐시를 무시하고 강제 요청 검증', () async {
+      int apiCallCount = 0;
+      final mockClient = MockClient((request) async {
+        apiCallCount++;
+        return http.Response(
+          json.encode({
+            'insight': '식습관이 양호합니다.',
+            'cached': false,
+          }),
+          200,
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+          },
+        );
+      });
+
+      final service = AiFoodInsightService();
+      service.setClientForTesting(mockClient);
+
+      final history = <ReviewHistoryEntry>[
+        _createEntry(foodName: '된장찌개', category: '한식'),
+      ];
+
+      await service.getInsight(history, forceRefresh: true);
+      expect(apiCallCount, 1);
+
+      // forceRefresh: true 로 두 번째 호출
+      await service.getInsight(history, forceRefresh: true);
+      expect(apiCallCount, 2);
+    });
+
+    test('dispose 호출 후 다시 요청 시 클라이언트 재생성 및 안정성 검증', () async {
+      int apiCallCount = 0;
+      final mockClient = MockClient((request) async {
+        apiCallCount++;
+        return http.Response(
+          json.encode({
+            'insight': '안정적으로 재연결되었습니다.',
+            'cached': false,
+          }),
+          200,
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+          },
+        );
+      });
+
+      final service = AiFoodInsightService();
+      service.setClientForTesting(mockClient);
+
+      final history = <ReviewHistoryEntry>[
+        _createEntry(foodName: '된장찌개', category: '한식'),
+      ];
+
+      // 첫 조회
+      await service.getInsight(history, forceRefresh: true);
+      expect(apiCallCount, 1);
+
+      // dispose 실행 (클라이언트 닫기)
+      service.dispose();
+
+      // 두 번째 조회 - 재생성되어 에러 없이 정상 요청을 보내야 함
+      final result = await service.getInsight(history, forceRefresh: true);
+      expect(result.isAi, isTrue);
+      expect(result.message, '안정적으로 재연결되었습니다.');
+      expect(apiCallCount, 2);
     });
   });
 
