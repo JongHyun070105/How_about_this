@@ -89,8 +89,14 @@ void main() {
       final after = DateTime.now();
 
       // 에러 시 로컬 시간을 반환하므로 before와 after 범위 내여야 함
-      expect(time.millisecondsSinceEpoch, greaterThanOrEqualTo(before.millisecondsSinceEpoch));
-      expect(time.millisecondsSinceEpoch, lessThanOrEqualTo(after.millisecondsSinceEpoch));
+      expect(
+        time.millisecondsSinceEpoch,
+        greaterThanOrEqualTo(before.millisecondsSinceEpoch),
+      );
+      expect(
+        time.millisecondsSinceEpoch,
+        lessThanOrEqualTo(after.millisecondsSinceEpoch),
+      );
     });
 
     test('로컬 시스템 시간 조작 감지(detectTimeManipulation) 검증', () async {
@@ -110,10 +116,14 @@ void main() {
           );
         } else {
           // 10분 오프셋을 더한 시간 응답
-          final manipulatedMs = DateTime.now().add(const Duration(minutes: 10)).millisecondsSinceEpoch;
+          final manipulatedMs = DateTime.now()
+              .add(const Duration(minutes: 10))
+              .millisecondsSinceEpoch;
           return http.Response(
             json.encode({
-              'serverTime': DateTime.now().add(const Duration(minutes: 10)).toIso8601String(),
+              'serverTime': DateTime.now()
+                  .add(const Duration(minutes: 10))
+                  .toIso8601String(),
               'timestamp': manipulatedMs,
             }),
             200,
@@ -150,10 +160,14 @@ void main() {
           );
         } else {
           // 1분 오차만 주어 5분 이내로 유지
-          final minorDiffMs = DateTime.now().add(const Duration(minutes: 1)).millisecondsSinceEpoch;
+          final minorDiffMs = DateTime.now()
+              .add(const Duration(minutes: 1))
+              .millisecondsSinceEpoch;
           return http.Response(
             json.encode({
-              'serverTime': DateTime.now().add(const Duration(minutes: 1)).toIso8601String(),
+              'serverTime': DateTime.now()
+                  .add(const Duration(minutes: 1))
+                  .toIso8601String(),
               'timestamp': minorDiffMs,
             }),
             200,

@@ -95,14 +95,9 @@ void main() {
       final mockClient = MockClient((request) async {
         apiCallCount++;
         return http.Response(
-          json.encode({
-            'insight': '오늘 점심은 가벼운 한식 어떠신가요?',
-            'cached': false,
-          }),
+          json.encode({'insight': '오늘 점심은 가벼운 한식 어떠신가요?', 'cached': false}),
           200,
-          headers: {
-            'content-type': 'application/json; charset=utf-8',
-          },
+          headers: {'content-type': 'application/json; charset=utf-8'},
         );
       });
 
@@ -131,14 +126,9 @@ void main() {
       final mockClient = MockClient((request) async {
         apiCallCount++;
         return http.Response(
-          json.encode({
-            'insight': '식습관이 양호합니다.',
-            'cached': false,
-          }),
+          json.encode({'insight': '식습관이 양호합니다.', 'cached': false}),
           200,
-          headers: {
-            'content-type': 'application/json; charset=utf-8',
-          },
+          headers: {'content-type': 'application/json; charset=utf-8'},
         );
       });
 
@@ -162,14 +152,9 @@ void main() {
       final mockClient = MockClient((request) async {
         apiCallCount++;
         return http.Response(
-          json.encode({
-            'insight': '안정적으로 재연결되었습니다.',
-            'cached': false,
-          }),
+          json.encode({'insight': '안정적으로 재연결되었습니다.', 'cached': false}),
           200,
-          headers: {
-            'content-type': 'application/json; charset=utf-8',
-          },
+          headers: {'content-type': 'application/json; charset=utf-8'},
         );
       });
 

@@ -21,7 +21,6 @@ class ServerTimeService {
   @visibleForTesting
   static Duration cacheExpiry = const Duration(minutes: 5);
 
-
   /// 서버 시간 가져오기 (5분 캐싱)
   static Future<DateTime> getServerTime() async {
     try {

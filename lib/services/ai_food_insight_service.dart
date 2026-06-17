@@ -34,7 +34,6 @@ class AiFoodInsightService {
     return _innerClient!;
   }
 
-
   // 상수 정의
   static const List<int> _cacheTimePoints = [8, 12, 19];
   static const Duration _httpTimeout = Duration(seconds: 10);
