@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:in_app_update/in_app_update.dart';
@@ -10,16 +11,38 @@ class AppUpdateService {
       'https://gist.github.com/JongHyun070105/ba8200acae9b3375efe284ce43b0e519/raw/467c41ced067c0ccd2ec32a7e0a27aa40c4ff1ae/latest_version.json';
   static const Duration _httpTimeout = Duration(seconds: 5);
 
+  final http.Client _client;
+
+  AppUpdateService({http.Client? client}) : _client = client ?? http.Client();
+
+  static String? _mockCurrentVersion;
+  static bool? _mockIsAndroid;
+
+  @visibleForTesting
+  static void setMockCurrentVersion(String? version) {
+    _mockCurrentVersion = version;
+  }
+
+  @visibleForTesting
+  static void setMockIsAndroid(bool? isAndroid) {
+    _mockIsAndroid = isAndroid;
+  }
+
   /// 새 버전의 앱이 사용 가능한지 확인합니다.
   /// 업데이트가 사용 가능하면 최신 버전 문자열을 반환하고, 그렇지 않으면 null을 반환합니다.
   Future<String?> isUpdateAvailable() async {
     try {
       // 1. 현재 앱 버전 가져오기
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version;
+      final String currentVersion;
+      if (_mockCurrentVersion != null) {
+        currentVersion = _mockCurrentVersion!;
+      } else {
+        final packageInfo = await PackageInfo.fromPlatform();
+        currentVersion = packageInfo.version;
+      }
 
       // 2. 서버에서 최신 버전 가져오기 (타임아웃 설정됨)
-      final response = await http
+      final response = await _client
           .get(Uri.parse(_updateUrl))
           .timeout(_httpTimeout);
 
@@ -73,7 +96,13 @@ class AppUpdateService {
 
   /// Android 플랫폼에서 인앱 업데이트를 확인하고, 가능하다면 다운로드를 시작(Flexible)합니다.
   Future<void> checkForInAppUpdate() async {
-    if (!Platform.isAndroid) return; // iOS는 미지원
+    final isAndroid = _mockIsAndroid ?? Platform.isAndroid;
+    if (!isAndroid) return; // iOS는 미지원
+
+    if (_mockIsAndroid != null) {
+      LoggerService.d('AppUpdateService: Mocked in-app update check.');
+      return;
+    }
 
     try {
       final updateInfo = await InAppUpdate.checkForUpdate();
