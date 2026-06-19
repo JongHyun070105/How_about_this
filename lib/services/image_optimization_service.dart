@@ -11,20 +11,26 @@ Future<Uint8List?> optimizeUploadedImageBytes(
   int maxDimension = 800,
   int jpegQuality = 85,
 }) {
-  return Isolate.run(() {
-    final image = img.decodeImage(bytes);
-    if (image == null) return null;
+  if (bytes.isEmpty) return Future.value(null);
 
-    if (image.width <= maxDimension && image.height <= maxDimension) {
+  return Isolate.run(() {
+    try {
+      final image = img.decodeImage(bytes);
+      if (image == null) return null;
+
+      if (image.width <= maxDimension && image.height <= maxDimension) {
+        return null;
+      }
+
+      final resized = img.copyResize(
+        image,
+        width: image.width > image.height ? maxDimension : null,
+        height: image.height > image.width ? maxDimension : null,
+      );
+
+      return Uint8List.fromList(img.encodeJpg(resized, quality: jpegQuality));
+    } catch (e) {
       return null;
     }
-
-    final resized = img.copyResize(
-      image,
-      width: image.width > image.height ? maxDimension : null,
-      height: image.height > image.width ? maxDimension : null,
-    );
-
-    return Uint8List.fromList(img.encodeJpg(resized, quality: jpegQuality));
   });
 }
