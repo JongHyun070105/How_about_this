@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/services/api_proxy_service.dart';
 import 'package:review_ai/config/api_config.dart';
@@ -6,12 +7,22 @@ import 'package:review_ai/core/utils/logger_service.dart';
 
 class ImageLabelingService {
   final ApiProxyService _apiProxyService;
+  final http.Client _httpClient;
+  final bool _isOwnClient;
 
   ImageLabelingService({http.Client? httpClient})
-    : _apiProxyService = ApiProxyService(
-        httpClient ?? http.Client(),
-        ApiConfig.proxyUrl,
+    : this.internal(
+        httpClient: httpClient ?? http.Client(),
+        isOwnClient: httpClient == null,
       );
+
+  @visibleForTesting
+  ImageLabelingService.internal({
+    required http.Client httpClient,
+    required bool isOwnClient,
+  }) : _isOwnClient = isOwnClient,
+       _httpClient = httpClient,
+       _apiProxyService = ApiProxyService(httpClient, ApiConfig.proxyUrl);
 
   Future<List<String>> getLabels(File imageFile) async {
     try {
@@ -27,6 +38,8 @@ class ImageLabelingService {
   }
 
   void dispose() {
-    // 이 간단한 서비스에서는 HTTP 클라이언트에 대해 해제할 리소스가 없음
+    if (_isOwnClient) {
+      _httpClient.close();
+    }
   }
 }
