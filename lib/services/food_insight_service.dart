@@ -78,11 +78,17 @@ class FoodInsightService {
   /// 음식명으로부터 카테고리를 추론합니다.
   ///
   /// 1차: Gemini API 추론 → 2차: 키워드 폴백
-  static Future<String> inferCategory(String foodName) async {
+  static Future<String> inferCategory(
+    String foodName, {
+    http.Client? httpClient,
+  }) async {
     if (foodName.isEmpty) return '기타';
 
     try {
-      final result = await _inferCategoryWithAI(foodName);
+      final result = await _inferCategoryWithAI(
+        foodName,
+        httpClient: httpClient,
+      );
       if (result != null) return result;
     } catch (e, stack) {
       LoggerService.w('AI 카테고리 추론 실패 (키워드 폴백 적용): $e', e, stack);
@@ -92,8 +98,12 @@ class FoodInsightService {
   }
 
   /// Gemini API를 사용한 카테고리 분류
-  static Future<String?> _inferCategoryWithAI(String foodName) async {
-    final client = http.Client();
+  static Future<String?> _inferCategoryWithAI(
+    String foodName, {
+    http.Client? httpClient,
+  }) async {
+    final client = httpClient ?? http.Client();
+    final isOwnClient = httpClient == null;
     try {
       final apiService = ApiProxyService(client, ApiConfig.proxyUrl);
       final categories = _cachedCategories;
@@ -113,7 +123,9 @@ class FoodInsightService {
         }
       }
     } finally {
-      client.close(); // 소켓 리소스 누수 방지
+      if (isOwnClient) {
+        client.close(); // 소켓 리소스 누수 방지
+      }
     }
     return null;
   }
