@@ -18,8 +18,10 @@ void main() {
     mockInAppReview = MockInAppReview();
     mockRemoteConfigService = MockRemoteConfigService();
 
-    // SharedPreferences Mocking
+    // SharedPreferences Mocking 및 테스트 간 격리 완화
     SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
 
     // RemoteConfig 기본값 세팅
     when(

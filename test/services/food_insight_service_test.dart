@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:review_ai/services/auth_service.dart';
 import 'package:review_ai/services/food_insight_service.dart';
 import 'package:review_ai/presentation/providers/review_provider.dart';
 
@@ -355,6 +359,108 @@ void main() {
       expect(FoodInsightService.categoryEmojis['일식'], '🍣');
       expect(FoodInsightService.categoryEmojis['양식'], '🍝');
       expect(FoodInsightService.categoryEmojis['패스트푸드'], '🍔');
+    });
+  });
+
+  group('inferCategory 테스트', () {
+    setUp(() {
+      AuthService.setMockToken(
+        accessToken: 'test_token',
+        expiry: DateTime.now().add(const Duration(hours: 1)),
+      );
+    });
+
+    tearDown(() {
+      AuthService.setMockToken(
+        accessToken: null,
+        refreshToken: null,
+        expiry: null,
+      );
+    });
+
+    test('음식명이 비어있을 때 즉시 기타 반환', () async {
+      final result = await FoodInsightService.inferCategory('');
+      expect(result, '기타');
+    });
+
+    test('AI 카테고리 추론 성공 시 일치하는 카테고리 반환', () async {
+      final mockResponse = {
+        'candidates': [
+          {
+            'content': {
+              'parts': [
+                {'text': '한식'},
+              ],
+            },
+          },
+        ],
+      };
+
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          json.encode(mockResponse),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
+      });
+
+      final result = await FoodInsightService.inferCategory(
+        '김치찌개',
+        httpClient: mockClient,
+      );
+      expect(result, '한식');
+    });
+
+    test('AI 카테고리 추론 응답에 추가 텍스트가 섞여 있어도 파싱하여 올바른 카테고리 반환', () async {
+      final mockResponse = {
+        'candidates': [
+          {
+            'content': {
+              'parts': [
+                {'text': '해당 음식의 카테고리는 중식 입니다.'},
+              ],
+            },
+          },
+        ],
+      };
+
+      final mockClient = MockClient((request) async {
+        return http.Response(
+          json.encode(mockResponse),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
+      });
+
+      final result = await FoodInsightService.inferCategory(
+        '짜장면',
+        httpClient: mockClient,
+      );
+      expect(result, '중식');
+    });
+
+    test('AI 카테고리 추론 실패(500 에러) 시 키워드 기반 폴백 매칭 반환', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final result = await FoodInsightService.inferCategory(
+        '피자',
+        httpClient: mockClient,
+      );
+      expect(result, '양식');
+    });
+
+    test('AI 카테고리 추론 실패하고 키워드 매칭도 안 될 경우 최종 기타 반환', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final result = await FoodInsightService.inferCategory(
+        '정체불명음식명',
+        httpClient: mockClient,
+      );
+      expect(result, '기타');
     });
   });
 }
