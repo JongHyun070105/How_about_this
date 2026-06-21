@@ -30,7 +30,7 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Analyze code
-        run: flutter analyze --no-fatal-infos > flutter_analyze.log || true
+        run: flutter analyze --no-fatal-infos > flutter_analyze.log
 
       - name: Setup ReviewDog
         if: github.event_name == 'pull_request'

@@ -7,6 +7,40 @@ import 'package:review_ai/data/models/location_models.dart';
 ///
 /// 배달앱 선택 및 외부 앱 실행 로직을 캡슐화합니다.
 abstract class DeliveryAppLauncher {
+  @visibleForTesting
+  static void Function(ClipboardData data)? mockClipboardSetter;
+
+  @visibleForTesting
+  static Future<bool> Function(Uri url)? mockCanLaunchUrl;
+
+  @visibleForTesting
+  static Future<bool> Function(Uri url, LaunchMode mode)? mockUrlLauncher;
+
+  static Future<void> _setClipboardData(ClipboardData data) async {
+    if (mockClipboardSetter != null) {
+      mockClipboardSetter!(data);
+    } else {
+      await Clipboard.setData(data);
+    }
+  }
+
+  static Future<bool> _canLaunch(Uri url) async {
+    if (mockCanLaunchUrl != null) {
+      return mockCanLaunchUrl!(url);
+    }
+    return canLaunchUrl(url);
+  }
+
+  static Future<bool> _launch(
+    Uri url, {
+    LaunchMode mode = LaunchMode.platformDefault,
+  }) async {
+    if (mockUrlLauncher != null) {
+      return mockUrlLauncher!(url, mode);
+    }
+    return launchUrl(url, mode: mode);
+  }
+
   /// 배달앱 선택 후 실행 진입점
   static Future<void> launch(
     BuildContext context,
@@ -53,7 +87,7 @@ abstract class DeliveryAppLauncher {
     KakaoPlace restaurant,
     String appName,
   ) async {
-    await Clipboard.setData(ClipboardData(text: restaurant.placeName));
+    await _setClipboardData(ClipboardData(text: restaurant.placeName));
 
     if (!context.mounted) return;
 
@@ -89,8 +123,8 @@ abstract class DeliveryAppLauncher {
     for (final urlScheme in appInfo.urlSchemes) {
       try {
         final uri = Uri.parse(urlScheme);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (await _canLaunch(uri)) {
+          await _launch(uri, mode: LaunchMode.externalApplication);
           launchSuccess = true;
           break;
         }
@@ -140,10 +174,7 @@ abstract class DeliveryAppLauncher {
         : 'market://details?id=${appInfo.packageName}';
 
     try {
-      await launchUrl(
-        Uri.parse(storeUrl),
-        mode: LaunchMode.externalApplication,
-      );
+      await _launch(Uri.parse(storeUrl), mode: LaunchMode.externalApplication);
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -180,23 +211,21 @@ abstract class DeliveryAppLauncher {
             'en=$endName';
         webUrl =
             'https://map.kakao.com/link/to/'
-            '${restaurant.placeName},${restaurant.y},${restaurant.x}/'
-            'from/내 위치,$currentLat,$currentLng';
+            '$endName,${restaurant.y},${restaurant.x}/'
+            'from/$startName,$currentLat,$currentLng';
       } else {
+        final endName = Uri.encodeComponent(restaurant.placeName);
         appScheme = 'kakaomap://look?p=${restaurant.y},${restaurant.x}&app=1';
         webUrl =
             'https://map.kakao.com/link/map/'
-            '${restaurant.placeName},${restaurant.y},${restaurant.x}';
+            '$endName,${restaurant.y},${restaurant.x}';
       }
 
       final uri = Uri.parse(appScheme);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (await _canLaunch(uri)) {
+        await _launch(uri, mode: LaunchMode.externalApplication);
       } else {
-        await launchUrl(
-          Uri.parse(webUrl),
-          mode: LaunchMode.externalApplication,
-        );
+        await _launch(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
       }
     } catch (_) {
       if (context.mounted) {
