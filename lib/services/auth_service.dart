@@ -20,6 +20,23 @@ void _debugLog(String message) {
 
 /// JWT 기반 동적 토큰 인증 서비스
 class AuthService {
+  @visibleForTesting
+  static http.Client? mockClient;
+
+  @visibleForTesting
+  static FlutterSecureStorage? mockStorage;
+
+  @visibleForTesting
+  static String? mockAppVersion;
+
+  @visibleForTesting
+  static String? mockDeviceInfo;
+
+  static final http.Client _defaultClient = http.Client();
+
+  static http.Client get _client => mockClient ?? _defaultClient;
+  static FlutterSecureStorage get _secureStorage => mockStorage ?? _storage;
+
   static const String _tokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _tokenExpiryKey = 'token_expiry';
@@ -85,7 +102,7 @@ class AuthService {
       const requestUrl = '${ApiConfig.proxyUrl}/api/auth/token';
       _debugLog('Requesting token from: $requestUrl');
 
-      final response = await http
+      final response = await _client
           .post(
             Uri.parse(requestUrl),
             headers: {
@@ -151,7 +168,7 @@ class AuthService {
 
   /// 리프레시 토큰으로 액세스 토큰 갱신
   static Future<String?> _refreshAccessToken(String refreshToken) async {
-    final response = await http
+    final response = await _client
         .post(
           Uri.parse('${ApiConfig.proxyUrl}/api/auth/refresh'),
           headers: {'Content-Type': 'application/json'},
@@ -187,9 +204,12 @@ class AuthService {
     final expiry = DateTime.now().add(Duration(seconds: expiresIn));
 
     await Future.wait([
-      _storage.write(key: _tokenKey, value: accessToken),
-      _storage.write(key: _refreshTokenKey, value: refreshToken),
-      _storage.write(key: _tokenExpiryKey, value: expiry.toIso8601String()),
+      _secureStorage.write(key: _tokenKey, value: accessToken),
+      _secureStorage.write(key: _refreshTokenKey, value: refreshToken),
+      _secureStorage.write(
+        key: _tokenExpiryKey,
+        value: expiry.toIso8601String(),
+      ),
     ]);
 
     _cachedAccessToken = accessToken;
@@ -205,8 +225,11 @@ class AuthService {
     final expiry = DateTime.now().add(Duration(seconds: expiresIn));
 
     await Future.wait([
-      _storage.write(key: _tokenKey, value: accessToken),
-      _storage.write(key: _tokenExpiryKey, value: expiry.toIso8601String()),
+      _secureStorage.write(key: _tokenKey, value: accessToken),
+      _secureStorage.write(
+        key: _tokenExpiryKey,
+        value: expiry.toIso8601String(),
+      ),
     ]);
 
     _cachedAccessToken = accessToken;
@@ -216,9 +239,9 @@ class AuthService {
   /// 토큰 캐시 클리어 (deviceId는 보존)
   static Future<void> _clearTokens() async {
     await Future.wait([
-      _storage.delete(key: _tokenKey),
-      _storage.delete(key: _refreshTokenKey),
-      _storage.delete(key: _tokenExpiryKey),
+      _secureStorage.delete(key: _tokenKey),
+      _secureStorage.delete(key: _refreshTokenKey),
+      _secureStorage.delete(key: _tokenExpiryKey),
     ]);
 
     _cachedAccessToken = null;
@@ -230,11 +253,11 @@ class AuthService {
   static Future<String> _getOrCreateDeviceId() async {
     if (_deviceId != null) return _deviceId!;
 
-    _deviceId = await _storage.read(key: _deviceIdKey);
+    _deviceId = await _secureStorage.read(key: _deviceIdKey);
 
     if (_deviceId == null) {
       _deviceId = const Uuid().v4();
-      await _storage.write(key: _deviceIdKey, value: _deviceId!);
+      await _secureStorage.write(key: _deviceIdKey, value: _deviceId!);
       _debugLog('New device ID generated and stored securely');
     }
 
@@ -243,6 +266,7 @@ class AuthService {
 
   /// 앱 버전 가져오기 (캐싱 적용)
   static Future<String> _getAppVersion() async {
+    if (mockAppVersion != null) return mockAppVersion!;
     if (_cachedAppVersion != null) return _cachedAppVersion!;
     try {
       final packageInfo = await PackageInfo.fromPlatform();
@@ -256,6 +280,7 @@ class AuthService {
 
   /// 디바이스 정보 가져오기 (캐싱 적용)
   static Future<String> _getDeviceInfo() async {
+    if (mockDeviceInfo != null) return mockDeviceInfo!;
     if (_cachedDeviceInfo != null) return _cachedDeviceInfo!;
     try {
       final deviceInfo = DeviceInfoPlugin();
@@ -281,15 +306,15 @@ class AuthService {
   /// 앱 시작시 캐시된 토큰 로드
   static Future<void> initialize() async {
     try {
-      _cachedAccessToken = await _storage.read(key: _tokenKey);
-      _cachedRefreshToken = await _storage.read(key: _refreshTokenKey);
+      _cachedAccessToken = await _secureStorage.read(key: _tokenKey);
+      _cachedRefreshToken = await _secureStorage.read(key: _refreshTokenKey);
 
-      final expiryString = await _storage.read(key: _tokenExpiryKey);
+      final expiryString = await _secureStorage.read(key: _tokenExpiryKey);
       if (expiryString != null) {
         _tokenExpiry = DateTime.parse(expiryString);
       }
 
-      _deviceId = await _storage.read(key: _deviceIdKey);
+      _deviceId = await _secureStorage.read(key: _deviceIdKey);
 
       _debugLog('AuthService initialized (Secure Storage)');
     } catch (e, stack) {
