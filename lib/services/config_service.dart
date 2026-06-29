@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:review_ai/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,20 @@ import 'package:review_ai/core/utils/logger_service.dart';
 
 /// 동적 설정 서비스 (AdMob ID, Clarity ID, Firebase 키 등)
 class ConfigService {
+  @visibleForTesting
+  static http.Client? mockClient;
+
+  @visibleForTesting
+  static SharedPreferences? mockPrefs;
+
+  @visibleForTesting
+  static int? mockTimeMs;
+
+  static final http.Client _defaultClient = http.Client();
+
+  static http.Client get _client => mockClient ?? _defaultClient;
+  static int _nowMs() => mockTimeMs ?? DateTime.now().millisecondsSinceEpoch;
+
   static const String _cacheKey = 'remote_config_cache';
   static const String _cacheTimeKey = 'remote_config_cache_time';
   static const Duration _cacheExpiry = Duration(hours: 24);
@@ -19,6 +34,7 @@ class ConfigService {
 
   /// SharedPreferences 인스턴스 캐시
   static Future<SharedPreferences> _getPrefs() async {
+    if (mockPrefs != null) return mockPrefs!;
     _prefs ??= await SharedPreferences.getInstance();
     return _prefs!;
   }
@@ -38,7 +54,7 @@ class ConfigService {
       final cachedTime = prefs.getInt(_cacheTimeKey);
 
       if (cachedData != null && cachedTime != null) {
-        final cacheAge = DateTime.now().millisecondsSinceEpoch - cachedTime;
+        final cacheAge = _nowMs() - cachedTime;
         if (cacheAge < _cacheExpiry.inMilliseconds) {
           final decodedCache = jsonDecode(cachedData);
           // firebase 블록이 없다면 구버전 캐시이므로 무시하고 다시 가져옴
@@ -54,7 +70,7 @@ class ConfigService {
 
       // 서버에서 새 설정 가져오기
       LoggerService.d('Fetching AdMob config from server');
-      final response = await http
+      final response = await _client
           .get(Uri.parse('${ApiConfig.proxyUrl}/api/config'))
           .timeout(const Duration(seconds: 10));
 
@@ -63,10 +79,7 @@ class ConfigService {
 
         // 캐시 저장
         await prefs.setString(_cacheKey, response.body);
-        await prefs.setInt(
-          _cacheTimeKey,
-          DateTime.now().millisecondsSinceEpoch,
-        );
+        await prefs.setInt(_cacheTimeKey, _nowMs());
 
         _cachedConfig = config;
         LoggerService.d('AdMob config fetched and cached');
@@ -213,5 +226,12 @@ class ConfigService {
     } catch (e, stack) {
       LoggerService.e('Error clearing config cache: $e', e, stack);
     }
+  }
+
+  /// 테스트 환경에서 인메모리 캐시 및 Preferences 객체를 리셋하기 위한 헬퍼
+  @visibleForTesting
+  static void resetInMemoryCache() {
+    _cachedConfig = null;
+    _prefs = null;
   }
 }
