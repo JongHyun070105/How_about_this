@@ -8,7 +8,13 @@ class RemoteConfigService {
   factory RemoteConfigService() => _instance;
   RemoteConfigService._internal();
 
-  final FirebaseRemoteConfig _remoteConfig = FirebaseRemoteConfig.instance;
+  FirebaseRemoteConfig? _customRemoteConfig;
+  FirebaseRemoteConfig get _remoteConfig =>
+      _customRemoteConfig ?? FirebaseRemoteConfig.instance;
+
+  @visibleForTesting
+  set mockRemoteConfig(FirebaseRemoteConfig config) =>
+      _customRemoteConfig = config;
 
   // Key Constants
   static const String keyReviewCooldownDays = 'review_cooldown_days';
