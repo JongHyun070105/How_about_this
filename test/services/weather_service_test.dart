@@ -5,78 +5,166 @@ import 'package:http/testing.dart';
 import 'package:review_ai/services/weather_service.dart';
 
 void main() {
-  group('WeatherService 유닛 테스트', () {
-    test('성공적인 날씨 API 응답 파싱 및 결과 매핑 검증', () async {
+  const mockWeatherResponse = {
+    'weather': [
+      {'main': 'Rain', 'description': 'moderate rain'},
+    ],
+    'main': {'temp': 20.5},
+  };
+
+  group('WeatherService - API 통신 및 데이터 파싱 검증', () {
+    test('서버 응답이 올바를 때 날씨 정보를 파싱하여 정확한 WeatherCondition을 반환해야 함', () async {
       final mockClient = MockClient((request) async {
-        return http.Response(
-          json.encode({
-            'weather': [
-              {'main': 'Rain', 'description': 'moderate rain'},
-            ],
-          }),
-          200,
-        );
+        expect(request.url.queryParameters['lat'], equals('37.5665'));
+        expect(request.url.queryParameters['lon'], equals('126.978'));
+        return http.Response(jsonEncode(mockWeatherResponse), 200);
       });
 
       final service = WeatherService(client: mockClient);
-      final weather = await service.getCurrentWeather(37.5665, 126.9780);
+      final condition = await service.getCurrentWeather(37.5665, 126.9780);
 
-      expect(weather, WeatherCondition.rain);
+      expect(condition, equals(WeatherCondition.rain));
     });
 
-    test('비정상 상태 코드 응답 시 WeatherCondition.unknown 반환 검증', () async {
+    test(
+      '서버 응답이 500 에러일 때 WeatherCondition.unknown을 반환하고 앱이 비정상 종료되지 않아야 함',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response('Internal Server Error', 500);
+        });
+
+        final service = WeatherService(client: mockClient);
+        final condition = await service.getCurrentWeather(37.5665, 126.9780);
+
+        expect(condition, equals(WeatherCondition.unknown));
+      },
+    );
+
+    test('날씨 매핑 분기가 잘 작동하는지 맵핑 검증', () async {
+      final conditions = {
+        'clear': WeatherCondition.clear,
+        'clouds': WeatherCondition.clouds,
+        'snow': WeatherCondition.snow,
+        'thunderstorm': WeatherCondition.thunderstorm,
+        'drizzle': WeatherCondition.drizzle,
+        'mist': WeatherCondition.atmosphere,
+        'fog': WeatherCondition.atmosphere,
+        'unknown_weather': WeatherCondition.unknown,
+      };
+
+      for (var entry in conditions.entries) {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'weather': [
+                {'main': entry.key},
+              ],
+            }),
+            200,
+          );
+        });
+
+        final service = WeatherService(client: mockClient);
+        final condition = await service.getCurrentWeather(37.5665, 126.9780);
+        expect(condition, equals(entry.value));
+      }
+    });
+  });
+
+  group('WeatherService - 캐시 적합성 판정(시간 및 거리 만료) 검증', () {
+    test('15분 이내 & 500m 이내 조회 시 서버 요청 없이 로컬 캐시를 반환해야 함', () async {
+      int apiCallCount = 0;
       final mockClient = MockClient((request) async {
-        return http.Response('Internal Server Error', 500);
+        apiCallCount++;
+        return http.Response(jsonEncode(mockWeatherResponse), 200);
       });
 
       final service = WeatherService(client: mockClient);
-      final weather = await service.getCurrentWeather(37.5665, 126.9780);
+      final baseTime = DateTime(2026, 7, 6, 12, 0);
+      service.mockCurrentTime = baseTime;
+      service.mockDistanceBetween = (lat1, lng1, lat2, lng2) =>
+          100.0; // 100m 이동 시뮬레이션
 
-      expect(weather, WeatherCondition.unknown);
+      // 1. 최초 조회 -> 서버 호출 유발
+      final cond1 = await service.getCurrentWeather(37.5665, 126.9780);
+      expect(cond1, equals(WeatherCondition.rain));
+      expect(apiCallCount, equals(1));
+
+      // 2. 10분 경과 및 100m 이동 후 조회 -> 서버 호출 없이 캐시 반환
+      service.mockCurrentTime = baseTime.add(const Duration(minutes: 10));
+      final cond2 = await service.getCurrentWeather(37.5666, 126.9781);
+      expect(cond2, equals(WeatherCondition.rain));
+      expect(apiCallCount, equals(1)); // 호출수 유지
     });
 
-    test('날씨 응답 JSON 포맷 손상 시 WeatherCondition.unknown 안전 반환 검증', () async {
+    test('15분이 초과(시간 만료)되면 로컬 캐시를 무시하고 서버 API를 재호출해야 함', () async {
+      int apiCallCount = 0;
       final mockClient = MockClient((request) async {
-        return http.Response(json.encode({'invalid_key': 'no_weather'}), 200);
+        apiCallCount++;
+        return http.Response(jsonEncode(mockWeatherResponse), 200);
       });
 
       final service = WeatherService(client: mockClient);
-      final weather = await service.getCurrentWeather(37.5665, 126.9780);
+      final baseTime = DateTime(2026, 7, 6, 12, 0);
+      service.mockCurrentTime = baseTime;
+      service.mockDistanceBetween = (lat1, lng1, lat2, lng2) => 100.0;
 
-      expect(weather, WeatherCondition.unknown);
+      // 1. 최초 조회 -> 서버 호출
+      await service.getCurrentWeather(37.5665, 126.9780);
+      expect(apiCallCount, equals(1));
+
+      // 2. 16분 경과 후 조회 -> 시간 만료로 서버 재호출
+      service.mockCurrentTime = baseTime.add(const Duration(minutes: 16));
+      await service.getCurrentWeather(37.5665, 126.9780);
+      expect(apiCallCount, equals(2));
     });
 
-    test('로컬 캐싱 메커니즘 검증 (15분 이내 & 500m 이내 동일 위치)', () async {
-      int requestCount = 0;
+    test('500m 이상 이동(위치 이탈)하면 로컬 캐시를 무시하고 서버 API를 재호출해야 함', () async {
+      int apiCallCount = 0;
       final mockClient = MockClient((request) async {
-        requestCount++;
-        return http.Response(
-          json.encode({
-            'weather': [
-              {'main': 'Clear'},
-            ],
-          }),
-          200,
-        );
+        apiCallCount++;
+        return http.Response(jsonEncode(mockWeatherResponse), 200);
       });
 
       final service = WeatherService(client: mockClient);
+      final baseTime = DateTime(2026, 7, 6, 12, 0);
+      service.mockCurrentTime = baseTime;
+      service.mockDistanceBetween = (lat1, lng1, lat2, lng2) =>
+          600.0; // 600m 이동 시뮬레이션
 
-      // 1. 최초 호출
-      final firstWeather = await service.getCurrentWeather(37.5665, 126.9780);
-      expect(firstWeather, WeatherCondition.clear);
-      expect(requestCount, 1);
+      // 1. 최초 조회 -> 서버 호출
+      await service.getCurrentWeather(37.5665, 126.9780);
+      expect(apiCallCount, equals(1));
 
-      // 2. 근접 위치(약 10m 이내 편차) 및 즉시 재호출 -> 캐시 적용 확인
-      final secondWeather = await service.getCurrentWeather(37.5666, 126.9781);
-      expect(secondWeather, WeatherCondition.clear);
-      expect(requestCount, 1); // API 호출 횟수가 늘어나지 않아야 함
+      // 2. 5분 지났지만 600m 이동한 상태 -> 위치 이탈로 서버 재호출
+      service.mockCurrentTime = baseTime.add(const Duration(minutes: 5));
+      await service.getCurrentWeather(37.5665, 126.9780);
+      expect(apiCallCount, equals(2));
+    });
 
-      // 3. 캐시 수동 초기화 후 호출 -> 다시 API 호출 확인
+    test('clearCache() 호출 후 조회 시 즉시 서버를 재호출해야 함', () async {
+      int apiCallCount = 0;
+      final mockClient = MockClient((request) async {
+        apiCallCount++;
+        return http.Response(jsonEncode(mockWeatherResponse), 200);
+      });
+
+      final service = WeatherService(client: mockClient);
+      final baseTime = DateTime(2026, 7, 6, 12, 0);
+      service.mockCurrentTime = baseTime;
+      service.mockDistanceBetween = (lat1, lng1, lat2, lng2) => 50.0;
+
+      // 1. 최초 조회 -> 서버 호출
+      await service.getCurrentWeather(37.5665, 126.9780);
+      expect(apiCallCount, equals(1));
+
+      // 2. 캐시 지우기
       service.clearCache();
-      final thirdWeather = await service.getCurrentWeather(37.5665, 126.9780);
-      expect(thirdWeather, WeatherCondition.clear);
-      expect(requestCount, 2); // API 호출 횟수 2회로 증가
+
+      // 3. 1분만 지난 시점이지만 캐시 유실 상태 -> 즉시 서버 재호출
+      service.mockCurrentTime = baseTime.add(const Duration(minutes: 1));
+      await service.getCurrentWeather(37.5665, 126.9780);
+      expect(apiCallCount, equals(2));
     });
   });
 }
