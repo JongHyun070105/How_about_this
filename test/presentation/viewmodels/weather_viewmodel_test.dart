@@ -60,6 +60,9 @@ class FakeWeatherService implements WeatherService {
 
   @override
   void dispose() {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:review_ai/config/api_config.dart';
@@ -17,6 +18,14 @@ enum WeatherCondition {
 
 class WeatherService {
   final http.Client _client;
+
+  @visibleForTesting
+  double Function(double, double, double, double)? mockDistanceBetween;
+
+  @visibleForTesting
+  DateTime? mockCurrentTime;
+
+  DateTime get _now => mockCurrentTime ?? DateTime.now();
 
   // 캐시 필드
   WeatherCondition? _cachedCondition;
@@ -60,7 +69,7 @@ class WeatherService {
 
               // 날씨 캐시 업데이트
               _cachedCondition = condition;
-              _cachedAt = DateTime.now();
+              _cachedAt = _now;
               _cachedLat = lat;
               _cachedLng = lng;
 
@@ -90,19 +99,16 @@ class WeatherService {
     }
 
     // 시간 만료 검증
-    final timeDiff = DateTime.now().difference(_cachedAt!);
+    final timeDiff = _now.difference(_cachedAt!);
     if (timeDiff >= _cacheDuration) {
       return false;
     }
 
     // 위치 오차 검증 (500m 이내)
     try {
-      final distance = Geolocator.distanceBetween(
-        _cachedLat!,
-        _cachedLng!,
-        lat,
-        lng,
-      );
+      final distance = mockDistanceBetween != null
+          ? mockDistanceBetween!(_cachedLat!, _cachedLng!, lat, lng)
+          : Geolocator.distanceBetween(_cachedLat!, _cachedLng!, lat, lng);
       return distance <= _distanceThresholdMeters;
     } catch (e) {
       // Geolocator 계산 실패 시 안전하게 캐시 무효화
