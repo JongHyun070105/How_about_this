@@ -28,6 +28,15 @@ class AppUpdateService {
     _mockIsAndroid = isAndroid;
   }
 
+  @visibleForTesting
+  static Future<AppUpdateInfo> Function()? mockCheckForUpdate;
+
+  @visibleForTesting
+  static Future<AppUpdateResult> Function()? mockStartFlexibleUpdate;
+
+  @visibleForTesting
+  static Future<void> Function()? mockCompleteFlexibleUpdate;
+
   /// 새 버전의 앱이 사용 가능한지 확인합니다.
   /// 업데이트가 사용 가능하면 최신 버전 문자열을 반환하고, 그렇지 않으면 null을 반환합니다.
   Future<String?> isUpdateAvailable() async {
@@ -99,23 +108,28 @@ class AppUpdateService {
     final isAndroid = _mockIsAndroid ?? Platform.isAndroid;
     if (!isAndroid) return; // iOS는 미지원
 
-    if (_mockIsAndroid != null) {
-      LoggerService.d('AppUpdateService: Mocked in-app update check.');
-      return;
-    }
-
     try {
-      final updateInfo = await InAppUpdate.checkForUpdate();
+      final updateInfo = mockCheckForUpdate != null
+          ? await mockCheckForUpdate!()
+          : await InAppUpdate.checkForUpdate();
 
       // 업데이트가 가능할 때 Flexible 다운로드 시작
       if (updateInfo.updateAvailability == UpdateAvailability.updateAvailable) {
         LoggerService.d(
           'AppUpdateService: Update available. Starting flexible update.',
         );
-        await InAppUpdate.startFlexibleUpdate();
+        if (mockStartFlexibleUpdate != null) {
+          await mockStartFlexibleUpdate!();
+        } else {
+          await InAppUpdate.startFlexibleUpdate();
+        }
 
         // 다운로드 완료 시 설치 유도
-        await InAppUpdate.completeFlexibleUpdate();
+        if (mockCompleteFlexibleUpdate != null) {
+          await mockCompleteFlexibleUpdate!();
+        } else {
+          await InAppUpdate.completeFlexibleUpdate();
+        }
       } else {
         LoggerService.d('AppUpdateService: No in-app update available.');
       }

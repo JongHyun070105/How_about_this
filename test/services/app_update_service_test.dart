@@ -2,12 +2,44 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:review_ai/services/app_update_service.dart';
+
+// InAppUpdate 정보를 모킹하기 위한 가짜 AppUpdateInfo 클래스
+class FakeAppUpdateInfo implements AppUpdateInfo {
+  @override
+  final UpdateAvailability updateAvailability;
+  @override
+  final int availableVersionCode;
+  @override
+  final bool immediateUpdateAllowed;
+  @override
+  final bool flexibleUpdateAllowed;
+  @override
+  final int clientVersionStalenessDays;
+  @override
+  final InstallStatus installStatus;
+
+  FakeAppUpdateInfo({
+    required this.updateAvailability,
+    this.availableVersionCode = 0,
+    this.immediateUpdateAllowed = false,
+    this.flexibleUpdateAllowed = false,
+    this.clientVersionStalenessDays = 0,
+    this.installStatus = InstallStatus.unknown,
+  });
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   tearDown(() {
     AppUpdateService.setMockCurrentVersion(null);
     AppUpdateService.setMockIsAndroid(null);
+    AppUpdateService.mockCheckForUpdate = null;
+    AppUpdateService.mockStartFlexibleUpdate = null;
+    AppUpdateService.mockCompleteFlexibleUpdate = null;
   });
 
   group('AppUpdateService.isVersionGreater 테스트', () {
@@ -80,11 +112,71 @@ void main() {
       expect(result, isNull);
     });
 
-    test('Android 모킹 체크 시 플랫폼 오류 없이 안전 우회 검증', () {
+    test(
+      'Android 플랫폼에서 인앱 업데이트가 없는 경우(updateAvailable 아님) 다운로드 안함 검증',
+      () async {
+        final service = AppUpdateService();
+        AppUpdateService.setMockIsAndroid(true);
+
+        bool startFlexibleCalled = false;
+        bool completeFlexibleCalled = false;
+
+        AppUpdateService.mockCheckForUpdate = () async {
+          return FakeAppUpdateInfo(
+            updateAvailability: UpdateAvailability.updateNotAvailable,
+          );
+        };
+        AppUpdateService.mockStartFlexibleUpdate = () async {
+          startFlexibleCalled = true;
+          return AppUpdateResult.success;
+        };
+        AppUpdateService.mockCompleteFlexibleUpdate = () async {
+          completeFlexibleCalled = true;
+        };
+
+        await service.checkForInAppUpdate();
+
+        expect(startFlexibleCalled, isFalse);
+        expect(completeFlexibleCalled, isFalse);
+      },
+    );
+
+    test('Android 플랫폼에서 인앱 업데이트가 있을 경우 다운로드 및 설치 순차 실행 검증', () async {
       final service = AppUpdateService();
       AppUpdateService.setMockIsAndroid(true);
 
-      expect(() => service.checkForInAppUpdate(), returnsNormally);
+      bool startFlexibleCalled = false;
+      bool completeFlexibleCalled = false;
+
+      AppUpdateService.mockCheckForUpdate = () async {
+        return FakeAppUpdateInfo(
+          updateAvailability: UpdateAvailability.updateAvailable,
+        );
+      };
+      AppUpdateService.mockStartFlexibleUpdate = () async {
+        startFlexibleCalled = true;
+        return AppUpdateResult.success;
+      };
+      AppUpdateService.mockCompleteFlexibleUpdate = () async {
+        completeFlexibleCalled = true;
+      };
+
+      await service.checkForInAppUpdate();
+
+      expect(startFlexibleCalled, isTrue);
+      expect(completeFlexibleCalled, isTrue);
+    });
+
+    test('Android 플랫폼에서 인앱 업데이트 조회 중 예외 발생 시 에러 핸들링 검증', () async {
+      final service = AppUpdateService();
+      AppUpdateService.setMockIsAndroid(true);
+
+      AppUpdateService.mockCheckForUpdate = () async {
+        throw Exception('InAppUpdate service is not available');
+      };
+
+      // 예외 발생 시 에러를 받아 처리하고 안전하게 루프가 종료되어야 함
+      await expectLater(service.checkForInAppUpdate(), completes);
     });
   });
 }
