@@ -60,6 +60,11 @@ class UserPreferenceService {
     _storageService = service;
   }
 
+  @visibleForTesting
+  static DateTime? mockCurrentTime;
+
+  static DateTime get _now => mockCurrentTime ?? DateTime.now();
+
   // 메모리 캐시 변수
   static List<FoodSelection>? _cachedHistory;
   static List<String>? _cachedDislikedFoods;
@@ -95,7 +100,7 @@ class UserPreferenceService {
     final selection = FoodSelection(
       foodName: foodName,
       category: category,
-      selectedAt: DateTime.now(),
+      selectedAt: _now,
       liked: liked,
     );
 
@@ -229,7 +234,7 @@ class UserPreferenceService {
       );
     }
 
-    final thirtyDaysAgo = DateTime.now().subtract(
+    final thirtyDaysAgo = _now.subtract(
       const Duration(days: _recentPeriodDays),
     );
     final recentHistory = history
@@ -297,7 +302,7 @@ class UserPreferenceService {
       return {};
     }
 
-    final now = DateTime.now();
+    final now = _now;
     final currentPeriodStart = now.subtract(
       const Duration(days: _recentPeriodDays),
     );
