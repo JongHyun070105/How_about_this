@@ -27,6 +27,11 @@ void main() {
     mockStorage = MockPersistentStorageService();
     UserPreferenceService.setStorageServiceForTesting(mockStorage);
     UserPreferenceService.clearCache();
+    UserPreferenceService.mockCurrentTime = null;
+  });
+
+  tearDown(() {
+    UserPreferenceService.mockCurrentTime = null;
   });
 
   group('UserPreferenceService 캐싱 및 기능 검증', () {
@@ -80,6 +85,169 @@ void main() {
       final disliked2 = await UserPreferenceService.getDislikedFoods();
       expect(disliked2, contains('오이'));
       expect(mockStorage.getCallCount, 1);
+    });
+  });
+
+  group('UserPreferenceService 취향 및 트렌드 분석 비즈니스 검증', () {
+    test(
+      '30일 이내의 선호 데이터가 분석에 포함되고 0.6 점수 이상 카테고리가 Preferred Categories로 추출되는지 검증',
+      () async {
+        final baseTime = DateTime(2026, 7, 10, 12, 0);
+        UserPreferenceService.mockCurrentTime = baseTime;
+
+        // 45일 전 한식 좋아요 (30일 초과이므로 제외됨)
+        // 10일 전 한식 좋아요 (포함)
+        // 5일 전 한식 좋아요 (포함)
+        // 2일 전 일식 싫어요 (포함)
+        mockStorage.store['user_preferences.json:food_selection_history'] = [
+          {
+            'foodName': '비빔밥',
+            'category': '한식',
+            'selectedAt': baseTime
+                .subtract(const Duration(days: 45))
+                .toIso8601String(),
+            'liked': true,
+          },
+          {
+            'foodName': '불고기',
+            'category': '한식',
+            'selectedAt': baseTime
+                .subtract(const Duration(days: 10))
+                .toIso8601String(),
+            'liked': true,
+          },
+          {
+            'foodName': '치킨',
+            'category': '한식',
+            'selectedAt': baseTime
+                .subtract(const Duration(days: 5))
+                .toIso8601String(),
+            'liked': true,
+          },
+          {
+            'foodName': '초밥',
+            'category': '일식',
+            'selectedAt': baseTime
+                .subtract(const Duration(days: 2))
+                .toIso8601String(),
+            'liked': false,
+          },
+        ];
+
+        final analysis = await UserPreferenceService.analyzeUserPreferences();
+
+        // 한식: recentHistory 내 total=2, liked=2, ratio=1.0. frequencyBonus = (2/3) * 0.3 = 0.2. 최종점수 = 1.2
+        // 일식: recentHistory 내 total=1, liked=0, ratio=0.0. frequencyBonus = (1/3) * 0.3 = 0.1. 최종점수 = 0.1
+        expect(analysis.preferredCategories, contains('한식'));
+        expect(analysis.preferredCategories, isNot(contains('일식')));
+        expect(analysis.categoryScores['한식'], closeTo(1.2, 0.001));
+        expect(analysis.categoryScores['일식'], closeTo(0.1, 0.001));
+      },
+    );
+
+    test('getCategoryPreferenceTrends 최근/이전 30일 구간 비교 트렌드 산출 검증', () async {
+      final baseTime = DateTime(2026, 7, 10, 12, 0);
+      UserPreferenceService.mockCurrentTime = baseTime;
+
+      mockStorage.store['user_preferences.json:food_selection_history'] = [
+        // 이전 구간(30~60일 전): 한식 total=2, liked=1, ratio=0.5, bonus=(2/2)*0.3=0.3, 총점=0.8
+        {
+          'foodName': '김치찌개',
+          'category': '한식',
+          'selectedAt': baseTime
+              .subtract(const Duration(days: 40))
+              .toIso8601String(),
+          'liked': true,
+        },
+        {
+          'foodName': '된장찌개',
+          'category': '한식',
+          'selectedAt': baseTime
+              .subtract(const Duration(days: 41))
+              .toIso8601String(),
+          'liked': false,
+        },
+        // 최근 구간(30일 이내): 한식 total=2, liked=2, ratio=1.0, bonus=(2/2)*0.3=0.3, 총점=1.3 -> 상승(차이 0.5 > 0.05)
+        {
+          'foodName': '불고기',
+          'category': '한식',
+          'selectedAt': baseTime
+              .subtract(const Duration(days: 10))
+              .toIso8601String(),
+          'liked': true,
+        },
+        {
+          'foodName': '갈비',
+          'category': '한식',
+          'selectedAt': baseTime
+              .subtract(const Duration(days: 5))
+              .toIso8601String(),
+          'liked': true,
+        },
+      ];
+
+      final trends = await UserPreferenceService.getCategoryPreferenceTrends();
+      expect(trends['한식'], equals('상승'));
+    });
+
+    test('analyzeDayOfWeekPreferences 요일별 선호 맵핑 수립 검증', () async {
+      final baseTime = DateTime(2026, 7, 10, 12, 0); // 금요일 (weekday=5)
+      UserPreferenceService.mockCurrentTime = baseTime;
+
+      mockStorage.store['user_preferences.json:food_selection_history'] = [
+        {
+          'foodName': '김치찌개',
+          'category': '한식',
+          'selectedAt': baseTime.toIso8601String(), // 금요일(5)
+          'liked': true,
+        },
+        {
+          'foodName': '탕수육',
+          'category': '중식',
+          'selectedAt': baseTime.toIso8601String(), // 금요일(5)
+          'liked': true,
+        },
+      ];
+
+      final dayStats =
+          await UserPreferenceService.analyzeDayOfWeekPreferences();
+      expect(dayStats[5], isNotNull);
+      expect(dayStats[5]!['한식'], equals(1));
+      expect(dayStats[5]!['중식'], equals(1));
+    });
+
+    test('shouldShowReviewPromptDialog 좋아요 횟수 10의 배수 시나리오 검증', () async {
+      // 1. 0개일 때
+      mockStorage.store['user_preferences.json:review_prompt_like_count'] = 0;
+      expect(
+        await UserPreferenceService.shouldShowReviewPromptDialog(),
+        isFalse,
+      );
+
+      // 2. 9개일 때
+      mockStorage.store['user_preferences.json:review_prompt_like_count'] = 9;
+      expect(
+        await UserPreferenceService.shouldShowReviewPromptDialog(),
+        isFalse,
+      );
+
+      // 3. 10개일 때
+      mockStorage.store['user_preferences.json:review_prompt_like_count'] = 10;
+      expect(
+        await UserPreferenceService.shouldShowReviewPromptDialog(),
+        isTrue,
+      );
+
+      // 4. 노출 플래그 완료 기록 시 0으로 클리어
+      await UserPreferenceService.recordReviewPromptDialogShown();
+      expect(
+        await UserPreferenceService.shouldShowReviewPromptDialog(),
+        isFalse,
+      );
+      expect(
+        mockStorage.store['user_preferences.json:review_prompt_like_count'],
+        equals(0),
+      );
     });
   });
 }
