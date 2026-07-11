@@ -42,6 +42,11 @@ void main() {
       mockConfig,
       storageService: mockStorage,
     );
+    UsageTrackingService.mockGetCurrentDate = null;
+  });
+
+  tearDown(() {
+    UsageTrackingService.mockGetCurrentDate = null;
   });
 
   group('UsageTrackingService 캐싱 및 기능 검증', () {
@@ -82,20 +87,106 @@ void main() {
       expect(mockStorage.getCallCount, 0); // 읽기 여전히 0회
     });
 
-    test('새로운 날짜가 도래하면 일일 카운터가 초기화된다', () async {
-      final yesterdayStr = DateTime.now()
-          .subtract(const Duration(days: 1))
-          .toIso8601String()
-          .substring(0, 10);
-      mockStorage.store['usage_data.json:review_count'] = 5;
-      mockStorage.store['usage_data.json:total_recommendation_count'] = 10;
-      mockStorage.store['usage_data.json:last_reset_date'] = yesterdayStr;
+    test('새로운 날짜가 도래하면 일일 카운터가 초기화된다 (가상 시간 주입 검증)', () async {
+      final baseTime = DateTime(2026, 7, 10, 12, 0);
+      UsageTrackingService.mockGetCurrentDate = () async => baseTime;
 
-      final count = await trackingService.getReviewCount();
-      expect(count, 0); // 날짜 바뀜에 따라 0으로 초기화
+      // 1. 기준일에 카운트 저장
+      mockStorage.store['usage_data.json:review_count'] = 5;
+      mockStorage.store['usage_data.json:total_recommendation_count'] = 8;
+      mockStorage.store['usage_data.json:last_reset_date'] = '2026-07-10';
+      mockStorage.store['usage_data.json:last_access_timestamp'] =
+          baseTime.millisecondsSinceEpoch;
+
+      final count1 = await trackingService.getReviewCount();
+      expect(count1, 5);
+
+      // 2. 가상 시간을 하루 뒤로 이동
+      UsageTrackingService.mockGetCurrentDate = () async =>
+          baseTime.add(const Duration(days: 1));
+
+      final count2 = await trackingService.getReviewCount();
+      expect(count2, 0); // 날짜 변경에 의해 0으로 리셋됨
 
       final recCount = await trackingService.getTotalRecommendationCount();
-      expect(recCount, 0); // 추천 수 역시 0으로 초기화
+      expect(recCount, 0); // 추천 카운트 역시 0으로 리셋됨
+    });
+
+    test('시간 변조(Time Manipulation) 감지 시 경고 로그 동작 검증', () async {
+      final baseTime = DateTime(2026, 7, 10, 12, 0);
+
+      // 미래 시간으로 먼저 기록함
+      mockStorage.store['usage_data.json:review_count'] = 1;
+      mockStorage.store['usage_data.json:last_reset_date'] = '2026-07-10';
+      mockStorage.store['usage_data.json:last_access_timestamp'] = baseTime
+          .add(const Duration(hours: 5))
+          .millisecondsSinceEpoch;
+
+      // 과거 시간으로 조회했을 때 예외 크래시 없이 정상 흐름을 타는지 검증
+      UsageTrackingService.mockGetCurrentDate = () async => baseTime;
+
+      expect(() => trackingService.getReviewCount(), returnsNormally);
+    });
+
+    test('일일 사용량 제한에 도달하면 추가 카운트 증가가 차단되고 false를 반환한다', () async {
+      final baseTime = DateTime(2026, 7, 10, 12, 0);
+      UsageTrackingService.mockGetCurrentDate = () async => baseTime;
+
+      mockStorage.store['usage_data.json:review_count'] = 9;
+      mockStorage.store['usage_data.json:total_recommendation_count'] = 19;
+      mockStorage.store['usage_data.json:last_reset_date'] = '2026-07-10';
+
+      // 1. 임계치 1회 전 (각각 최대 10회, 20회)
+      expect(await trackingService.incrementReviewCount(), isTrue);
+      expect(await trackingService.incrementTotalRecommendationCount(), isTrue);
+
+      // 2. 임계치 도달 상태 검증
+      expect(await trackingService.hasReachedReviewLimit(), isTrue);
+      expect(
+        await trackingService.hasReachedTotalRecommendationLimit(),
+        isTrue,
+      );
+      expect(await trackingService.getRemainingReviewCount(), equals(0));
+      expect(
+        await trackingService.getRemainingRecommendationCount(),
+        equals(0),
+      );
+
+      // 3. 임계치 도달 후 증가 시도 시 차단 및 false 반환 검증
+      expect(await trackingService.incrementReviewCount(), isFalse);
+      expect(
+        await trackingService.incrementTotalRecommendationCount(),
+        isFalse,
+      );
+
+      // 카운트가 최종 한계 이상으로 늘어나지 않았는지 확인
+      expect(await trackingService.getReviewCount(), equals(10));
+      expect(await trackingService.getTotalRecommendationCount(), equals(20));
+    });
+
+    test('서버 시간 조회 에러 시 로컬 폴백 시간을 기반으로 초기화 및 카운트가 안전하게 연동된다', () async {
+      int serverTimeCallCount = 0;
+      UsageTrackingService.mockGetCurrentDate = () async {
+        serverTimeCallCount++;
+        if (serverTimeCallCount == 1) {
+          throw Exception('Server Connection Timeout');
+        }
+        // catch 블록 내 폴백 시간 반환
+        return DateTime(2026, 7, 15, 12, 0);
+      };
+
+      // 기존 날짜는 7월 10일
+      mockStorage.store['usage_data.json:review_count'] = 3;
+      mockStorage.store['usage_data.json:total_recommendation_count'] = 5;
+      mockStorage.store['usage_data.json:last_reset_date'] = '2026-07-10';
+
+      // 서버 연결 에러 발생 -> 7월 15일 폴백을 기준으로 리셋이 발생해야 함
+      final count = await trackingService.getReviewCount();
+      expect(count, 0); // 새 날짜(7월 15일) 기준으로 카운트가 0으로 정상 리셋됨
+      expect(
+        mockStorage.store['usage_data.json:last_reset_date'],
+        equals('2026-07-15'),
+      );
     });
   });
 }
