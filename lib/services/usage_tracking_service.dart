@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:review_ai/services/persistent_storage_service.dart';
 import 'package:review_ai/services/server_time_service.dart';
 import 'package:review_ai/services/remote_config_service.dart';
@@ -6,6 +7,9 @@ import 'package:review_ai/core/utils/logger_service.dart';
 class UsageTrackingService {
   final RemoteConfigService _remoteConfigService;
   final PersistentStorageService _storageService;
+
+  @visibleForTesting
+  static Future<DateTime> Function()? mockGetCurrentDate;
 
   // 메모리 캐시 변수
   int? _cachedReviewCount;
@@ -72,7 +76,9 @@ class UsageTrackingService {
       await _ensureCached();
 
       // 서버 시간 가져오기
-      final serverDate = await ServerTimeService.getCurrentDate();
+      final serverDate = mockGetCurrentDate != null
+          ? await mockGetCurrentDate!()
+          : await ServerTimeService.getCurrentDate();
       final serverDateStr = serverDate.toIso8601String().substring(0, 10);
       final serverTimestamp = serverDate.millisecondsSinceEpoch;
 
@@ -137,7 +143,9 @@ class UsageTrackingService {
     } catch (e) {
       LoggerService.e('Error in _resetCountsIfNewDay: $e');
       // 에러 발생 시 로컬 시간 사용 (폴백)
-      final now = DateTime.now();
+      final now = mockGetCurrentDate != null
+          ? await mockGetCurrentDate!()
+          : DateTime.now();
       final nowDateStr = now.toIso8601String().substring(0, 10);
 
       await _ensureCached();
