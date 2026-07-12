@@ -1,0 +1,49 @@
+{
+  "repository": "JongHyun070105/how-about-this",
+  "title": "how-about-this",
+  "stars": 2,
+  "commits30d": 59,
+  "contributors": [
+    {
+      "login": "JongHyun070105",
+      "contributions": 356
+    },
+    {
+      "login": "github-actions[bot]",
+      "contributions": 23
+    }
+  ],
+  "languages": [
+    {
+      "name": "Dart",
+      "bytes": 787395,
+      "share": 0.8334427097115639
+    },
+    {
+      "name": "HTML",
+      "bytes": 129461,
+      "share": 0.13703201905265944
+    },
+    {
+      "name": "JavaScript",
+      "bytes": 21198,
+      "share": 0.022437681926435565
+    },
+    {
+      "name": "Java",
+      "bytes": 3428,
+      "share": 0.003628473141042604
+    }
+  ],
+  "latestRelease": {
+    "tagName": "v1.13.0",
+    "publishedAt": "2026-06-16T13:52:43Z"
+  },
+  "lastCommitAt": "2026-07-12T11:24:41Z",
+  "ci": {
+    "workflow": "cicd.yml",
+    "status": "in_progress",
+    "conclusion": null
+  },
+  "generatedAt": "2026-07-12T11:24:57.962Z"
+}
