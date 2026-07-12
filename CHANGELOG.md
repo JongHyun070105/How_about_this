@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/JongHyun070105/how-about-this/compare/v1.13.0...v1.14.0) (2026-07-12)
+
+
+### Features
+
+* add repository aquarium ([#98](https://github.com/JongHyun070105/how-about-this/issues/98)) ([82ca8e2](https://github.com/JongHyun070105/how-about-this/commit/82ca8e2ac8512360dacb09edeaf88aa0dfa9e736))
+
 ## [1.13.0](https://github.com/JongHyun070105/how-about-this/compare/v1.12.4...v1.13.0) (2026-06-16)
 
 
