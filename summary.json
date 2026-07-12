@@ -6,7 +6,7 @@
   "contributors": [
     {
       "login": "JongHyun070105",
-      "contributions": 356
+      "contributions": 357
     },
     {
       "login": "github-actions[bot]",
@@ -42,10 +42,10 @@
   "lastCommitAt": "2026-07-12T15:28:54Z",
   "ci": {
     "workflow": "cicd.yml",
-    "status": "in_progress",
-    "conclusion": null
+    "status": "completed",
+    "conclusion": "success"
   },
-  "generatedAt": "2026-07-12T15:31:11.635Z",
+  "generatedAt": "2026-07-12T15:43:26.490Z",
   "configuration": {
     "themes": [
       "coral-day",
