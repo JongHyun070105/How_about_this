@@ -1,5 +1,11 @@
 # 이거어때?
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-github-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-coral-day.svg">
+  <img alt="JongHyun070105/how-about-this의 저장소 활동을 보여주는 픽셀 아트 수족관" src="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-coral-day.svg" width="900">
+</picture>
+
 ## 개요
 
 이거어때?는 이미지, 음식명, 별점을 입력받아 Gemini AI(gemini-2.5-flash-lite)를 통해 음식 리뷰를 3개 생성하고, 사용자가 선택하여 복사할 수 있는 Flutter 애플리케이션입니다. 이 앱은 사용자에게 편리하고 다양한 리뷰 옵션을 제공하여 음식 리뷰 작성 과정을 간소화합니다.
