@@ -10,7 +10,7 @@
     },
     {
       "login": "github-actions[bot]",
-      "contributions": 23
+      "contributions": 24
     }
   ],
   "languages": [
@@ -36,14 +36,33 @@
     }
   ],
   "latestRelease": {
-    "tagName": "v1.13.0",
-    "publishedAt": "2026-06-16T13:52:43Z"
+    "tagName": "v1.14.0",
+    "publishedAt": "2026-07-12T11:33:13Z"
   },
-  "lastCommitAt": "2026-07-12T11:24:41Z",
+  "lastCommitAt": "2026-07-12T15:28:54Z",
   "ci": {
     "workflow": "cicd.yml",
     "status": "in_progress",
     "conclusion": null
   },
-  "generatedAt": "2026-07-12T11:24:57.962Z"
+  "generatedAt": "2026-07-12T15:31:11.635Z",
+  "configuration": {
+    "themes": [
+      "coral-day",
+      "deep-ocean",
+      "github-dark",
+      "sunset-lagoon",
+      "arctic-ice",
+      "neon-cyber"
+    ],
+    "creatures": [
+      "fish",
+      "turtle",
+      "seahorse",
+      "octopus",
+      "ray",
+      "pufferfish",
+      "starfish"
+    ]
+  }
 }
