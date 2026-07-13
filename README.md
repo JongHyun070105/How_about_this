@@ -1,9 +1,9 @@
 # 이거어때?
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-github-dark.svg?v=1.2.1">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-coral-day.svg?v=1.2.1">
-  <img alt="진화하는 기여자, 릴리스 전설 생물, 저장소 활동 현상을 보여주는 how-about-this Repo Aquarium 세계" src="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-coral-day.svg?v=1.2.1" width="900">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-github-dark.svg?v=1.3.0">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-coral-day.svg?v=1.3.0">
+  <img alt="테마별 모습으로 자유롭게 움직이는 기여자, 릴리스 전설 생물, 저장소 활동 현상을 보여주는 how-about-this Repo Aquarium 세계" src="https://raw.githubusercontent.com/JongHyun070105/how-about-this/aquarium-output/aquarium-coral-day.svg?v=1.3.0" width="900">
 </picture>
 
 ## 개요
