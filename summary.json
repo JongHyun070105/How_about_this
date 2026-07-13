@@ -2,14 +2,14 @@
   "repository": "JongHyun070105/how-about-this",
   "title": "how-about-this",
   "stars": 2,
-  "commits30d": 59,
+  "commits30d": 61,
   "mergedPullRequests30d": 0,
   "closedIssues30d": 0,
   "reviews30d": 9,
   "contributors": [
     {
       "login": "JongHyun070105",
-      "contributions": 357,
+      "contributions": 359,
       "recentCommits": 0,
       "pullRequests": 0,
       "reviews": 0
@@ -55,13 +55,13 @@
     "tagName": "v1.14.0",
     "publishedAt": "2026-07-12T11:33:13Z"
   },
-  "lastCommitAt": "2026-07-12T15:28:54Z",
+  "lastCommitAt": "2026-07-13T03:39:33Z",
   "ci": {
     "workflow": "cicd.yml",
-    "status": "completed",
-    "conclusion": "success"
+    "status": "in_progress",
+    "conclusion": null
   },
-  "generatedAt": "2026-07-13T02:17:20.181Z",
+  "generatedAt": "2026-07-13T03:39:47.828Z",
   "configuration": {
     "themes": [
       "coral-day",
@@ -72,7 +72,9 @@
       "neon-cyber"
     ],
     "creatures": [
-      "fish",
+      "contributors",
+      "jellyfish",
+      "crab",
       "turtle",
       "seahorse",
       "octopus",
