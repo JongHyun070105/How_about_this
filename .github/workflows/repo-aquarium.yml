@@ -21,5 +21,5 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           themes: coral-day,deep-ocean,github-dark,sunset-lagoon,arctic-ice,neon-cyber
-          creatures: fish,turtle,seahorse,octopus,ray,pufferfish,starfish
+          creatures: contributors,jellyfish,crab,turtle,seahorse,octopus,ray,pufferfish,starfish
           ci-workflow: cicd.yml
