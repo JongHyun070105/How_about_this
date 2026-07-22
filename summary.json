@@ -2,10 +2,10 @@
   "repository": "JongHyun070105/how-about-this",
   "title": "how-about-this",
   "stars": 2,
-  "commits30d": 40,
+  "commits30d": 38,
   "mergedPullRequests30d": 0,
   "closedIssues30d": 0,
-  "reviews30d": 9,
+  "reviews30d": 8,
   "contributors": [
     {
       "login": "JongHyun070105",
@@ -15,18 +15,18 @@
       "reviews": 0
     },
     {
-      "login": "gemini-code-assist[bot]",
-      "contributions": 0,
-      "recentCommits": 0,
-      "pullRequests": 0,
-      "reviews": 9
-    },
-    {
       "login": "github-actions[bot]",
       "contributions": 24,
       "recentCommits": 0,
       "pullRequests": 0,
       "reviews": 0
+    },
+    {
+      "login": "gemini-code-assist[bot]",
+      "contributions": 0,
+      "recentCommits": 0,
+      "pullRequests": 0,
+      "reviews": 8
     }
   ],
   "languages": [
@@ -61,7 +61,7 @@
     "status": "completed",
     "conclusion": "success"
   },
-  "generatedAt": "2026-07-21T06:04:43.437Z",
+  "generatedAt": "2026-07-22T06:03:33.628Z",
   "configuration": {
     "themes": [
       "coral-day",
