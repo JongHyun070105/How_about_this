@@ -2,10 +2,10 @@
   "repository": "JongHyun070105/how-about-this",
   "title": "how-about-this",
   "stars": 2,
-  "commits30d": 11,
+  "commits30d": 9,
   "mergedPullRequests30d": 0,
   "closedIssues30d": 0,
-  "reviews30d": 5,
+  "reviews30d": 4,
   "contributors": [
     {
       "login": "JongHyun070105",
@@ -26,7 +26,7 @@
       "contributions": 0,
       "recentCommits": 0,
       "pullRequests": 0,
-      "reviews": 5
+      "reviews": 4
     }
   ],
   "languages": [
@@ -61,7 +61,7 @@
     "status": "completed",
     "conclusion": "success"
   },
-  "generatedAt": "2026-08-07T05:00:59.245Z",
+  "generatedAt": "2026-08-08T04:19:10.712Z",
   "configuration": {
     "themes": [
       "coral-day",
